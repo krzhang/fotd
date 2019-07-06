@@ -1,4 +1,4 @@
-from textutils import Colors
+from textutils import Colors, yprint
 
 class Skill(object):
 
@@ -23,14 +23,14 @@ class Skill(object):
     return "<" + Colors.GREEN + self.skill_str + Colors.ENDC + ">"
   
   def narrate(self, otherstr):
-    print("  " + self.activation_str() + " " + otherstr)
+    yprint("  " + self.activation_str() + " " + otherstr)
 
 def skill_narration(skill_str, other_str, success):
   if success:
     success_str = Colors.OKGREEN + " SUCCESS!" + Colors.ENDC
   else:
     success_str = Colors.MAGENTA + " FAIL!" + Colors.ENDC
-  print(Skill(skill_str).activation_str(success) + " " + other_str + success_str)
+  yprint(Skill(skill_str).activation_str(success) + " " + other_str + success_str)
 
 SKILLS_IMPLEMENTED = ["counter_arrow",
                       "chu_ko_nu",

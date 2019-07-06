@@ -1,9 +1,9 @@
+from textutils import Colors, yprint, yinput
 from army import Character, Unit, Army
 import battle
 import events
 import random
 import status
-from textutils import Colors
 
 # power/intel/pol/cha/coolness/bravery
 
@@ -104,7 +104,7 @@ def link_data_funcs():
         #                                                      "stat_str":st})
         params = {"target":context.target, "stat_viz":str(status.Status(v))}
         disp = status.STATUSES_BATTLE[v]["on_receive"].format(**params)
-        print("  " + disp)
+        yprint("  " + disp)
         context.target.add_unit_status(v)
       return received_status
     # STATUSES[s]
@@ -114,22 +114,22 @@ def link_data_funcs():
                               "triggers":[]}
   # TODO: Jing suggests just write a single received_status event
     
-def play():
-  link_data_funcs()
-  bat = battle.Battle(army_mysticsoft(0, Colors.BLUE), army_unknown(1, Colors.RED))
+  
+link_data_funcs()
+bat = battle.Battle(army_mysticsoft(0, Colors.BLUE), army_unknown(1, Colors.RED))
+while(True):
+  # get player orders in this loop
+  bat.init_turn_state()
   while(True):
-    # get player orders in this loop
-    bat.init_turn_state()
-    while(True):
-      bat.display_state()
-      order = input("Input orders (A/D/I):")
-      # order = utils.read_single_keypress()[0]
-      if bat.legal_order(order):
-        AI_order = bat.gen_AI_order()
-        bat.take_turn([order.upper(), AI_order])
-        if bat.win_army() != None:
-          return
-        bat.init_turn_state()
-      else:
-        print("Illegal order.")
+    bat.display_state()
+    order = yinput("Input orders (A/D/I):")
+    # order = utils.read_single_keypress()[0]
+    if bat.legal_order(order):
+      AI_order = bat.gen_AI_order()
+      bat.take_turn([order.upper(), AI_order])
+      if bat.win_army() != None:
+        exit()
+      bat.init_turn_state()
+    else:
+      yprint("Illegal order.")
       

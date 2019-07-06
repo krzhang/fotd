@@ -1,3 +1,4 @@
+from textutils import Colors, yprint
 import random
 import numpy as np
 import skills
@@ -5,7 +6,6 @@ from skills import skill_narration
 import status
 import utils
 import insults
-from textutils import Colors
 
 # <2019-07-04 Thu> 
 # had both statuses and skills here, and decided to offload all skills into statuses, and so
@@ -55,7 +55,7 @@ class Event(object):
     if "panic_blocked" in edict and edict["panic_blocked"]:
       potential_panicker = getattr(self.context, edict["primary_actor"])
       if potential_panicker.has_unit_status("panicked"):
-        print("  %s is %s! No action" % (potential_panicker, status.Status("panicked")))
+        yprint("  %s is %s! No action" % (potential_panicker, status.Status("panicked")))
         return
     # time to activate this event on the queue; note the event has its own context, battle, etc.
     #   Yan has already activated using the tactic fire on Jing
@@ -96,7 +96,7 @@ def compute_damage(source, target, dmg_type, multiplier=1):
     roll = random.random()
     if roll < hitprob:
       raw_damage += 1
-  print("    [Strength: ({} vs. {}); {} dice with chance {} each; Final: {}]".format
+  yprint("    [Strength: ({} vs. {}); {} dice with chance {} each; Final: {}]".format
         (s_str, d_str, dicecount, color_prob(hitprob), color_damage(raw_damage)))
   return raw_damage
 
@@ -113,7 +113,7 @@ def attack_order(context):
   enemy = context.battle.armies[1-myarmyid]
   enemyunits = enemy.live_units()
   if len(enemyunits) == 0:
-    print("No unit to attack!")
+    yprint("No unit to attack!")
     return
   target = random.choice(enemyunits)
   Event("engage", context.rebase({"source":source, "target":target})).activate()
@@ -124,7 +124,6 @@ def defense_order(context):
     Event("berserked_order", context).activate()
     return
   Event.gain_status("defended", context, target)
-  utils.read_single_keypress()
 
 def indirect_order(context):
   source = context.target
@@ -135,7 +134,7 @@ def indirect_order(context):
   enemy = context.battle.armies[1-myarmyid]
   enemyunits = enemy.live_units()
   if len(enemyunits) == 0:
-    print("No unit to target!")
+    yprint("No unit to target!")
     return
   target = random.choice(enemyunits)
   arrowprob = 0.50
@@ -145,9 +144,9 @@ def indirect_order(context):
     arrowprob = 1.0
     vulnerable = True
   if random.random() < arrowprob:
-    print("{} sneaks in an arrow attack against {}".format(source, target))
+    yprint("{} sneaks in an arrow attack against {}".format(source, target))
     if target.has_unit_status("defended"):
-      print(defstr)
+      yprint(defstr)
     Event("arrow_strike", context.rebase({"source":source, "target":target, "vulnerable":vulnerable})).activate()
   fireprob = 0.40
   if random.random() < fireprob and source.has_unit_status("fire_tactic"):
@@ -164,7 +163,7 @@ def berserked_order(context):
   armyid = random.choice([0,1])
   enemyunits = context.battle.armies[armyid].live_units()
   target = random.choice(enemyunits)
-  print("{} is {}; ignoring orders, {} blindly pursues {}".format(
+  yprint("{} is {}; ignoring orders, {} blindly pursues {}".format(
     source, status.Status("berserk"), source, target))
   Event("engage", context.rebase({"source":source, "target":target})).activate()
     
@@ -188,24 +187,24 @@ for ev in EVENTS_ORDERS:
 def engage(context):
   source = context.source
   target = context.target
-  print("%s engages %s" % (source, target))  
+  yprint("%s engages %s" % (source, target))  
   if target.is_defended():
-    print("  but %s is ready!" % target)
+    yprint("  but %s is ready!" % target)
     if random.random() < 0.5:
-      print("  %s able to launch defensive arrow volley" % target)
+      yprint("  %s able to launch defensive arrow volley" % target)
       Event("arrow_strike", context.rebase({"target":source, "source":target})).activate()
     if random.random() < 0.5:    
-      print("  %s able to launch offensive arrow volley" % source)
+      yprint("  %s able to launch offensive arrow volley" % source)
       Event("arrow_strike", context).activate()
     Event("physical_clash", context.rebase({"target":source, "source":target})).activate()
-    # print("  %s able to launch defensive first strike" % target)
+    # yprint("  %s able to launch defensive first strike" % target)
     # Event("physical_strike",
     #       context.rebase({"target":source, "source":target})).activate()
-    # print("  %s able to launch retaliation" % source)
+    # yprint("  %s able to launch retaliation" % source)
     # Event("physical_strike", context).activate()
   else:
     if random.random() < 0.5:
-      print("  %s able to launch offensive arrow volley" % source)
+      yprint("  %s able to launch offensive arrow volley" % source)
       Event("arrow_strike", context).activate()
     # defense doesn't have time to shoot arrows
     # need logic for when 2 attackers rush into each other
@@ -233,17 +232,16 @@ def arrow_strike(context):
       Event("arrow_strike", context).activate()
   if target.has_unit_status("counter_arrow"):
     if random.random() < 0.85:
-#      print("  <counter arrow skill> %s can counter with their own volley of arrows" % target)
+#      yprint("  <counter arrow skill> %s can counter with their own volley of arrows" % target)
       Event("counter_arrow_strike",
             context.rebase({"target":source, "source":target})).activate()
-  utils.read_single_keypress()
 
 def physical_clash(context):
   source = context.source
   target = context.target
-  print("  {} clashes against {}!".format(source, target))
+  yprint("  {} clashes against {}!".format(source, target))
   Event("physical_strike", context).activate()
-  # print("  %s able to launch retaliation" % target) can die in the middle
+  # yprint("  %s able to launch retaliation" % target) can die in the middle
   Event("physical_strike", context.rebase({"target":source, "source":target})).activate()
   
 def physical_strike(context):
@@ -253,7 +251,6 @@ def physical_strike(context):
   damage = compute_damage(source, target, "DMG_PHYSICAL")
   dmgstr = "{} hits {}:".format(source, target, damage)
   Event("receive_damage", context.rebase({"damage":damage, "target":target, "dmgstr":dmgstr})).activate()
-  utils.read_single_keypress()
 
 EVENTS_GENERIC_TARGETTED = {
   "arrow_strike": {},
@@ -289,7 +286,7 @@ EVENTS_RECEIVE = {
 # No common rules here...
 
 def army_destroyed(context):
-  print("Army %d loses the battle" % context.target_army)
+  yprint("Army %d loses the battle" % context.target_army)
 
 def color_prob(prob):
   pstr = "{:4.3f}".format(prob)
@@ -323,7 +320,7 @@ def receive_damage(context):
   target.size -= damage
   if target.size == 0:
     fdmgstr += "; " + Colors.RED + "DESTROYED!" + Colors.ENDC
-  print(fdmgstr)
+  yprint(fdmgstr)
   if not context.battle.armies[target.armyid].is_alive():
     Event("army_destroyed", context.rebase({"target_army":target.armyid})).defer()
 
@@ -373,7 +370,7 @@ def panic_tactic(context):
   target = context.target  
   if source.has_unit_status("panicked"):
     # you need this here anyway because maybe a unit got panicked right before considering a tactic
-    print("  %s is panicked (ironically)! No action" % source)
+    yprint("  %s is panicked (ironically)! No action" % source)
     return
   success = random.random() < 0.5
   skill_narration("panic_tactic",
@@ -412,13 +409,13 @@ EVENTS = dict(list(EVENTS_ORDERS.items()) +
 
 def generic_eot_fizzle(context):
   stat_str = context.status
-  print("{} is no longer {}".format(context.target, status.Status(stat_str)))
+  yprint("{} is no longer {}".format(context.target, status.Status(stat_str)))
   context.target.remove_unit_status(stat_str)
   
 def burned_bot(context):
   target = context.target
   if context.battle.is_raining():
-    print("  Thanks to the rain, %s put out the fire." % target)
+    yprint("  Thanks to the rain, %s put out the fire." % target)
     target.remove_unit_status("burned")
   
 def burned_eot(context):
@@ -427,7 +424,7 @@ def burned_eot(context):
     # damage before putting out
     if context.battle.is_hot():
       damdice = 10
-      print("It's an extra {} day; fire is much more dangerous.".format(context.battle.weather))
+      yprint("It's an extra {} day; fire is much more dangerous.".format(context.battle.weather))
     else:
       damdice = 5
     damage = random.choice(range(damdice))
@@ -435,28 +432,28 @@ def burned_eot(context):
     Event("receive_damage", context.copy(
       additional_opt={"target":target, "damage":damage, "dmgstr":dmgstr})).activate()
     if random.random() < 0.5:
-      print("  %s put out the fire" % target)
+      yprint("  %s put out the fire" % target)
       target.remove_unit_status("burned")
     else:
-      print("  The fire burning %s rages on." % target)
+      yprint("  The fire burning %s rages on." % target)
 
 def berserk_eot(context):
   target = context.target
   if target.has_unit_status("berserk"): # could have dried up or something
     if random.random() < 0.5:
-      print("  %s regains control." % target)
+      yprint("  %s regains control." % target)
       target.remove_unit_status("berserk")
     else:
-      print("  {}'s unit is still {}.".format(target, status.Status("berserk")))
+      yprint("  {}'s unit is still {}.".format(target, status.Status("berserk")))
 
 def panic_eot(context):
   target = context.target
   if target.has_unit_status("panicked"): # could have dried up or something
     if random.random() < 0.5:
-      print("  %s regains control." % target)
+      yprint("  %s regains control." % target)
       target.remove_unit_status("panicked")
     else:
-      print("  %s's unit is still panicking." % target)
+      yprint("  %s's unit is still panicking." % target)
 
 ##########
 # Skills #

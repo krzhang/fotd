@@ -1,4 +1,6 @@
-from colorama import Fore, Style
+from colorama import Fore, Back, Style
+from utils import read_single_keypress
+import os
 
 class Colors:
   HEADER = '\033[95m'
@@ -17,3 +19,37 @@ class Colors:
   GREEN = Fore.GREEN
   MAGENTA = Fore.MAGENTA
   CYAN = Fore.CYAN
+
+SCROLL_COUNT = 0
+MAX_SCROLL_COUNT = 22
+
+MORE_STR = Fore.BLACK + Back.WHITE + "MORE... [hit a key]" + Colors.ENDC  
+
+def yinput(prompt):
+  global SCROLL_COUNT
+  SCROLL_COUNT = 0
+  return input(prompt)
+
+def yprint(text):
+  global SCROLL_COUNT
+  if SCROLL_COUNT == MAX_SCROLL_COUNT:
+    print(MORE_STR)
+    read_single_keypress()
+    SCROLL_COUNT = 0
+  print(text)
+  SCROLL_COUNT += 1
+
+def reset_buffer():
+  print(MORE_STR)
+  read_single_keypress()
+  global SCROLL_COUNT
+  SCROLL_COUNT = 0
+  os.system('cls' if os.name == 'nt' else 'clear')
+
+
+# import pygcurse
+# win = pygcurse.PygcurseWindow(40, 25, 'Fall of the Dragon')
+# print = win.pygprint
+# input = win.input
+# win.setscreencolors('lime', 'black', clear=True)
+

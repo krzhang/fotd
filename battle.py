@@ -1,3 +1,4 @@
+from textutils import Colors, yprint, reset_buffer
 import random
 import events
 import numpy as np
@@ -5,7 +6,6 @@ import skills
 import status
 from collections import deque
 from mathutils import normalize
-from textutils import Colors
 import utils
 
 PLAYER_ARMY = 0
@@ -75,21 +75,21 @@ class Battle(object):
       priors += np.array([1-m, 1-m, 1-m])
       assert min(priors) > 0
     newpriors = normalize(priors)
-    print("  AI predicts player (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*newpriors))
+    yprint("  AI predicts player (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*newpriors))
     counters = np.array(list(newpriors[2:]) + list(newpriors[:2]))
-    print("  AI counterpicks    (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters))
+    yprint("  AI counterpicks    (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters))
     return np.random.choice(["A", "D", "I"], p=counters)
     
   def display_state(self):
-    print("===========================================================")
-    print("Weather: %s" % str(self.weather))
-    print("Morale Differential: %d" % self.morale_diff)
+    yprint("===========================================================")
+    yprint("Weather: %s" % str(self.weather))
+    yprint("Morale Differential: %d" % self.morale_diff)
     for i in [0,1]:
-      print("Army %d:" % i)
+      yprint("Army %d:" % i)
       for u in self.armies[i].live_units():
-        print("  {} (SP: {}) {}".format(u.size_repr(), u.speed, u.status_real_repr()))
-        print("        {} {}".format(repr(u), u.character.skills))
-    print("===========================================================")
+        yprint("  {} (SP: {}) {}".format(u.size_repr(), u.speed, u.status_real_repr()))
+        yprint("        {} {}".format(repr(u), u.character.skills))
+    yprint("===========================================================")
     return
 
   def init_turn_state(self):
@@ -112,22 +112,23 @@ class Battle(object):
   def take_turn(self, orders):
     self.place_orders(orders)
     # preloading events
-    print("===========================================================")
-    print("Resolving Events: %s(%s) vs %s(%s)" % (self.order_history[-1][0],
+    yprint("===========================================================")
+    yprint("Resolving Events: %s(%s) vs %s(%s)" % (self.order_history[-1][0],
                                                   self.armies[0].name,
                                                   self.order_history[-1][1],
                                                   self.armies[1].name))
-    print("===========================================================")
+    yprint("===========================================================")
     self._run_status_handlers("bot")
     while len(self.gq) > 0:
       event = self.gq.pop()
       event.activate()
       if event.event_type == "army_destroyed":
         return
-    print("===========================================================")
-    print("Events Finished")
+    yprint("===========================================================")
+    yprint("Events Finished")
     # cleanup temporary effects
     self._run_status_handlers("eot")
+    reset_buffer()
     
   def legal_order(self, order):
     return order.upper() in ["A", "D", "I"]

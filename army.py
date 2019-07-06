@@ -122,7 +122,7 @@ class Unit(object):
     self.unit_status.remove(status.Status(statstr))
     
   def attack_strength(self, dmg_type):
-    dam = float(self.size)/2
+    dam = float(self.size)/3.5
     if dmg_type == "DMG_ARROW":
       # arrow damage shouldn't scale with numbers
       dam = 2.0

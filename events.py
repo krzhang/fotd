@@ -313,10 +313,11 @@ def receive_damage(context):
   dmgstr = context.dmgstr
   if damage >= target.size:
     damage = target.size
-  fdmgstr = "  {} {} -> {} ({} damage)".format(dmgstr,
-                                               target.size,
-                                               target.size - damage,
-                                               color_damage(damage))
+  hpbar = Colors.GREEN + '#'*(target.size-damage) + Colors.RED + '#'*(damage) + Colors.ENDC + '.'*(20-target.size)
+  fdmgstr = "  {} ".format(dmgstr) + hpbar + " {} -> {} ({} damage)".format(
+    target.size,
+    target.size - damage,
+    color_damage(damage))
   target.size -= damage
   if target.size == 0:
     fdmgstr += "; " + Colors.RED + "DESTROYED!" + Colors.ENDC

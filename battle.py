@@ -1,4 +1,4 @@
-from textutils import Colors, yprint, reset_buffer
+from textutils import Colors, yprint, pause
 import random
 import events
 import numpy as np
@@ -128,7 +128,7 @@ class Battle(object):
     yprint("Events Finished")
     # cleanup temporary effects
     self._run_status_handlers("eot")
-    reset_buffer()
+    pause(clear=True)
     
   def legal_order(self, order):
     return order.upper() in ["A", "D", "I"]

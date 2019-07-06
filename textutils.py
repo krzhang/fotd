@@ -39,14 +39,16 @@ def yprint(text):
   print(text)
   SCROLL_COUNT += 1
 
-def reset_buffer():
+def pause(clear=False):
   print(MORE_STR)
   read_single_keypress()
   global SCROLL_COUNT
   SCROLL_COUNT = 0
-  os.system('cls' if os.name == 'nt' else 'clear')
+  if clear:
+    os.system('cls' if os.name == 'nt' else 'clear')
+  
 
-
+  
 # import pygcurse
 # win = pygcurse.PygcurseWindow(40, 25, 'Fall of the Dragon')
 # print = win.pygprint

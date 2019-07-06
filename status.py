@@ -59,7 +59,7 @@ STATUSES_BATTLE = {
     "on_remove": ""
   },
   "trymode_activated": {
-    "eot":[],
+    # "eot":[],
     "on_receive": "{target} is actually trying now; they are brimming with power",    
     "on_remove": ""
   },

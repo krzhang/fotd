@@ -230,6 +230,9 @@ def indirect_raid(context):
   jeerprob = 0.60
   if random.random() < jeerprob and source.has_unit_status("jeer"):
     Event("jeer", context).activate()
+  waterprob = 0.80
+  if random.random() < waterprob and source.has_unit_status("jeer") and context.battle.is_raining():
+    Event("water_tactic", context).activate()
     
 def arrow_strike(context):
   source = context.source
@@ -273,7 +276,7 @@ def physical_strike(context):
   target = context.target
   damage, damlog = compute_damage(source, target, "DMG_PHYSICAL")
   dmgstr = "{} hits {}:".format(source, target, damage) 
-  target.add_unit_status("received_physical_attack")
+  # target.add_unit_status("received_physical_attack")
   target.attacked_by.append(source)
   source.attacked.append(target)
   Event("receive_damage", context.rebase({"damage":damage, "target":target, "dmgstr":dmgstr, "dmglog":damlog})).activate()
@@ -348,7 +351,9 @@ def receive_damage(context):
   if damage >= target.size:
     damage = target.size
   hpbar = textutils.disp_bar(20, target.size, target.size - damage)
-  fdmgstr = "  {} ".format(dmgstr) + hpbar + " {} -> {} ({} damage)".format(
+  if dmgstr:
+    dmgstr = dmgstr + " "
+  fdmgstr = dmgstr + hpbar + " {} -> {} ({} damage)".format(
     target.size,
     target.size - damage,
     color_damage(damage))
@@ -356,7 +361,8 @@ def receive_damage(context):
   if target.size == 0:
     fdmgstr += "; " + Colors.RED + "DESTROYED!" + Colors.ENDC
   yprint(fdmgstr)
-  yprint(context.dmglog)
+  if context.dmglog:
+    yprint(context.dmglog)
   if not context.battle.armies[target.armyid].is_alive():
     Event("army_destroyed", context.rebase({"target_army":target.armyid})).defer()
 
@@ -427,11 +433,30 @@ def panic_tactic(context):
     target.narrate("Keep calm. Don't let {}'s trickery get to you.".format(source))
   skill_narration("panic_tactic", "", success)
 
+def water_tactic(context):
+  source = context.source
+  target = context.target  
+  success = random.random() < 0.5
+  skill_narration("water_tactic",
+                  "{} positions dams and ships...".format(source, target))
+  if success:
+    damdice = 12
+    damage = random.choice(range(damdice))
+    dmgstr = "{}'s unit is flooded by a torrent, aggravated by the pouring {}".format(target, context.battle.weather)
+    Event("receive_damage", context.copy(
+      additional_opt={"damage":damage, "dmgstr":dmgstr, "dmglog":""})).activate()
+    source.narrate("This is painful to look at...")
+  else:
+    target.narrate("We narrowly avoided being swept away. Water is a very scary force of nature!")
+  skill_narration("water_tactic", "", success)
+  
+  
 EVENTS_SKILLS = {
   "counter_arrow_strike": {},
   "fire_tactic": {},
   "jeer": {},
-  "panic_tactic": {}
+  "panic_tactic": {},
+  "water_tactic": {}
 }
 
 for ev in EVENTS_SKILLS:
@@ -478,7 +503,7 @@ def burned_eot(context):
     damage = random.choice(range(damdice))
     dmgstr = "{}'s unit is {}".format(target, status.Status("burned"))
     Event("receive_damage", context.copy(
-      additional_opt={"target":target, "damage":damage, "dmgstr":dmgstr})).activate()
+      additional_opt={"damage":damage, "dmgstr":dmgstr, "dmglog":""})).activate()
     if random.random() < 0.5:
       yprint("s put out the fire." % target)
       target.remove_unit_status("burned")
@@ -514,7 +539,7 @@ def trymode_status_bot(context):
   skill_narration("trymode", "{} looks for an excuse to pretend to be powered up...".format(target))
   if success:
     target.narrate("Did you really think I took you seriously before?")
-    Events.gain_status("trymode_activated", context, target) 
+    Event.gain_status("trymode_activated", context, target) 
   else:
     target.narrate("I have not tried yet, and I still do not need to.")
   skill_narration("trymode", "", success)

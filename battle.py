@@ -1,5 +1,5 @@
 import textutils
-from textutils import Colors, yprint, pause
+from textutils import Colors, yprint, pause, yprint_hrule
 import random
 import events
 import numpy as np
@@ -82,7 +82,7 @@ class Battle(object):
     return np.random.choice(["A", "D", "I"], p=counters)
     
   def display_state(self):
-    yprint("===========================================================")
+    yprint_hrule()
     yprint("Weather: %s" % str(self.weather))
     for i in [0,1]:
       # yprint("Army %d:" % i)
@@ -92,7 +92,7 @@ class Battle(object):
         yprint("  {} {} (SP: {}) {}".format(healthbar, u.size_repr(), u.speed, u.status_real_repr()))
       if i == 0:
         yprint("                                     VS")    
-    yprint("===========================================================")
+    yprint_hrule()
     return
 
   def init_turn_state(self):
@@ -116,12 +116,12 @@ class Battle(object):
   def take_turn(self, orders):
     self.init_turn(orders)
     # preloading events
-    yprint("===========================================================")
+    yprint_hrule()
     yprint("Resolving Events: %s(%s) vs %s(%s)" % (self.order_history[-1][0],
                                                   self.armies[0].name,
                                                   self.order_history[-1][1],
                                                   self.armies[1].name))
-    yprint("===========================================================")
+    yprint_hrule()
     self._run_status_handlers("bot")
     while len(self.gq) > 0:
       event = self.gq.pop()
@@ -129,8 +129,6 @@ class Battle(object):
       if event.event_type == "army_destroyed":
         return
     yprint("===========================================================")
-    yprint("Events Finished")
-    # cleanup temporary effects
     self._run_status_handlers("eot")
     pause(clear=True)
     

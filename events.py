@@ -97,7 +97,7 @@ def compute_damage(source, target, dmg_type, multiplier=1):
     roll = random.random()
     if roll < hitprob:
       raw_damage += 1
-  damlog = "    [Strength: ({4.3f} vs. {4.3f}); {} dice with chance {} each; Final: {}]".format(
+  damlog = "    [Strength: ({:4.3f} vs. {:4.3f}); {} dice with chance {} each; Final: {}]".format(
     s_str, d_str, dicecount, color_prob(hitprob), color_damage(raw_damage))
   return raw_damage, damlog
 

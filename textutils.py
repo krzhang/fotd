@@ -57,7 +57,8 @@ def disp_bar(total, base, cur):
   """Total: length; base: max; cur: current. """
   return  Colors.GREEN + '#'*cur + Colors.RED + '#'*(base-cur) + Colors.ENDC + '.'*(total-base)
 
-  
+def yprint_hrule():
+  yprint("===========================================================")
 # import pygcurse
 # win = pygcurse.PygcurseWindow(40, 25, 'Fall of the Dragon')
 # print = win.pygprint

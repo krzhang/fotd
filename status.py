@@ -55,7 +55,6 @@ STATUSES_BATTLE = {
   },
   "defended": {
     "eot":["generic_eot_fizzle"],
-    "on_receive": "",
     # "on_receive": "{target} is now {stat_viz} against standard tactics",    
     "on_remove": ""
   },

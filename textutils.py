@@ -28,7 +28,13 @@ MORE_STR = Fore.BLACK + Back.WHITE + "MORE... [hit a key]" + Colors.ENDC
 def yinput(prompt):
   global SCROLL_COUNT
   SCROLL_COUNT = 0
-  return input(prompt)
+  # return input(prompt)
+  inp = ' '
+  while(inp.upper() not in ['A', 'D', 'I']):
+    yprint(Fore.BLACK + Back.WHITE + prompt + Colors.ENDC)
+    inp = read_single_keypress()[0]
+  SCROLL_COUNT = 0
+  return inp
 
 def yprint(text):
   global SCROLL_COUNT

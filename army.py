@@ -121,19 +121,24 @@ class Unit(object):
     #self.unit_status = [s for s in self.unit_status if s.stat_str != statstr]
     self.unit_status.remove(status.Status(statstr))
     
-  def attack_strength(self):
-    size = self.size
+  def attack_strength(self, dmg_type):
+    dam = float(self.size)/2
+    if dmg_type == "DMG_ARROW":
+      dam /= 2
     if self.has_unit_status("trymode_activated"):
-      size *= 1.5
-    return int(size)
+      dam *= 1.5
+    return int(dam)
 
-  def defense_strength(self):
-    size = self.size
+  def defense_strength(self, dmg_type):
+    de = float(self.size)
+    if dmg_type == "DMG_ARROW":
+      # arrow damage shouldn't scale with numbers
+      de = 10.0
     if self.has_unit_status("defended"):
-      size *= 1.5
+      de *= 1.5
     if self.has_unit_status("trymode_activated"):
-      size *= 1.5
-    return int(size)      
+      de *= 1.5
+    return int(de*1.5)      
 
   def is_defended(self):
     return self.has_unit_status("defended")

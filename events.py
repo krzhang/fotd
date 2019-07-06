@@ -78,9 +78,14 @@ class Event(object):
 
   @classmethod
   def gain_status(cls, stat_str, context, target):
+    """ Basically, nothing should call add_unit_status except for this, so all the handlers are tehre."""
     Event("receive_status", context=context.rebase({"target":target,
                                                     "status":stat_str,
                                                     "stat_viz":str(status.Status(stat_str))})).activate()
+
+  @classmethod
+  def remove_status(cls, stat_str, context, target):
+    pass
 
 ################################
 # Utility functions #
@@ -509,7 +514,7 @@ def trymode_status_bot(context):
   skill_narration("trymode", "{} looks for an excuse to pretend to be powered up...".format(target))
   if success:
     target.narrate("Did you really think I took you seriously before?")
-    target.add_unit_status("trymode_activated") 
+    Events.gain_status("trymode_activated", context, target) 
   else:
     target.narrate("I have not tried yet, and I still do not need to.")
   skill_narration("trymode", "", success)

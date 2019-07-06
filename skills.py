@@ -45,7 +45,8 @@ SKILLS_IMPLEMENTED = ["counter_arrow",
                       "panic_tactic",
                       "fire_tactic",
                       "jeer",
-                      "trymode"]
+                      "trymode",
+                      "water_tactic"]
 
 SKILLS = {
   "chaos_arrow": {
@@ -70,7 +71,7 @@ SKILLS = {
     "ai_eval": (0,1,1)
   },
   "fire_tactic": {
-    "ai_eval": (0,1,1)
+    "ai_eval": (0,0,1)
   },
   "jeer": {
     "ai_eval": (0,0,2)
@@ -89,6 +90,9 @@ SKILLS = {
   },
   "trymode": {
     "ai_eval": (3,0,0)
+  },
+  "water_tactic": {
+    "ai_eval": (0,0,1) 
   }
 }
 

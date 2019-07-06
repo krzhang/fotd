@@ -8,7 +8,7 @@ import status
 # power/intel/pol/cha/coolness/bravery
 
 Yan = Character("Zhang Yan", "Yellow Lightning",
-  71, 80, 74, 60, 5, 4,  ["pincer_specialist", "perfect_defense", "flood", "empty_castle_tactic", "drop_rocks", "counter_tactic"])
+  71, 80, 74, 60, 5, 4,  ["pincer_specialist", "perfect_defense", "water_tactic", "empty_castle_tactic", "drop_rocks", "counter_tactic"])
 
 Jing = Character("Jing Chan", "Purge",
   55, 70, 90, 85, 4, 5, ["trymode", "counter_arrow", "fire_tactic", "chu_ko_nu"]) #items  
@@ -24,7 +24,7 @@ LiuBei = Character("Liu Bei", "",
   70, 81, 89, 100, 4, 5,["cheer", "recruit_specialist"]) #items  
 
 GuanYu = Character("Guan Yu", "War God",
-  98, 80, 53, 92, 6, 7, ["flood", "study", "valor"])
+  98, 80, 53, 92, 6, 7, ["water_tactic", "study", "valor"])
 GuanYu.equip("BLACK_DRAGON")
 GuanYu.equip("RED_HARE")
 

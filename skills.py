@@ -1,5 +1,15 @@
 from textutils import Colors, yprint
 
+
+def _success_color(success):
+  if success:
+    return Colors.OKGREEN
+  elif success == False:
+    return Colors.MAGENTA
+  else:
+    # when we don't know if it failed
+    return Colors.GREEN
+
 class Skill(object):
 
   def __init__(self, skill_str):
@@ -11,13 +21,9 @@ class Skill(object):
   def __eq__(self, other):
     # this allows us to e.g. remove
     return self.skill_str == other.skill_str
-
-  def activation_str(self, success):
-    if success:
-      color = Colors.OKGREEN
-    else:
-      color = Colors.MAGENTA
-    return "<" + color + " ".join(self.skill_str.upper().split("_")) + Colors.ENDC + ">"
+  
+  def activation_str(self, success=None):
+    return "<" + _success_color(success) + " ".join(self.skill_str.upper().split("_")) + Colors.ENDC + ">"
 
   def __repr__(self):
     return "<" + Colors.GREEN + self.skill_str + Colors.ENDC + ">"
@@ -25,12 +31,14 @@ class Skill(object):
   def narrate(self, otherstr):
     yprint("  " + self.activation_str() + " " + otherstr)
 
-def skill_narration(skill_str, other_str, success):
+def skill_narration(skill_str, other_str, success=None):
   if success:
-    success_str = Colors.OKGREEN + " SUCCESS!" + Colors.ENDC
+    successtr = "SUCCESS!"
   else:
-    success_str = Colors.MAGENTA + " FAIL!" + Colors.ENDC
-  yprint(Skill(skill_str).activation_str(success) + " " + other_str + success_str)
+    successtr = "FAIL!"
+  if other_str == "":
+    other_str = _success_color(success) + successtr + Colors.ENDC
+  yprint(Skill(skill_str).activation_str(success) + " " + other_str)
 
 SKILLS_IMPLEMENTED = ["counter_arrow",
                       "chu_ko_nu",

@@ -88,8 +88,8 @@ class Event(object):
 
 def compute_damage(source, target, dmg_type, multiplier=1):
   """ We already know who is hitting whom, just computing damage """
-  s_str = max(1, int(source.attack_strength(dmg_type)))
-  d_str = max(1, int(target.defense_strength(dmg_type)))
+  s_str = max(1, source.attack_strength(dmg_type))
+  d_str = max(1, target.defense_strength(dmg_type))
   hitprob = float(s_str) / (d_str + s_str)
   dicecount = int(s_str*multiplier)
   raw_damage = 0
@@ -97,7 +97,7 @@ def compute_damage(source, target, dmg_type, multiplier=1):
     roll = random.random()
     if roll < hitprob:
       raw_damage += 1
-  damlog = "    [Strength: ({} vs. {}); {} dice with chance {} each; Final: {}]".format(
+  damlog = "    [Strength: ({4.3f} vs. {4.3f}); {} dice with chance {} each; Final: {}]".format(
     s_str, d_str, dicecount, color_prob(hitprob), color_damage(raw_damage))
   return raw_damage, damlog
 
@@ -231,7 +231,7 @@ def arrow_strike(context):
   target = context.target
   multiplier = 1
   if "vulnerable" in context.opt and context.vulnerable:
-    multiplier = 1.5
+    multiplier = 2
   damage, damlog = compute_damage(source, target, "DMG_ARROW", multiplier=multiplier)
   dmgstr = "{} shoots {}:".format(source, target, damage)
   Event("receive_damage",
@@ -243,8 +243,11 @@ def arrow_strike(context):
       Event.gain_status("burned", context, target)
   if source.has_unit_status("chu_ko_nu"):
     if random.random() < 0.5:
-      skill_narration("chu_ko_nu", "{}'s arrows continue to rain thanks to the weapon!".format(source), True)
-      source.narrate("Have some more, guys!")
+      skill_narration("chu_ko_nu", "{}'s arrows continue to rain!".format(source), True)
+      if source.name == "Zhuge Liang":
+        source.narrate("It's a bit embarassing to be using something named after yourself...")
+      else:
+        source.narrate("Have some more, guys!")
       Event("arrow_strike", context).activate()
   if target.has_unit_status("counter_arrow"):
     if random.random() < 0.85:
@@ -378,13 +381,13 @@ def fire_tactic(context):
   target = context.target
   success = random.random() < 0.5
   skill_narration("fire_tactic",
-                  "{} prepares embers and tinder...".format(source),
-                  success)
+                  "{} prepares embers and tinder...".format(source))
   if success:
     source.narrate("It's going to get pretty hot!")
     Event.gain_status("burned", context, target)
   else:
     target.narrate("No need to play with fire, boys. Fight like real men!")
+  skill_narration("fire_tactic", "", success)
 
 def jeer(context):
   source = context.source
@@ -392,8 +395,7 @@ def jeer(context):
   # should interrupt this, but right now it should be fine
   success = random.random() < 0.3
   skill_narration("jeer",
-                  "{} prepares their best insults...".format(source),
-                  success)
+                  "{} prepares their best insults...".format(source))
   ins = random.choice(insults.INSULTS)
   source.narrate(ins[0])
   if success:
@@ -401,6 +403,7 @@ def jeer(context):
     Event.gain_status("berserk", context, target)
   else:
     target.narrate(ins[1])  
+  skill_narration("jeer_tactic", "", success)
     
 def panic_tactic(context):
   source = context.source
@@ -411,13 +414,13 @@ def panic_tactic(context):
   #   return
   success = random.random() < 0.5
   skill_narration("panic_tactic",
-                  "{} sows seeds of chaos in {}'s unit...".format(source, target),
-                  success)
+                  "{} sows seeds of chaos in {}'s unit...".format(source, target))
   if success:
     source.narrate("{} will be out of commission for a while...".format(target))
     Event.gain_status("panicked", context, target)
   else:
     target.narrate("Keep calm. Don't let {}'s trickery get to you.".format(source))
+  skill_narration("panic_tactic", "", success)
 
 EVENTS_SKILLS = {
   "counter_arrow_strike": {},
@@ -503,8 +506,11 @@ def trymode_status_bot(context):
   target = context.target
   trymodeprob = (20.0-target.size)/20
   success = random.random() < trymodeprob
-  skill_narration("trymode", "{} looks for an excuse to pretend to be powered up...".format(target), success)
+  skill_narration("trymode", "{} looks for an excuse to pretend to be powered up...".format(target))
   if success:
-    target.narrate("Did you really think I took you seriously?")
+    target.narrate("Did you really think I took you seriously before?")
     target.add_unit_status("trymode_activated") 
+  else:
+    target.narrate("I have not tried yet, and I still do not need to.")
+  skill_narration("trymode", "", success)
 

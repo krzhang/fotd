@@ -127,7 +127,7 @@ class Unit(object):
       dam /= 2
     if self.has_unit_status("trymode_activated"):
       dam *= 1.5
-    return int(dam)
+    return float(dam)
 
   def defense_strength(self, dmg_type):
     de = float(self.size)
@@ -138,7 +138,7 @@ class Unit(object):
       de *= 1.5
     if self.has_unit_status("trymode_activated"):
       de *= 1.5
-    return int(de*1.5)      
+    return float(de*1.5)      
 
   def is_defended(self):
     return self.has_unit_status("defended")

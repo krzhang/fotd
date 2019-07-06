@@ -124,7 +124,8 @@ class Unit(object):
   def attack_strength(self, dmg_type):
     dam = float(self.size)/2
     if dmg_type == "DMG_ARROW":
-      dam /= 2
+      # arrow damage shouldn't scale with numbers
+      dam = 2.0
     if self.has_unit_status("trymode_activated"):
       dam *= 1.5
     return float(dam)
@@ -133,7 +134,7 @@ class Unit(object):
     de = float(self.size)
     if dmg_type == "DMG_ARROW":
       # arrow damage shouldn't scale with numbers
-      de = 10.0
+      de = 12.0
     if self.has_unit_status("defended"):
       de *= 1.5
     if self.has_unit_status("trymode_activated"):

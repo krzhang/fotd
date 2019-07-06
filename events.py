@@ -91,7 +91,7 @@ def compute_damage(source, target, dmg_type, multiplier=1):
   s_str = max(1, source.attack_strength(dmg_type))
   d_str = max(1, target.defense_strength(dmg_type))
   hitprob = float(s_str) / (d_str + s_str)
-  dicecount = int(s_str*multiplier)
+  dicecount = int(source.size*multiplier)
   raw_damage = 0
   for i in range(dicecount):
     roll = random.random()
@@ -403,7 +403,7 @@ def jeer(context):
     Event.gain_status("berserk", context, target)
   else:
     target.narrate(ins[1])  
-  skill_narration("jeer_tactic", "", success)
+  skill_narration("jeer", "", success)
     
 def panic_tactic(context):
   source = context.source

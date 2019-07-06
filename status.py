@@ -59,9 +59,13 @@ STATUSES_BATTLE = {
   "trymode_activated": {
     "eot":["generic_eot_fizzle"],
     "on_receive": "{target} is actually trying now; they are brimming with power",    
+  },
+  "received_physical_attack": {
+    "eot":["generic_eot_fizzle"],
   }
 }
-  
+
+# these are statuses that are just about having skills, not about activating them
 STATUSES_FROM_SKILLS = {
   "trymode": {
     "bot":["trymode_status_bot"]

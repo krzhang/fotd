@@ -103,8 +103,10 @@ def link_data_funcs():
         # disp = status.STATUSES_BATTLE[st]["receive"].format(**{"target":context.target,
         #                                                      "stat_str":st})
         params = {"target":context.target, "stat_viz":str(status.Status(v))}
-        disp = status.STATUSES_BATTLE[v]["on_receive"].format(**params)
-        yprint("  " + disp)
+        if "on_receive" in status.STATUSES_BATTLE[v]:
+          # sometimes can be quiet
+          disp = status.STATUSES_BATTLE[v]["on_receive"].format(**params)
+          yprint("  " + disp)
         context.target.add_unit_status(v)
       return received_status
     # STATUSES[s]

@@ -1,5 +1,6 @@
 import skills
 import status
+import textutils
 from textutils import Colors
 
 STAT_BASES = {"power":"power_base",
@@ -9,6 +10,7 @@ STAT_BASES = {"power":"power_base",
 
 class Character(object):
   def __init__(self, name, title, power, intel, pol, cha, coolness, bravery, skillstrs):
+    self.id = name + title # this really needs to be rewritten
     self.name = name
     self.title = title
     self.power_base = power
@@ -23,6 +25,9 @@ class Character(object):
     self.status = []
     self.calc_attributes()
     self.color = ""
+
+  def __eq__(self, other):
+    return self.id == other.id
     
   def calc_attributes(self):
     for s in STAT_BASES:
@@ -56,13 +61,19 @@ class Unit(object):
     self.speed = speed
     self.armyid = None
     self.unit_status = [] # not to be confused with character-status
+    self.targetting = None
+    self.attacked = [] # enemies attacked in a turn
+    self.attacked_by = []
+
+  def __eq__(self, other):
+    return self.character == other.character
     
   def __repr__(self):
     return repr(self.character)
 
   def size_repr(self):
     csize = self._size_single_repr(self.size) + str(self.size) + Colors.ENDC
-    return "{size1: >2}/{size2: >2}".format(size1=csize, size2=self.size_base)
+    return "{: <2}/{: <2}".format(str(csize), str(self.size_base))
     strb = "{}".format(self.size) + Style.RESET_ALL
     strc = "/{}, speed: {})".format(self.size_base, self.speed)
 
@@ -97,12 +108,13 @@ class Unit(object):
     """ When we need him to say something """
     self.character.narrate(otherstr)
 
-  def has_unit_status(self, statstr):
-    return statstr in [s.stat_str for s in self.unit_status]
+  def has_unit_status(self, stat_str):
+    return stat_str in [s.stat_str for s in self.unit_status]
   
-  def add_unit_status(self, statstr):
+  def add_unit_status(self, stat_str):
     """ as strings. DON'T USE WITH SKILLS """
-    self.unit_status.append(status.Status(statstr))
+    if not self.has_unit_status(stat_str):
+      self.unit_status.append(status.Status(stat_str))
 
   def remove_unit_status(self, statstr):
     #import pdb; pdb.set_trace()

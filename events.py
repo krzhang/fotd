@@ -1,3 +1,4 @@
+import textutils
 from textutils import Colors, yprint
 import random
 import numpy as np
@@ -96,13 +97,14 @@ def compute_damage(source, target, dmg_type, multiplier=1):
     roll = random.random()
     if roll < hitprob:
       raw_damage += 1
-  yprint("    [Strength: ({} vs. {}); {} dice with chance {} each; Final: {}]".format
-        (s_str, d_str, dicecount, color_prob(hitprob), color_damage(raw_damage)))
+  #yprint("    [Strength: ({} vs. {}); {} dice with chance {} each; Final: {}]".format
+  #      (s_str, d_str, dicecount, color_prob(hitprob), color_damage(raw_damage)))
   return raw_damage
 
 ################
 # Order Events #
 ################
+# after these, there should be a target
 
 def attack_order(context):
   source = context.target
@@ -116,13 +118,16 @@ def attack_order(context):
     yprint("No unit to attack!")
     return
   target = random.choice(enemyunits)
-  Event("engage", context.rebase({"source":source, "target":target})).activate()
+  context.target.targetting = target
+  yprint("({} -> {}): preparing attack".format(source, target))
+  Event("engage", context.rebase({"source":source, "target":target})).defer()
 
 def defense_order(context):
   target = context.target
   if target.has_unit_status("berserk"): # note different dude
     Event("berserked_order", context).activate()
     return
+  context.target.targetting = None
   Event.gain_status("defended", context, target)
 
 def indirect_order(context):
@@ -137,35 +142,19 @@ def indirect_order(context):
     yprint("No unit to target!")
     return
   target = random.choice(enemyunits)
-  arrowprob = 0.50
-  vulnerable = False
-  if target.has_unit_status("defended"):
-    defstr = "  {}'s standard defense is vulnerable".format(target)
-    arrowprob = 1.0
-    vulnerable = True
-  if random.random() < arrowprob:
-    yprint("{} sneaks in an arrow attack against {}".format(source, target))
-    if target.has_unit_status("defended"):
-      yprint(defstr)
-    Event("arrow_strike", context.rebase({"source":source, "target":target, "vulnerable":vulnerable})).activate()
-  fireprob = 0.40
-  if random.random() < fireprob and source.has_unit_status("fire_tactic"):
-    Event("fire_tactic", context.rebase({"source":source, "target":target})).activate()
-  panicprob = 0.20
-  if random.random() < panicprob and source.has_unit_status("panic_tactic"):
-    Event("panic_tactic", context.rebase({"source":source, "target":target})).activate()
-  jeerprob = 0.60
-  if random.random() < jeerprob and source.has_unit_status("jeer"):
-    Event("jeer", context.rebase({"source":source, "target":target})).activate()
+  context.target.targetting = target
+  yprint("({} -> {}): preparing skullduggery".format(source, target))
+  Event("indirect_raid", context.rebase({"source":source, "target":target})).defer()
 
 def berserked_order(context):
   source = context.target
   armyid = random.choice([0,1])
   enemyunits = context.battle.armies[armyid].live_units()
   target = random.choice(enemyunits)
-  yprint("{} is {}; ignoring orders, {} blindly pursues {}".format(
-    source, status.Status("berserk"), source, target))
-  Event("engage", context.rebase({"source":source, "target":target})).activate()
+  yprint("({} -> {}): {} is {}, ignoring original orders".format(
+    source, target, source, status.Status("berserk")))
+  context.target.targetting = target
+  Event("engage", context.rebase({"source":source, "target":target})).defer()
     
 EVENTS_ORDERS = {
   "attack_order": {},
@@ -187,12 +176,14 @@ for ev in EVENTS_ORDERS:
 def engage(context):
   source = context.source
   target = context.target
-  yprint("%s engages %s" % (source, target))  
+  if target in source.attacked_by:
+    yprint("{} was planning to engage {}, but they already engaged".format(source, target))
+    return
+  yprint("{} engages {}".format(source, target))  
   if target.is_defended():
     yprint("  but %s is ready!" % target)
-    if random.random() < 0.5:
-      yprint("  %s able to launch defensive arrow volley" % target)
-      Event("arrow_strike", context.rebase({"target":source, "source":target})).activate()
+    yprint("  %s able to launch defensive arrow volley" % target)
+    Event("arrow_strike", context.rebase({"target":source, "source":target})).activate()
     if random.random() < 0.5:    
       yprint("  %s able to launch offensive arrow volley" % source)
       Event("arrow_strike", context).activate()
@@ -210,6 +201,31 @@ def engage(context):
     # need logic for when 2 attackers rush into each other
     Event("physical_clash", context).activate()
 
+def indirect_raid(context):
+  source = context.source
+  target = context.target
+  if len(source.attacked_by) > 0:
+    yprint("{}'s sneaking up on {} was interrupted by {}!".format(source, target, source.attacked_by[0]))
+    return
+  yprint("{} sneaks up on {}".format(source, target))  
+  # tactic 1: raid
+  vulnerable = False
+  if target.has_unit_status("defended"):
+    yprint("  {} is defended against standard attacks but not raids!".format(target))
+    vulnerable = True
+  Event("arrow_strike", context.rebase({"source":source, "target":target, "vulnerable":vulnerable})).activate()
+  # fire
+  if (random.random() < 0.4 and
+      source.has_unit_status("fire_tactic") and
+      not context.battle.is_raining()):
+    Event("fire_tactic", context.rebase({"source":source, "target":target})).activate()
+  panicprob = 0.20
+  if random.random() < panicprob and source.has_unit_status("panic_tactic"):
+    Event("panic_tactic", context.rebase({"source":source, "target":target})).activate()
+  jeerprob = 0.60
+  if random.random() < jeerprob and source.has_unit_status("jeer"):
+    Event("jeer", context.rebase({"source":source, "target":target})).activate()
+    
 def arrow_strike(context):
   source = context.source
   target = context.target
@@ -250,11 +266,15 @@ def physical_strike(context):
   target = context.target
   damage = compute_damage(source, target, "DMG_PHYSICAL")
   dmgstr = "{} hits {}:".format(source, target, damage)
+  target.add_unit_status("received_physical_attack")
+  target.attacked_by.append(source)
+  source.attacked.append(target)
   Event("receive_damage", context.rebase({"damage":damage, "target":target, "dmgstr":dmgstr})).activate()
 
 EVENTS_GENERIC_TARGETTED = {
   "arrow_strike": {},
   "engage": {},
+  "indirect_raid": {},
   "physical_clash": {},
   "physical_strike": {}
 }
@@ -313,7 +333,7 @@ def receive_damage(context):
   dmgstr = context.dmgstr
   if damage >= target.size:
     damage = target.size
-  hpbar = Colors.GREEN + '#'*(target.size-damage) + Colors.RED + '#'*(damage) + Colors.ENDC + '.'*(20-target.size)
+  hpbar = textutils.disp_bar(20, target.size, target.size - damage)
   fdmgstr = "  {} ".format(dmgstr) + hpbar + " {} -> {} ({} damage)".format(
     target.size,
     target.size - damage,
@@ -354,6 +374,7 @@ def fire_tactic(context):
 def jeer(context):
   source = context.source
   target = context.target
+  # should interrupt this, but right now it should be fine
   success = random.random() < 0.3
   skill_narration("jeer",
                   "{} prepares their best insults...".format(source),
@@ -369,10 +390,10 @@ def jeer(context):
 def panic_tactic(context):
   source = context.source
   target = context.target  
-  if source.has_unit_status("panicked"):
-    # you need this here anyway because maybe a unit got panicked right before considering a tactic
-    yprint("  %s is panicked (ironically)! No action" % source)
-    return
+  # if source.has_unit_status("panicked"):
+  #   # you need this here anyway because maybe a unit got panicked right before considering a tactic
+  #   yprint("  %s is panicked (ironically)! No action" % source)
+  #   return
   success = random.random() < 0.5
   skill_narration("panic_tactic",
                   "{} sows seeds of chaos in {}'s unit...".format(source, target),
@@ -411,7 +432,9 @@ EVENTS = dict(list(EVENTS_ORDERS.items()) +
 def generic_eot_fizzle(context):
   stat_str = context.status
   yprint("{} is no longer {}".format(context.target, status.Status(stat_str)))
+  yprint("  old statuses: {}".format(context.target.unit_status))
   context.target.remove_unit_status(stat_str)
+  yprint("  new statuses: {}".format(context.target.unit_status))
   
 def burned_bot(context):
   target = context.target

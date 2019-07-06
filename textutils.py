@@ -47,6 +47,9 @@ def pause(clear=False):
   if clear:
     os.system('cls' if os.name == 'nt' else 'clear')
   
+def disp_bar(total, base, cur):
+  """Total: length; base: max; cur: current. """
+  return  Colors.GREEN + '#'*cur + Colors.RED + '#'*(base-cur) + Colors.ENDC + '.'*(total-base)
 
   
 # import pygcurse

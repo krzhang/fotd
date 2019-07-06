@@ -1,3 +1,4 @@
+import textutils
 from textutils import Colors, yprint, pause
 import random
 import events
@@ -67,7 +68,7 @@ class Battle(object):
           priors += np.array(skills.SKILLS[skstr]["ai_eval"])
     # adjusting for size
           # import pdb; pdb.set_trace()
-    priors += np.array([1,-1,0])*(self.armies[PLAYER_ARMY].str_estimate() -
+    priors += np.array([1,0,0])*(self.armies[PLAYER_ARMY].str_estimate() -
                 self.armies[AI_ARMY].str_estimate())
     # TODO: adjusting for battlefield conditions
     m = min(priors)
@@ -83,12 +84,14 @@ class Battle(object):
   def display_state(self):
     yprint("===========================================================")
     yprint("Weather: %s" % str(self.weather))
-    yprint("Morale Differential: %d" % self.morale_diff)
     for i in [0,1]:
-      yprint("Army %d:" % i)
+      # yprint("Army %d:" % i)
       for u in self.armies[i].live_units():
-        yprint("  {} (SP: {}) {}".format(u.size_repr(), u.speed, u.status_real_repr()))
-        yprint("        {} {}".format(repr(u), u.character.skills))
+        yprint("{} {}".format(repr(u), u.character.skills))
+        healthbar = textutils.disp_bar(20, u.size_base, u.size)
+        yprint("  {} {} (SP: {}) {}".format(healthbar, u.size_repr(), u.speed, u.status_real_repr()))
+      if i == 0:
+        yprint("                                     VS")    
     yprint("===========================================================")
     return
 
@@ -98,8 +101,9 @@ class Battle(object):
 
   def _run_status_handlers(self, func_key):
     for i in [0,1]:
-      for unit in self.armies[i].live_units():
-        for sta in unit.unit_status:
+      # originally these are in lists; the problem is you can change these lists, so make copies
+      for unit in tuple(self.armies[i].live_units()):
+        for sta in tuple(unit.unit_status):
           ctxt = events.Context(self, opt={"target":unit})
           sta.run_status_func(func_key, ctxt)
 
@@ -110,7 +114,7 @@ class Battle(object):
     return self.weather.text == "hot"
 
   def take_turn(self, orders):
-    self.place_orders(orders)
+    self.init_turn(orders)
     # preloading events
     yprint("===========================================================")
     yprint("Resolving Events: %s(%s) vs %s(%s)" % (self.order_history[-1][0],
@@ -139,13 +143,16 @@ class Battle(object):
         return 1-i
     return None
     
-  def place_orders(self, orders):
+  def init_turn(self, orders):
     o2e = {"A": "attack_order", "D": "defense_order", "I":"indirect_order"}
     self.order_history.append(orders)
     orderlist = []
     for i in [0, 1]:
       order = orders[i]
       for u in self.armies[i].live_units():
+        u.attacked = []
+        u.attacked_by = []
+        u.targetting = None
         speed = u.speed
         speed += random.choice([-3,-2,-1,0,1,2,3])
         if order == 'D':

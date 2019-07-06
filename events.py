@@ -197,7 +197,7 @@ def engage(context):
     if target.targetting == source:
       if random.random() < 0.5:
         yprint("  %s able to launch defensive arrow volley" % target)
-        Event("arrow_strike", context).activate()      
+        Event("arrow_strike", context.rebase_switch()).activate()      
     # need logic for when 2 attackers rush into each other
     Event("physical_clash", context).activate()
 

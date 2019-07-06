@@ -74,8 +74,7 @@ class Event(object):
 
   @classmethod
   def gain_status(cls, stat_str, context, target):
-    """Use for an event that just gives a status event."""    
-    cls(stat_str+"_received", context=context.rebase({"target":target})).activate()
+    Event("received_status", context=context.rebase({"target":target, "status":stat_str})).activate()
 
 ################################
 # Utility functions #
@@ -285,11 +284,13 @@ for ev in EVENTS_GENERIC_TARGETTED:
   EVENTS_GENERIC_TARGETTED[ev]["primary_actor"] = "source"
   EVENTS_GENERIC_TARGETTED[ev]["need_live_actors"] = True
 
-##################
-# PASSIVE EVENTS
-##################
+###############
+# MISC EVENTS #
+###############
 
-EVENTS_RECEIVE = {
+# eventually maybe separate things out with one target unit
+  
+EVENTS_MISC = {
   "army_destroyed": {
     "actors":["target_army"],
     "primary_actor": "target_army"
@@ -298,6 +299,11 @@ EVENTS_RECEIVE = {
     "actors":["target"],
     "primary_actor": "target",
     "need_live_actors":True
+  },
+  "receive_status": {
+    "actors":["target"],
+    "primary_actor": "target",
+    "need_live_actors":False # maybe need "Captured" etc.
   }
 }
 
@@ -345,7 +351,15 @@ def receive_damage(context):
   if not context.battle.armies[target.armyid].is_alive():
     Event("army_destroyed", context.rebase({"target_army":target.armyid})).defer()
 
-
+def receive_status(context):
+  target = context.target
+  st = context.status
+  if "on_receive" in status.STATUSES_BATTLE[st]:
+    # sometimes can be quiet
+    disp = status.STATUSES_BATTLE[st]["on_receive"].format(**params)
+    yprint("  " + disp)
+  context.target.add_unit_status(v)
+  
 ######################
 # Events from Skills #
 ######################
@@ -420,21 +434,22 @@ for ev in EVENTS_SKILLS:
 
 EVENTS = dict(list(EVENTS_ORDERS.items()) +
               list(EVENTS_GENERIC_TARGETTED.items()) +
-              list(EVENTS_RECEIVE.items()) +
+              list(EVENTS_MISC.items()) +
               list(EVENTS_SKILLS.items()))
 
 #######################################
 # Status Beginning/end of turn Events #
 #######################################
 
-# Strictly speaking, these aren't events right now, since we just run them
+# Strictly speaking, these aren't events right now, since we just run them. This means we can activate but cannot defer
 
 def generic_eot_fizzle(context):
+  # a bit annoying that removal is not symmetric with gaining
   stat_str = context.status
-  yprint("{} is no longer {}".format(context.target, status.Status(stat_str)))
-  yprint("  old statuses: {}".format(context.target.unit_status))
+  if status.Status.STATUSES[stat_str]["disp_remove"] != None:
+    # eventually, maybe do specialized stuff
+    yprint("{} is no longer {}".format(context.target, status.Status(stat_str)))
   context.target.remove_unit_status(stat_str)
-  yprint("  new statuses: {}".format(context.target.unit_status))
   
 def burned_bot(context):
   target = context.target

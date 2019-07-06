@@ -96,25 +96,6 @@ def link_data_funcs():
     for func_type in ["eot", "bot"]:
       if func_type in STATUSES[st]:
         STATUSES[st][func_type+'_func'] = getattr(events, STATUSES[st][func_type][0])
-  for st in status.STATUSES_BATTLE:
-    # unlike skills, we don't get them during battle, so we treat these differently
-    def myfunc(v):
-      def received_status(context):
-        # disp = status.STATUSES_BATTLE[st]["receive"].format(**{"target":context.target,
-        #                                                      "stat_str":st})
-        params = {"target":context.target, "stat_viz":str(status.Status(v))}
-        if "on_receive" in status.STATUSES_BATTLE[v]:
-          # sometimes can be quiet
-          disp = status.STATUSES_BATTLE[v]["on_receive"].format(**params)
-          yprint("  " + disp)
-        context.target.add_unit_status(v)
-      return received_status
-    # STATUSES[s]
-    EVENTS[st+"_received"] = {"func":myfunc(st),
-                              "panic_blocked": False,
-                              "primary_agent": "target",
-                              "triggers":[]}
-  # TODO: Jing suggests just write a single received_status event
     
   
 link_data_funcs()

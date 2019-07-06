@@ -231,7 +231,7 @@ def indirect_raid(context):
   if random.random() < jeerprob and source.has_unit_status("jeer"):
     Event("jeer", context).activate()
   waterprob = 0.80
-  if random.random() < waterprob and source.has_unit_status("jeer") and context.battle.is_raining():
+  if random.random() < waterprob and source.has_unit_status("water_tactic") and context.battle.is_raining():
     Event("water_tactic", context).activate()
     
 def arrow_strike(context):

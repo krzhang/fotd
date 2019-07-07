@@ -1,6 +1,5 @@
 from textutils import Colors, yprint
 
-
 def _success_color(success):
   if success:
     return Colors.OKGREEN
@@ -40,6 +39,10 @@ def skill_narration(skill_str, other_str, success=None):
     other_str = _success_color(success) + successtr + Colors.ENDC
   yprint(Skill(skill_str).activation_str(success) + " " + other_str)
 
+def info(skill_str, key):
+  if key in SKILLS[skill_str]:
+    return SKILLS[skill_str][key]
+  return None
 
 SKILLS = {
   "chaos_arrow": {
@@ -78,6 +81,7 @@ SKILLS = {
   },
   "lure": {
     "ai_eval": (0,0,1),
+    "on_success": "{lurer} " + Colors.GREEN + "lures " + Colors.ENDC + "{ctarget} into the tactic!",
     "on_success_speech": [("lurer","Here, kitty kitty kitty...")],
   },
   "jeer": {

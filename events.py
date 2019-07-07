@@ -37,7 +37,7 @@ class Context(object):
 
   def speech(self, narrator, text):
     """Ex: context.speech('csource', 'yo{ctarget}...')"""
-    self.opt[narrator].narrate(text)
+    self.opt[narrator].speech(text)
   
 class EventType(object):
   def __init__(self, inputdict):
@@ -265,15 +265,15 @@ def arrow_strike(context):
   if csource.has_unit_status("fire_arrow"):
     if random.random() < 0.5 and not context.battle.is_raining():
       skill_narration("fire_arrow", "{}'s arrows are covered with fire!".format(csource), True)
-      csource.narrate("Light'em up!")
+      csource.speech("Light'em up!")
       Event.gain_status("burned", context, ctarget)
   if csource.has_unit_status("chu_ko_nu"):
     if random.random() < 0.5:
       skill_narration("chu_ko_nu", "{}'s arrows continue to rain!".format(csource), True)
       if csource.name == "Zhuge Liang":
-        csource.narrate("The name is a bit embarassing...")
+        csource.speech("The name is a bit embarassing...")
       else:
-        csource.narrate("Have some more, guys!")
+        csource.speech("Have some more!")
       Event("arrow_strike", context).activate()
   if ctarget.has_unit_status("counter_arrow"):
     if random.random() < 0.85:
@@ -379,7 +379,7 @@ def counter_arrow_strike(context):
   csource = context.csource
   ctarget = context.ctarget
   skill_narration("counter_arrow", "{} counters with their own volley".format(csource), True)
-  csource.narrate("Come on boys; let's show these guys how to actually use arrows!")
+  csource.speech("Let's show them guys how to actually use arrows!")
   Event("arrow_strike",
         context.rebase({"csource":csource, "ctarget":ctarget})).activate()
   return True
@@ -415,7 +415,7 @@ def lure_tactic(context, base_chance, improved_chance, success_callback):
         lurer = random.choice(context.lure_candidates)
         skill_narration("lure", "", True)
         lurer.speech(status.info("lure", "on_success_speech"))
-        lure_success_text = events.info("lure_tactic", "on_success")
+        lure_success_text = skills.info("lure_tactic", "on_success")
         skill_narration("lure", lure_success_text.format(**{"lurer":lurer, "ctarget":targ}), True)
       else:
         # still a success, but it is not because of the lure
@@ -470,11 +470,11 @@ def jeer(context):
   ins = random.choice(insults.INSULTS)
   csource.narrate(ins[0])
   if success:
-    ctarget.narrate("Why you...")
+    ctarget.speech("Why you...")
     Event.gain_status("berserk", context, ctarget)
     # TODO: AOE
   else:
-    ctarget.narrate(ins[1])  
+    ctarget.speech(ins[1])  
   skill_narration("jeer", "", success)
   return success
 
@@ -506,8 +506,7 @@ EVENTS_SKILLS = {
     "can_aoe": True
     },
   "lure_tactic": {
-    "on_success": "{lurer} " + Colors.GREEN + "lures " + Colors.ENDC + "{ctarget} into the tactic!"
-    }
+    },
   "panic_tactic": {
     "can_aoe": True
     },
@@ -537,7 +536,7 @@ EVENTS = dict(list(EVENTS_ORDERS.items()) +
 def generic_eot_fizzle(context):
   # a bit annoying that removal is not symmetric with gaining
   stat_str = context.status
-  if status.info(stat_str, "on_remove") != "":
+  if status.info(stat_str, "on_remove"):
     # eventually, maybe do specialized stuff
     yprint("{} is no longer {}".format(context.ctarget, status.Status(stat_str)))
   context.ctarget.remove_unit_status(stat_str)
@@ -585,6 +584,16 @@ def panic_eot(context):
     else:
       yprint("%s's unit is still panicking." % ctarget)
 
+def provoked_eot(context):
+  ctarget = context.ctarget
+  if ctarget.has_unit_status("provoked"): # could have dried up or something
+    if random.random() < 0.5:
+      yprint("%s regains control." % ctarget)
+      ctarget.remove_unit_status("provoked")
+    else:
+      yprint("{}'s unit is still {}.".format(ctarget, status.Status("provoked")))
+
+      
 ##########
 # Skills #
 ##########
@@ -595,9 +604,9 @@ def trymode_status_bot(context):
   success = random.random() < trymodeprob
   skill_narration("trymode", "{} looks for an excuse to pretend to be powered up...".format(ctarget))
   if success:
-    ctarget.narrate("Did you really think I took you seriously before?")
+    ctarget.speech("Did you really think I took you seriously before?")
     Event.gain_status("trymode_activated", context, ctarget) 
   else:
-    ctarget.narrate("I have not tried yet, and I still do not need to.")
+    ctarget.speech("I have not tried yet, and I still do not need to.")
   skill_narration("trymode", "", success)
 

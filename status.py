@@ -57,7 +57,7 @@ STATUSES_BATTLE = {
   "panicked": {
     "eot":["panic_eot"],
     "on_receive": "{ctarget}'s unit collapses into a chaotic {stat_viz} state",
-    "on_remove": ""
+    "on_remove": None
   },
   "provoked": {
     "eot":["provoked_eot"],
@@ -67,7 +67,7 @@ STATUSES_BATTLE = {
   "defended": {
     "eot":["generic_eot_fizzle"],
     # "on_receive": "{target} is now {stat_viz} against standard tactics",    
-    "on_remove": ""
+    "on_remove": None
   },
   "is_commander": {
     "viz":Colors.YELLOW + "commander" + Colors.ENDC, 
@@ -75,11 +75,11 @@ STATUSES_BATTLE = {
   "trymode_activated": {
     # "eot":[],
     "on_receive": "{ctarget} is actually trying now; they are brimming with power",    
-    "on_remove": ""
+    "on_remove": None
   },
   "received_physical_attack": {
     "eot":["generic_eot_fizzle"],
-    "on_remove": ""
+    "on_remove": None
   }
 }
 

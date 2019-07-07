@@ -102,17 +102,10 @@ link_data_funcs()
 bat = battle.Battle(army_mysticsoft(0, Colors.BLUE), army_unknown(1, Colors.RED))
 while(True):
   # get player orders in this loop
-  bat.init_turn_state()
   while(True):
-    bat.display_state()
-    order = yinput("Input orders (A/D/I):")
-    # order = utils.read_single_keypress()[0]
-    if bat.legal_order(order):
-      AI_order = bat.gen_AI_order()
-      bat.take_turn([order.upper(), AI_order])
-      if bat.win_army() != None:
-        exit()
-      bat.init_turn_state()
-    else:
-      yprint("Illegal order.")
+    player_order = bat.get_player_order()
+    AI_order = bat.get_AI_order()
+    bat.take_turn([player_order, AI_order])
+    if bat.win_army() != None:
+      exit()
       

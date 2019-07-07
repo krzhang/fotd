@@ -85,10 +85,6 @@ class Unit(object):
   def set_color(self, color):
     self.character.color = color
 
-  def set_position(self, pos):
-    self.position = pos
-    pos.add_unit(self)
-  
   def __str__(self):
     return str(self.character)
 
@@ -122,6 +118,11 @@ class Unit(object):
     if not self.has_unit_status(stat_str):
       self.unit_status.append(status.Status(stat_str))
 
+  def move(self, newpos):
+    self.position.remove_unit(self)
+    newpos.add_unit(self)
+    self.position = newpos
+      
   def remove_unit_status(self, statstr):
     #import pdb; pdb.set_trace()
     #self.unit_status = [s for s in self.unit_status if s.stat_str != statstr]

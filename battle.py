@@ -52,6 +52,8 @@ class Battle(object):
           # u.unit_status.append(status.Status.FromSkillName(s.skill_str))
       a.commander.add_unit_status("is_commander")
     self.hqs = [positions.Position(self, self.armies[i].commander, i) for i in [0,1]]
+        
+    self.dynamic_positions = []
     self.morale_diff = 0
     # 5 queues
     self.queues = {}
@@ -60,17 +62,41 @@ class Battle(object):
     # other stuff
     self.date = 0
     self.order_history = []
-    self.init_triggers()
+    self.init_battle_state()
 
+  def init_battle_state(self):
+    self.date += 1
+    self.weather = Weather(random.choice(list(WEATHER)))
+    for i in [0,1]:
+      for u in self.armies[i].units:
+        u.position = self.hqs[i]
+        self.hqs[i].add_unit(u)
+    
   def place_event(self, event_type, context, queue_name):
     """ used when we want to make a new event on a queue of our choice """
     self.queues[queue_name].append(events.Event(event_type, context))
     
-  def init_triggers(self):
-    self.triggers = {} # DOES NOTHIGN RIGHT NOW
-    pass
+  def display_state(self):
+    yprint_hrule()
+    yprint("Day {} {}".format(self.date, str(self.weather)))
+    textutils.yprint_hrule()
+    for p in self.hqs:
+      p.display()
+      if p.hqid == 0:
+        yprint("                                               VS")
+    yprint_hrule()
+    return
 
-  def gen_AI_order(self):
+  def get_player_order(self):
+    while(True):
+      self.display_state()
+      order = textutils.yinput("Input orders (A/D/I):")
+      if self.legal_order(order):
+        return order.upper()
+      else:
+        yprint("Illegal order.")        
+      
+  def get_AI_order(self):
     # 2 paths: RPS and story-driven soul reading
     parmy = self.armies[PLAYER_ARMY].live_units()
     priors = np.array([10,10,10])
@@ -92,26 +118,7 @@ class Battle(object):
     yprint("  AI predicts player (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*newpriors))
     counters = np.array(list(newpriors[2:]) + list(newpriors[:2]))
     yprint("  AI counterpicks    (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters))
-    return np.random.choice(["A", "D", "I"], p=counters)
-    
-  def display_state(self):
-    yprint_hrule()
-    yprint("Day {} {}".format(self.date, str(self.weather)))
-    for i in [0,1]:
-      # yprint("Army %d:" % i)
-      for u in self.armies[i].live_units():
-        charstr = "{} {}".format(repr(u), " ".join((repr(s) for s in u.character.skills)))
-        yprint(charstr)
-        healthbar = textutils.disp_bar(20, u.size_base, u.size)
-        yprint("  {} {} (SP: {}) {}".format(healthbar, u.size_repr(), u.speed, u.status_real_repr()))
-      if i == 0:
-        yprint("                                        VS")    
-    yprint_hrule()
-    return
-
-  def init_turn_state(self):
-    self.date += 1
-    self.weather = Weather(random.choice(list(WEATHER)))
+    return np.random.choice(["A", "D", "I"], p=counters)    
 
   def _run_status_handlers(self, func_key):
     for i in [0,1]:
@@ -134,8 +141,16 @@ class Battle(object):
       event.activate()
       if any((not self.armies[i].is_alive()) for i in [0,1]):
         # TODO: replace with arbitary leave condition
-        return    
-  
+        return
+      
+  def make_position(self, ctarget):
+    newpos = positions.Position(self, ctarget) # meeting in the field
+    self.dynamic_positions.append(newpos)
+
+  def display_positions(self):
+    for p in self.hqs + self.dynamic_positions:
+      p.display()
+    
   def take_turn(self, orders):
     self.init_turn(orders)
     # preloading events
@@ -148,14 +163,15 @@ class Battle(object):
     self._run_status_handlers("bot") # should be queue later
     self._run_queue('Q_ORDER')
     self._run_queue('Q_MANUEVER')
+    self.display_positions()
     self._run_queue('Q_RESOLVE')    
     self._run_status_handlers("eot") # should be queue later
     for i in [0,1]:
       for u in self.armies[i].units:
         if u.position:
-          # everyone should have a position
-          u.position.remove_unit(u)
-          u.position = None
+          u.move(self.hqs[u.armyid])
+    assert all((p.is_empty() for p in self.dynamic_positions))
+    self.dynamic_positions = []
     pause(clear=True)
     
   def legal_order(self, order):

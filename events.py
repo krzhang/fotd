@@ -132,7 +132,7 @@ def defense_order(context):
     Event("berserked_order", context).activate()
     return
   context.ctarget.ctargetting = None
-  context.battle.hqs[ctarget.armyid].add_unit(context.ctarget)
+  ctarget.move(context.battle.hqs[ctarget.armyid])
   yprint("{}: staying put at {};".format(ctarget, context.ctarget.position))
   Event.gain_status("defended", context, ctarget)
 
@@ -189,10 +189,9 @@ def engage(context):
     return
   yprint("{} engages {} (-> {})".format(csource, ctarget, ctarget.ctargetting))
   converging = bool(ctarget.ctargetting == csource) # if other ctarget is coming towards you
-  assert csource.position is None
   if ctarget.is_defended():
     assert ctarget.position == context.battle.hqs[ctarget.armyid] # meeting at hq
-    ctarget.position.add_unit(csource)
+    csource.move(ctarget.position)
     yprint("  but %s is ready!" % ctarget)
     yprint("  %s able to launch defensive arrow volley" % ctarget)
     context.battle.place_event("arrow_strike", context.rebase_switch(), "Q_RESOLVE")
@@ -201,9 +200,9 @@ def engage(context):
       context.battle.place_event("arrow_strike", context, "Q_RESOLVE")
     context.battle.place_event("physical_clash", context.rebase_switch(), "Q_RESOLVE")
   else:
-    newpos = positions.Position(context.battle, ctarget) # meeting in the field
-    newpos.add_unit(csource)
-    newpos.add_unit(ctarget)
+    newpos = context.battle.make_position(ctarget)
+    csource.move(newpos)
+    ctarget.move(newpos)
     if random.random() < 0.5:
       yprint("  %s able to launch offensive arrow volley" % csource)
       context.battle.place_event("arrow_strike", context, "Q_RESOLVE")

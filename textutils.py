@@ -21,7 +21,7 @@ class Colors:
   CYAN = Fore.CYAN
 
 SCROLL_COUNT = 0
-MAX_SCROLL_COUNT = 22
+MAX_SCROLL_COUNT = 24
 
 MORE_STR = Fore.BLACK + Back.WHITE + "MORE... [hit a key]" + Colors.ENDC  
 

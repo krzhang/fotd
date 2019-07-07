@@ -237,16 +237,16 @@ def indirect_raid(context):
   if (random.random() < 0.4 and
       csource.has_unit_status("fire_tactic") and
       not context.battle.is_raining()):
-    context.battle.place_event("fire_tactic", newcontext, "Q_RESOLVE")
+    context.battle.place_event("fire_tactic", context, "Q_RESOLVE")
   panicprob = 0.20
   if random.random() < panicprob and csource.has_unit_status("panic_tactic"):
-    context.battle.place_event("panic_tactic", newcontext, "Q_RESOLVE")
+    context.battle.place_event("panic_tactic", context, "Q_RESOLVE")
   jeerprob = 0.60
   if random.random() < jeerprob and csource.has_unit_status("jeer"):
-    context.battle.place_event("jeer", newcontext, "Q_RESOLVE")
+    context.battle.place_event("jeer", context, "Q_RESOLVE")
   waterprob = 0.80
   if random.random() < waterprob and csource.has_unit_status("water_tactic") and context.battle.is_raining():
-    context.battle.place_event("water_tactic", newcontext, "Q_RESOLVE")
+    context.battle.place_event("water_tactic", context, "Q_RESOLVE")
 
 #################
 # RESOLVE PHASE #

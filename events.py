@@ -239,7 +239,7 @@ def indirect_raid(context):
     context.battle.place_event("panic_tactic", context, "Q_RESOLVE")
   jeerprob = 0.60
   if random.random() < jeerprob and csource.has_unit_status("jeer"):
-    context.battle.place_event("jeer_tactic", context, "Q_RESOLVE")
+    context.battle.place_event("jeer", context, "Q_RESOLVE")
   waterprob = 0.80
   if random.random() < waterprob and csource.has_unit_status("water_tactic") and context.battle.is_raining():
     context.battle.place_event("water_tactic", context, "Q_RESOLVE")

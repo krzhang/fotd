@@ -55,11 +55,12 @@ class Event(object):
   def activate(self):
     edict = EVENTS[self.event_type]
     # death handler (should later be "availability" for retreats, etc.)
-    if "need_live_actors" in edict and edict["need_live_actors"]:
-      if any([not getattr(self.context, foo).is_alive() for foo in edict["actors"]]):
+    # most events require actors who are alive
+    if not info(self.event_type, "allow_non_present_actors"):
+      if any([not getattr(self.context, foo).is_present() for foo in edict["actors"]]):
         return
     # panic handler
-    if "panic_blocked" in edict and edict["panic_blocked"]:
+    if info(self.even_type, "panic_blocked"):
       potential_panicker = getattr(self.context, edict["primary_actor"])
       if potential_panicker.has_unit_status("panicked"):
         yprint("  %s is %s! No action" % (potential_panicker, status.Status("panicked")))
@@ -120,7 +121,7 @@ def attack_order(context):
     return
   myarmyid = csource.armyid
   enemy = context.battle.armies[1-myarmyid]
-  enemyunits = enemy.live_units()
+  enemyunits = enemy.present_units()
   if len(enemyunits) == 0:
     yprint("No unit to attack!")
     return
@@ -147,7 +148,7 @@ def indirect_order(context):
     return
   myarmyid = csource.armyid
   enemy = context.battle.armies[1-myarmyid]
-  enemyunits = enemy.live_units()
+  enemyunits = enemy.present_units()
   if len(enemyunits) == 0:
     yprint("No unit to ctarget!")
     return
@@ -160,7 +161,7 @@ def indirect_order(context):
 def berserked_order(context):
   csource = context.ctarget
   armyid = random.choice([0,1])
-  enemyunits = context.battle.armies[armyid].live_units()
+  enemyunits = context.battle.armies[armyid].present_units()
   ctarget = random.choice(enemyunits)
   yprint("{}: random attack -> {}; ignoring orders".format(
     csource, ctarget, status.Status("berserk")))
@@ -179,7 +180,6 @@ for ev in EVENTS_ORDERS:
   EVENTS_ORDERS[ev]["panic_blocked"] = True
   EVENTS_ORDERS[ev]["actors"] = ["ctarget"]
   EVENTS_ORDERS[ev]["primary_actor"] = "ctarget"
-  EVENTS_ORDERS[ev]["need_live_actors"] = True
 
 ################
 # Generic Battlefield Events #
@@ -311,7 +311,6 @@ for ev in EVENTS_GENERIC_CTARGETTED:
   EVENTS_GENERIC_CTARGETTED[ev]["panic_blocked"] = True
   EVENTS_GENERIC_CTARGETTED[ev]["actors"] = ["csource", "ctarget"]
   EVENTS_GENERIC_CTARGETTED[ev]["primary_actor"] = "csource"
-  EVENTS_GENERIC_CTARGETTED[ev]["need_live_actors"] = True
 
 ###############
 # MISC EVENTS #
@@ -326,13 +325,12 @@ EVENTS_MISC = {
   # },
   "receive_damage": {
     "actors":["ctarget"],
-    "primary_actor": "ctarget",
-    "need_live_actors":True
+    "primary_actor": "ctarget"
   },
   "receive_status": {
     "actors":["ctarget"],
-    "primary_actor": "ctarget",
-    "need_live_actors":False # maybe need "Captured" etc.
+    "primary_actor": "ctarget"
+    #"need_live_actors":False # maybe need "Captured" etc.
   }
 }
 
@@ -359,8 +357,6 @@ def receive_damage(context):
   yprint(fdmgstr)
   if context.dmglog:
     yprint(context.dmglog, debug=True)
-  # if not context.battle.armies[ctarget.armyid].is_alive():
-  #   Event("army_destroyed", context.rebase({"ctarget_army":ctarget.armyid})).defer()
 
 def receive_status(context):
   ctarget = context.ctarget
@@ -399,7 +395,7 @@ def lure_tactic(context, base_chance, improved_chance, success_callback):
   improved_lure_chance = improved_chance
   additional_activations = []                
   possible_aoe = tuple([u for u in context.ctarget.position.units[ctarget.armyid] if u != ctarget])
-  possible_lure_candidates = tuple(context.battle.armies[csource.armyid].live_units())
+  possible_lure_candidates = tuple(context.battle.armies[csource.armyid].present_units())
   # eventually make it just the people who are in position
   lure_candidates = tuple(lc for lc in possible_lure_candidates if lc.has_unit_status("lure"))
     # later: probably also add a check of panicked, etc.
@@ -519,8 +515,6 @@ for ev in EVENTS_SKILLS:
   EVENTS_SKILLS[ev]["panic_blocked"] = True
   EVENTS_SKILLS[ev]["actors"] = ["csource", "ctarget"]
   EVENTS_SKILLS[ev]["primary_actor"] = "csource"
-  EVENTS_SKILLS[ev]["need_live_actors"] = True
-
 
 EVENTS = dict(list(EVENTS_ORDERS.items()) +
               list(EVENTS_GENERIC_CTARGETTED.items()) +

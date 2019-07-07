@@ -73,8 +73,11 @@ class Battle(object):
         self.hqs[i].add_unit(u)
     
   def place_event(self, event_type, context, queue_name):
-    """ used when we want to make a new event on a queue of our choice """
-    self.queues[queue_name].append(events.Event(event_type, context))
+    """ 
+    used when we want to make a new event on a queue of our choice 
+    we pop from right, so we should place left.
+    """
+    self.queues[queue_name].appendleft(events.Event(event_type, context))
     
   def display_state(self):
     yprint_hrule()
@@ -98,7 +101,7 @@ class Battle(object):
       
   def get_AI_order(self):
     # 2 paths: RPS and story-driven soul reading
-    parmy = self.armies[PLAYER_ARMY].live_units()
+    parmy = self.armies[PLAYER_ARMY].present_units()
     priors = np.array([10,10,10])
     for unit in parmy:
       for sk in unit.character.skills:
@@ -138,7 +141,7 @@ class Battle(object):
     while len(self.queues[queue_name]) > 0:
       event = self.queues[queue_name].pop()
       event.activate()
-      if any((not self.armies[i].is_alive()) for i in [0,1]):
+      if any((not self.armies[i].is_present()) for i in [0,1]):
         # TODO: replace with arbitary leave condition
         return
       
@@ -195,7 +198,7 @@ class Battle(object):
   
   def win_army(self):
     for i in [0, 1]:
-      if not self.armies[i].is_alive():
+      if not self.armies[i].is_present():
         return 1-i
     return None
     
@@ -205,7 +208,7 @@ class Battle(object):
     orderlist = []
     for i in [0, 1]:
       order = orders[i]
-      for u in self.armies[i].live_units():
+      for u in self.armies[i].present_units():
         u.attacked = []
         u.attacked_by = []
         u.targetting = None

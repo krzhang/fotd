@@ -151,7 +151,7 @@ class Unit(object):
   def is_defended(self):
     return self.has_unit_status("defended")
   
-  def is_alive(self):
+  def is_present(self):
     return self.size > 0 and self.character.health > 0
 
 class Army(object):
@@ -166,11 +166,11 @@ class Army(object):
       u.armyid = armyid
       u.set_color(color)
 
-  def is_alive(self):
-    return any([u for u in self.units if u.is_alive()])
+  def is_present(self):
+    return any([u for u in self.units if u.is_present()])
 
-  def live_units(self):
-    return [u for u in self.units if u.is_alive()]
+  def present_units(self):
+    return [u for u in self.units if u.is_present()]
 
   def str_estimate(self):
     return sum([u.size for u in self.units], 0)

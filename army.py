@@ -53,7 +53,7 @@ class Character(object):
     return self.color + self.name + Colors.ENDC
   
 class Unit(object):
-  def __init__(self, character, size, speed):
+  def __init__(self, character, size, speed, intelligence_type):
     self.character = character
     self.name = character.name
     self.size_base = size
@@ -66,6 +66,7 @@ class Unit(object):
     self.attacked = [] # enemies attacked in a turn
     self.attacked_by = []
     self.position = None
+    self.intelligence_type = intel_type
     
   def __eq__(self, other):
     return hasattr(self, "character") and hasattr(other, "character") and self.character == other.character

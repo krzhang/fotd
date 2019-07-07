@@ -115,19 +115,17 @@ def link_data_funcs():
         STATUSES[st][func_type+'_func'] = getattr(events, STATUSES[st][func_type][0])
       
 link_data_funcs()
-bat = battle.Battle(army_mysticsoft(0, Colors.BLUE), army_unknown(1, Colors.RED))
 
 def test(debug=False, resize=False):
   if resize:
-    print ("\x1b[8;24;80t")
+    print ("\x1b[8;{};80t".format(textutils,MAX_SCROLL_COUNT))
     print ("ok")
   textutils.SHOW_DEBUG = debug
+  army0 = army_mysticsoft(0, Colors.BLUE, "PLAYER_ARMY")
+  army1 = army_unknown(1, Colors.RED, "AI_ARMY")
+  bat = battle.Battle(army0, army1)
   while(True):
-    # get player orders in this loop
-    while(True):
-      player_order = bat.get_player_order()
-      AI_order = bat.get_AI_order()
-      bat.take_turn([player_order, AI_order])
-      if bat.win_army() != None:
-        sys.exit(0)
+    bat.take_turn()
+    if bat.win_army() != None:
+      sys.exit(0)
       

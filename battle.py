@@ -2,16 +2,13 @@ import textutils
 from textutils import Colors, yprint, pause, yprint_hrule
 import random
 import events
-import numpy as np
+from intelligence import gen_AI_order, gen_player_order
 import skills
 import status
 import positions
 from collections import deque
 from mathutils import normalize
 import utils
-
-PLAYER_ARMY = 0
-AI_ARMY = 1
 
 WEATHER = {
   "sunny": {
@@ -90,39 +87,6 @@ class Battle(object):
     yprint_hrule()
     return
 
-  def get_player_order(self):
-    while(True):
-      self.display_state()
-      order = textutils.yinput("Input orders (A/D/I):")
-      if self.legal_order(order):
-        return order.upper()
-      else:
-        yprint("Illegal order.")        
-      
-  def get_AI_order(self):
-    # 2 paths: RPS and story-driven soul reading
-    parmy = self.armies[PLAYER_ARMY].present_units()
-    priors = np.array([10,10,10])
-    for unit in parmy:
-      for sk in unit.character.skills:
-        skstr = sk.skill_str
-        if skstr in skills.SKILLS:
-          priors += np.array(skills.SKILLS[skstr]["ai_eval"])
-    # adjusting for size
-          # import pdb; pdb.set_trace()
-    priors += np.array([1,0,0])*(self.armies[PLAYER_ARMY].str_estimate() -
-                self.armies[AI_ARMY].str_estimate())
-    # TODO: adjusting for battlefield conditions
-    m = min(priors)
-    if m < 0:
-      priors += np.array([1-m, 1-m, 1-m])
-      assert min(priors) > 0
-    newpriors = normalize(priors)
-    yprint("  AI predicts player (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*newpriors))
-    counters = np.array(list(newpriors[2:]) + list(newpriors[:2]))
-    yprint("  AI counterpicks    (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters))
-    return np.random.choice(["A", "D", "I"], p=counters)    
-
   def _run_status_handlers(self, func_key):
     for i in [0,1]:
       # originally these are in lists; the problem is you can change these lists, so make copies
@@ -154,9 +118,35 @@ class Battle(object):
     for p in self.hqs + self.dynamic_positions:
       if not p.is_empty():
         p.display(debug=True)
-    
-  def take_turn(self, orders):
-    self.init_turn(orders)
+
+  def get_orders(self):
+    ordersdict = {}
+    for i in [0,1]:
+      ordersdict[i] = intelligence.get_order(armies[i].intelligence_type, i)
+    return ordersdict
+
+  def init_turn(self, orders):
+    o2e = {"A": "attack_order", "D": "defense_order", "I":"indirect_order"}
+    self.order_history.append(orders)
+    orderlist = []
+    for i in [0, 1]:
+      order = orders[i]
+      for u in self.armies[i].present_units():
+        u.attacked = []
+        u.attacked_by = []
+        u.targetting = None
+        speed = u.speed
+        speed += random.choice([-3,-2,-1,0,1,2,3])
+        if order == 'D':
+          speed += 7
+        orderlist.append((speed, o2e[order], events.Context(self, opt={"ctarget":u})))
+    orderlist.sort(key=lambda x: x[0])
+    for o in orderlist:
+      self.place_event(o[1], o[2], "Q_ORDER")
+  
+  def take_turn(self):
+    orders = self.get_orders()
+    self.init_turn((orders[0], orders[1]))
     # preloading events
     yprint_hrule()
     yprint("Day Starts: %s (%s) vs %s (%s)" % (self.order_history[-1][0],
@@ -202,22 +192,3 @@ class Battle(object):
         return 1-i
     return None
     
-  def init_turn(self, orders):
-    o2e = {"A": "attack_order", "D": "defense_order", "I":"indirect_order"}
-    self.order_history.append(orders)
-    orderlist = []
-    for i in [0, 1]:
-      order = orders[i]
-      for u in self.armies[i].present_units():
-        u.attacked = []
-        u.attacked_by = []
-        u.targetting = None
-        speed = u.speed
-        speed += random.choice([-3,-2,-1,0,1,2,3])
-        if order == 'D':
-          speed += 7
-        orderlist.append((speed, o2e[order], events.Context(self, opt={"ctarget":u})))
-    orderlist.sort(key=lambda x: x[0])
-    for o in orderlist:
-      self.place_event(o[1], o[2], "Q_ORDER")
-      

@@ -381,6 +381,7 @@ def counter_arrow_strike(context):
         context.rebase({"csource":csource, "ctarget":ctarget})).activate()
   return True
 
+# is this an event?
 def lure_tactic(context, base_chance, improved_chance, possible_aoe, lure_candidates,
                 lure_success_text,
                 generic_success_text, stat_str):
@@ -416,7 +417,8 @@ def fire_tactic(context):
     csource.narrate("It's going to get pretty hot!")
     Event.gain_status("burned", context, ctarget)
     # compute AOE
-    lure_tactic(context, 0.5, 0.7, context.possible_aoe, context.lure_candidates,
+    lure_tactic(context,
+                0.25, 0.6, context.possible_aoe, context.lure_candidates,
                 "{lurer} " + Colors.GREEN + "lures " + Colors.ENDC + "{ctarget} into the flames!",
                 "  {ctarget} was also entangled into the flames!",
                 "burned")
@@ -438,7 +440,7 @@ def jeer(context):
     ctarget.narrate("Why you...")
     Event.gain_status("berserk", context, ctarget)
     # compute AOE
-    lure_tactic(context, 0.5, 0.7, context.possible_aoe, context.lure_candidates,
+    lure_tactic(context, 0.25, 0.6, context.possible_aoe, context.lure_candidates,
                 "{lurer} lures {ctarget} into the chaos!",
                 "  {ctarget} was also entangled into the chaos!",
                 "berserk")
@@ -460,7 +462,8 @@ def panic_tactic(context):
   if success:
     csource.narrate("{} will be out of commission for a while...".format(ctarget))
     Event.gain_status("panicked", context, ctarget)
-    lure_tactic(context, 0.3, 0.6, context.possible_aoe, context.lure_candidates,
+    lure_tactic(context,
+                0.25, 0.6, context.possible_aoe, context.lure_candidates,
                 "{lurer} lures {ctarget} into the panic!",
                 "  {ctarget} was also entangled into the panic!",
                 "panicked")
@@ -585,7 +588,7 @@ def panic_eot(context):
 
 def trymode_status_bot(context):
   ctarget = context.ctarget
-  trymodeprob = (20.0-ctarget.size)/20
+  trymodeprob = (ctarget.size_base-ctarget.size)/ctarget.size_base
   success = random.random() < trymodeprob
   skill_narration("trymode", "{} looks for an excuse to pretend to be powered up...".format(ctarget))
   if success:

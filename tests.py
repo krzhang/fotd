@@ -126,5 +126,5 @@ def test(debug=False):
       AI_order = bat.get_AI_order()
       bat.take_turn([player_order, AI_order])
       if bat.win_army() != None:
-        sys.exit()
+        sys.exit(0)
       

@@ -58,16 +58,27 @@ SKILLS = {
     "desc": "This officer is skilled at attacking the enemy's supplies and foiling their support, which disrupts the enemy logistics and morale."
   },
   "panic_tactic": {
-    "ai_eval": (0,0,2)
+    "ai_eval": (0,0,2),
+    "on_roll": ["{csource} sows seeds of fear and doubt in {ctarget}'s unit..."],
+    "on_success_speech": [("csource", "{ctarget} will be out of commission for a while..."),
+                          ("ctarget", "The soldiers are incredibly scared, of everything from spies to ghosts.")],
+    "on_fail_speech": [("csource", "{ctarget}'s unit was not shaken."),
+                       ("ctarget", "Keep calm, don't let {csource}'s trickery get to you.")],    
   },
   "cheer": {
     "ai_eval": (0,1,1)
   },
   "fire_tactic": {
-    "ai_eval": (0,0,1)
+    "ai_eval": (0,0,1),
+    "on_roll": ["{csource} prepares embers and tinder..."],
+    "on_success_speech": [("csource", "It's going to get pretty hot!"),
+                          ("ctarget", "Oh no! My soldiers are engulfed in flames!")],
+    "on_fail_speech": [("csource", "{ctarget} did not fall for my tricks."),
+                       ("ctarget", "No need to play with fire, {csource}!")],    
   },
   "lure": {
-    "ai_eval": (0,0,1)
+    "ai_eval": (0,0,1),
+    "on_success_speech": [("lurer","Here, kitty kitty kitty...")],
   },
   "jeer": {
     "ai_eval": (0,0,2)
@@ -88,7 +99,13 @@ SKILLS = {
     "ai_eval": (3,0,0)
   },
   "water_tactic": {
-    "ai_eval": (0,0,1) 
+    "ai_eval": (0,0,1),
+    "on_roll": ["{csource} positions dams and ships..."],
+    "on_success_speech": [("csource", "Oh my. This is going to be painful."),
+                          ("csource", "The Gods of nature are unforgiving.")],
+    "on_fail_speech": [("csource", "{ctarget} narrowly avoided being swept away."),
+                       ("ctarget", "No need to play with fire, {csource}!")],    
+    
   }
 }
 

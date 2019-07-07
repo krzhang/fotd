@@ -38,7 +38,7 @@ class Character(object):
     self.items.append(item)
     self.calc_attributes()
 
-  def narrate(self, otherstr):
+  def speech(self, otherstr):
     """When this character says something """
     print("  " + repr(self) + ": '" + Colors.GREEN + otherstr + Colors.ENDC + "'")
     
@@ -106,9 +106,9 @@ class Unit(object):
   # def remove_skill(self, skillstr):
   #   self.character_skills.remove(skills.Skill(skillstr))
 
-  def narrate(self, otherstr):
+  def speech(self, otherstr):
     """ When we need him to say something """
-    self.character.narrate(otherstr)
+    self.character.speech(otherstr)
 
   def has_unit_status(self, stat_str):
     return stat_str in [s.stat_str for s in self.unit_status]

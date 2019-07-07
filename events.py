@@ -34,6 +34,10 @@ class Context(object):
   def rebase_switch(self):
     """Most common usecase: create a context with switched source/ctargets. """
     return self.rebase({"ctarget":self.csource, "csource":self.ctarget})
+
+  def speech(self, narrator, text):
+    """Ex: context.speech('csource', 'yo{ctarget}...')"""
+    self.opt[narrator].narrate(text)
   
 class EventType(object):
   def __init__(self, inputdict):
@@ -229,13 +233,6 @@ def indirect_raid(context):
   context.battle.place_event("arrow_strike",
                              context.copy(additional_opt={"vulnerable":vulnerable}),
                              "Q_RESOLVE")
-  possible_aoe = tuple([u for u in ctarget.position.units[ctarget.armyid] if u != ctarget])
-  possible_lure_candidates = tuple(context.battle.armies[csource.armyid].live_units())
-  # eventually make it just the people who are in position
-  lure_candidates = tuple(lc for lc in possible_lure_candidates if lc.has_unit_status("lure"))
-  newcontext = context.copy(additional_opt={"possible_aoe":possible_aoe,
-                                            "lure_candidates":lure_candidates})
-    # later: probably also add a check of panicked, etc.
   # fire
   if (random.random() < 0.4 and
       csource.has_unit_status("fire_tactic") and
@@ -374,9 +371,9 @@ def receive_status(context):
     yprint("  " + disp)
   context.ctarget.add_unit_status(stat_str)
   
-######################
-# Events from Skills #
-######################
+################################
+# targetted Events from Skills #
+################################
 
 def counter_arrow_strike(context):
   csource = context.csource
@@ -387,13 +384,25 @@ def counter_arrow_strike(context):
         context.rebase({"csource":csource, "ctarget":ctarget})).activate()
   return True
 
-# is this an event?
-def lure_tactic(context, base_chance, improved_chance, possible_aoe, lure_candidates,
-                lure_success_text,
-                generic_success_text, stat_str):
+def lure_tactic(context, base_chance, improved_chance, success_callback):
+  """
+  a bit harder since we dont know who the lurer actually is
+
+  context needs:
+    csource
+    ctarget
+    success_callback
+  """
+  csource = context.csource
+  ctarget = context.ctarget
   base_lure_chance = base_chance
   improved_lure_chance = improved_chance
-  additional_activations = []
+  additional_activations = []                
+  possible_aoe = tuple([u for u in context.ctarget.position.units[ctarget.armyid] if u != ctarget])
+  possible_lure_candidates = tuple(context.battle.armies[csource.armyid].live_units())
+  # eventually make it just the people who are in position
+  lure_candidates = tuple(lc for lc in possible_lure_candidates if lc.has_unit_status("lure"))
+    # later: probably also add a check of panicked, etc.
   for targ in possible_aoe:
     roll = random.random()
     if roll > improved_lure_chance:
@@ -405,33 +414,51 @@ def lure_tactic(context, base_chance, improved_chance, possible_aoe, lure_candid
           # this means we came from a lure
         lurer = random.choice(context.lure_candidates)
         skill_narration("lure", "", True)
-        lurer.narrate("Here, kitty kitty kitty...")
+        lurer.speech(status.info("lure", "on_success_speech"))
+        lure_success_text = events.info("lure_tactic", "on_success")
         skill_narration("lure", lure_success_text.format(**{"lurer":lurer, "ctarget":targ}), True)
       else:
-        yprint(generic_success_text.format(ctarget=targ))
+        # still a success, but it is not because of the lure
+        yprint("{ctarget} was also entangled into the tactic!".format(**{"ctarget":ctarget}))
       additional_activations.append(targ)
   for targ in tuple(additional_activations):
-    Event.gain_status(stat_str, context.rebase({"ctarget":targ}), targ)
+    success_callback(context.rebase({"ctarget":targ}))
 
-def fire_tactic(context):
+def target_skill_tactic(context, cskill, cchance, success_callback):
+  """
+  For a class of tactics with a source, a target, a skill, and corresponding roll. This event
+  happens the moment the conditions activate, so we are rolling for success.
+
+  Context needs: 
+    csource, 
+    ctarget, 
+    success_callback
+  """
   csource = context.csource
   ctarget = context.ctarget
-  success = random.random() < 0.5
-  skill_narration("fire_tactic",
-                  "{} prepares embers and tinder...".format(csource))
+  success = random.random() < cchance # can replace with harder functions later
+  # TODO cchance = calc_chance(target, skill) or something
+  cskill_on_prep = status.info(cskill, "on_roll").format(**context.opt)
+  skill_narration(cskill, cskill_on_prep)
   if success:
-    csource.narrate("It's going to get pretty hot!")
-    Event.gain_status("burned", context, ctarget)
-    # compute AOE
+    narrator_str, narrate_text = random.choice(status.info(cskill, "on_success_speech"))
+    context.speech(narator_str, narrate_text)
+    success_callback(context)
     lure_tactic(context,
-                0.25, 0.6, context.possible_aoe, context.lure_candidates,
-                "{lurer} " + Colors.GREEN + "lures " + Colors.ENDC + "{ctarget} into the flames!",
-                "  {ctarget} was also entangled into the flames!",
-                "burned")
+                0.25, # base entanglement chance
+                0.6, # improved entanglement chance
+                success_callback)
   else:
-    ctarget.narrate("No need to play with fire, boys. Fight like real men!")
-  skill_narration("fire_tactic", "", success)
-  return success
+    narrator_str, narrate_text = random.choice(status.info(cskill, "on_fail_speech"))
+    context.speech(narator_str, narrate_text)
+  skill_narration(cskill, "", success)
+  return success  
+
+def _fire_tactic_success(context):
+  Event.gain_status("burned", context, context.ctarget)
+
+def fire_tactic(context):
+  return target_skill_tactic(context, "fire_tactic", 0.5, _fire_tactic_success)
 
 def jeer(context):
   csource = context.csource
@@ -445,61 +472,28 @@ def jeer(context):
   if success:
     ctarget.narrate("Why you...")
     Event.gain_status("berserk", context, ctarget)
-    # compute AOE
-    lure_tactic(context, 0.25, 0.6, context.possible_aoe, context.lure_candidates,
-                "{lurer} lures {ctarget} into the chaos!",
-                "  {ctarget} was also entangled into the chaos!",
-                "berserk")
+    # TODO: AOE
   else:
     ctarget.narrate(ins[1])  
   skill_narration("jeer", "", success)
   return success
-    
+
+def _panic_tactic_success(context):
+  Event.gain_status("panicked", context, context.ctarget)
+
 def panic_tactic(context):
-  csource = context.csource
-  ctarget = context.ctarget  
-  # if csource.has_unit_status("panicked"):
-  #   # you need this here anyway because maybe a unit got panicked right before considering a tactic
-  #   yprint("  %s is panicked (ironically)! No action" % csource)
-  #   return
-  success = random.random() < 0.5
-  skill_narration("panic_tactic",
-                  "{} sows seeds of chaos in {}'s unit...".format(csource, ctarget))
-  if success:
-    csource.narrate("{} will be out of commission for a while...".format(ctarget))
-    Event.gain_status("panicked", context, ctarget)
-    lure_tactic(context,
-                0.25, 0.6, context.possible_aoe, context.lure_candidates,
-                "{lurer} lures {ctarget} into the panic!",
-                "  {ctarget} was also entangled into the panic!",
-                "panicked")
-  else:
-    ctarget.narrate("Keep calm. Don't let {}'s trickery get to you.".format(csource))
-  skill_narration("panic_tactic", "", success)
-  return success
+  return target_skill_tactic(context, "panic_tactic", 0.5, _panic_tactic_success)
 
+def _water_tactic_success(context):
+  damdice = 12
+  damage = random.choice(range(damdice))
+  dmgstr = "{}'s unit is flooded by a torrent, aggravated by the pouring rain".format(
+    context.ctarget)
+  Event("receive_damage", context.copy(
+    additional_opt={"damage":damage, "dmgstr":dmgstr, "dmglog":""})).activate()
+  
 def water_tactic(context):
-  csource = context.csource
-  ctarget = context.ctarget  
-  success = random.random() < 0.5
-  skill_narration("water_tactic",
-                  "{} positions dams and ships...".format(csource, ctarget))
-  if success:
-    damdice = 12
-    damage = random.choice(range(damdice))
-    dmgstr = "{}'s unit is flooded by a torrent, aggravated by the pouring {}".format(ctarget, context.battle.weather)
-    Event("receive_damage", context.copy(
-      additional_opt={"damage":damage, "dmgstr":dmgstr, "dmglog":""})).activate()
-    csource.narrate("This is painful to look at...")
-    # lure_tactic(context, 0.3, 0.6, context.possible_aoe, context.lure_candidates,
-    #             "{lurer} lures {ctarget} into the chaos!",
-    #             "{ctarget} was also entangled into the chaos!",
-    #             "berserk")
-  else:
-    ctarget.narrate("We narrowly avoided being swept away. Water is a very scary force of nature!")
-  skill_narration("water_tactic", "", success)
-  return success
-
+  return target_skill_tactic(context, "water_tactic", 0.5, _water_tactic_success)
   
 EVENTS_SKILLS = {
   "counter_arrow_strike": {
@@ -511,6 +505,9 @@ EVENTS_SKILLS = {
   "jeer": {
     "can_aoe": True
     },
+  "lure_tactic": {
+    "on_success": "{lurer} " + Colors.GREEN + "lures " + Colors.ENDC + "{ctarget} into the tactic!"
+    }
   "panic_tactic": {
     "can_aoe": True
     },

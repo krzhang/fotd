@@ -59,6 +59,11 @@ STATUSES_BATTLE = {
     "on_receive": "{ctarget}'s unit collapses into a chaotic {stat_viz} state",
     "on_remove": ""
   },
+  "provoked": {
+    "eot":["provoked_eot"],
+    "on_receive": "{ctarget}'s units are {stat_viz}; they are angry and out of control!",
+    "viz":Colors.RED + "provoked" + Colors.ENDC
+  },
   "defended": {
     "eot":["generic_eot_fizzle"],
     # "on_receive": "{target} is now {stat_viz} against standard tactics",    

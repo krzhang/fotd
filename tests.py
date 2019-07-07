@@ -117,7 +117,10 @@ def link_data_funcs():
 link_data_funcs()
 bat = battle.Battle(army_mysticsoft(0, Colors.BLUE), army_unknown(1, Colors.RED))
 
-def test(debug=False):
+def test(debug=False, resize=False):
+  if resize:
+    print ("\x1b[8;24;80t")
+    print ("ok")
   textutils.SHOW_DEBUG = debug
   while(True):
     # get player orders in this loop

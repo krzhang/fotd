@@ -101,7 +101,8 @@ def compute_damage(csource, ctarget, dmg_type, multiplier=1):
     if roll < hitprob:
       raw_damage += 1
   damlog = "    [Strength: ({:4.3f} vs. {:4.3f}); {} dice with chance {} each; Final: {}]".format(
-    s_str, d_str, dicecount, color_prob(hitprob), color_damage(raw_damage))
+    s_str, d_str, dicecount,
+    textutils.color_prob(hitprob), textutils.color_damage(raw_damage))
   return raw_damage, damlog
 
 ################
@@ -336,24 +337,6 @@ EVENTS_MISC = {
 #   EVENTS_RECEIVE[ev]["panic_blocked"] = True
 # No common rules here...
 
-def color_prob(prob):
-  pstr = "{:4.3f}".format(prob)
-  if prob > 0.75:
-    return Colors.GREEN + pstr + Colors.ENDC
-  elif prob > 0.5:
-    return Colors.MAGENTA + pstr + Colors.ENDC
-  elif prob > 0.25:
-    return Colors.YELLOW + pstr + Colors.ENDC
-  else:
-    return Colors.RED + pstr + Colors.ENDC
-  
-def color_damage(damage):
-  if damage == 0:
-    return Colors.OKGREEN + str(damage) + Colors.ENDC
-  elif damage <= 3:
-    return str(damage)
-  else:
-    return Colors.RED + str(damage) + Colors.ENDC
   
 def receive_damage(context):
   ctarget = context.ctarget
@@ -463,11 +446,21 @@ def water_tactic(context):
   
   
 EVENTS_SKILLS = {
-  "counter_arrow_strike": {},
-  "fire_tactic": {},
-  "jeer": {},
-  "panic_tactic": {},
-  "water_tactic": {}
+  "counter_arrow_strike": {
+    "can_aoe": False
+    },
+  "fire_tactic": {
+    "can_aoe": True
+    },
+  "jeer": {
+    "can_aoe": True
+    },
+  "panic_tactic": {
+    "can_aoe": True
+    },
+  "water_tactic": {
+    "can_aoe": True
+    }
 }
 
 for ev in EVENTS_SKILLS:

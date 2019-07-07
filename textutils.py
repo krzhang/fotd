@@ -36,6 +36,29 @@ class Colors:
   MAGENTA = Fore.MAGENTA
   CYAN = Fore.CYAN
 
+def color_prob(prob):
+  pstr = "{:4.3f}".format(prob)
+  if prob > 0.75:
+    return Colors.GREEN + pstr + Colors.ENDC
+  elif prob > 0.5:
+    return Colors.MAGENTA + pstr + Colors.ENDC
+  elif prob > 0.25:
+    return Colors.YELLOW + pstr + Colors.ENDC
+  else:
+    return Colors.RED + pstr + Colors.ENDC
+  
+def color_damage(damage):
+  if damage == 0:
+    return Colors.OKGREEN + str(damage) + Colors.ENDC
+  elif damage <= 3:
+    return str(damage)
+  else:
+    return Colors.RED + str(damage) + Colors.ENDC
+
+
+#####
+# IO
+  
 SCROLL_COUNT = 0
 MAX_SCROLL_COUNT = 24
 

@@ -40,13 +40,6 @@ def skill_narration(skill_str, other_str, success=None):
     other_str = _success_color(success) + successtr + Colors.ENDC
   yprint(Skill(skill_str).activation_str(success) + " " + other_str)
 
-SKILLS_IMPLEMENTED = ["counter_arrow",
-                      "chu_ko_nu",
-                      "panic_tactic",
-                      "fire_tactic",
-                      "jeer",
-                      "trymode",
-                      "water_tactic"]
 
 SKILLS = {
   "chaos_arrow": {
@@ -71,6 +64,9 @@ SKILLS = {
     "ai_eval": (0,1,1)
   },
   "fire_tactic": {
+    "ai_eval": (0,0,1)
+  },
+  "lure": {
     "ai_eval": (0,0,1)
   },
   "jeer": {

@@ -19,7 +19,7 @@ class Character(object):
     self.cha_base = cha
     self.coolness_base = coolness
     self.bravery_base = bravery
-    self.skills = [skills.Skill(s) for s in skillstrs if s in skills.SKILLS_IMPLEMENTED]
+    self.skills = [skills.Skill(s) for s in skillstrs]
     self.health = 100
     self.items = []
     self.status = []

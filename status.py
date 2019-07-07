@@ -34,7 +34,7 @@ class Status(object):
 def info(status_str, key):
   """ return None otherwise """
   if key in STATUSES[status_str]:
-    return STATUSES[status_str]
+    return STATUSES[status_str][key]
   return None
       
   # @classmethod

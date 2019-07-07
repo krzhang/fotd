@@ -10,52 +10,65 @@ import status
 import sys
 # power/intel/pol/cha/coolness/bravery
 
-Yan = Character("Zhang Yan", "Yellow Lightning",
-  71, 80, 74, 60, 5, 4,  ["pincer_specialist", "perfect_defense", "water_tactic", "empty_castle_tactic", "drop_rocks", "counter_tactic"])
+SKILLS_IMPLEMENTED = ["counter_arrow",
+                      "chu_ko_nu",
+                      "panic_tactic",
+                      "fire_tactic",
+                      "jeer",
+                      "lure",
+                      "trymode",
+                      "water_tactic"]
 
-Jing = Character("Jing Chan", "Purge",
+def test_char(name, style, power, intel, pol, cha, cool, brave, skills):
+  return Character(name, style, power, intel, pol, cha, cool, brave,
+                   [s for s in skills if s in SKILLS_IMPLEMENTED])
+
+Yan = test_char("Zhang Yan", "Yellow Lightning",
+  71, 80, 74, 60, 5, 4,  ["pincer_specialist", "perfect_defense", "water_tactic", "empty_castle_tactic", "drop_rocks", "counter_tactic", "lure"])
+
+Jing = test_char("Jing Chan", "Purge",
   55, 70, 90, 85, 4, 5, ["trymode", "counter_arrow", "fire_tactic", "chu_ko_nu"]) #items  
 Jing.equip("FLAME_BLADE")
 
-Yoyo = Character("You Zhou", "Caffeinator",
+Yoyo = test_char("You Zhou", "Caffeinator",
   31, 90, 63, 21, 4, 2,["cheer", "attack_supplies", "fire_tactic", "panic_tactic", "jeer"]) 
 
-Han = Character("Han Xu", "Finalmente",
+Han = test_char("Han Xu", "Finalmente",
   90, 85, 12, 24, 2, 6,  ["sneak_attack", "dash", "jeer", "chaos_arrow", "headhunter"])
 
-LiuBei = Character("Liu Bei", "",
+LiuBei = test_char("Liu Bei", "",
   70, 81, 89, 100, 4, 5,["cheer", "recruit_specialist"]) #items  
 
-GuanYu = Character("Guan Yu", "War God",
+GuanYu = test_char("Guan Yu", "War God",
   98, 80, 53, 92, 6, 7, ["water_tactic", "study", "valor"])
 GuanYu.equip("BLACK_DRAGON")
 GuanYu.equip("RED_HARE")
 
-ZhangFei = Character("Zhang Fei", "",
+ZhangFei = test_char("Zhang Fei", "",
   99, 18, 13, 22, 1, 7, ["panic_tactic", "charge"])
 ZhangFei.equip("SNAKE_SPEAR")
 
-HuangZhong = Character("Huang Zhong", "",
+HuangZhong = test_char("Huang Zhong", "",
   90, 51, 42, 64, 4, 7, ["counter_arrow", "chaos_arrow", "fire_arrow"])
 
-Jeanne = Character("Jeanne D'Arc", Colors.RED + "Rose" + Colors.ENDC + " of Versailles",
-  85, 85, 85, 85, 4, 5, ["spy", "invent", "trade", "charge", "zeal", "critic", "wealth"])
+Jeanne = test_char("Jeanne D'Arc", Colors.RED + "Rose" + Colors.ENDC + " of Versailles",
+  85, 85, 85, 85, 4, 5, ["lure", "spy", "invent", "trade", "charge", "zeal", "critic", "wealth"])
 
-Grant = Character("Ulysses S. Grant", "",
+Grant = test_char("Ulysses S. Grant", "",
   91, 51, 28, 62, 4, 4, ["invent", "rally", "jeer", "drop_rocks", "perfect_defense"])
 
-Wyatt = Character("Wyatt Earp", "",
+Wyatt = test_char("Wyatt Earp", "",
   97, 83, 57, 80, 5, 7, ["valor", "charge", "duel", "dash", "navy", "cheer", "jeer"])
 
 # need to fix stats
-CaoCao = Character("Cao Cao", "The Usurper",
+CaoCao = test_char("Cao Cao", "The Usurper",
   90, 51, 42, 64, 4, 7, ["attack_supplies", "sneak_attack"])
 
-ZhugeLiang = Character("Zhuge Liang", "The Genius",
+ZhugeLiang = test_char("Zhuge Liang", "The Sleeping Dragon",
   70, 81, 89, 100, 4, 5,["chu_ko_nu", "fire_tactic", "change_weather", "empty_castle_tactic", "counter_tactic"]) #items  
 
-Einstein = Character("Albert Einstein", "Eureka",
-  4, 100, 83, 70, 5, 1,["plan", "rumor", "sage", "harass", "volley", "siege"]) #items  
+Einstein = test_char("Albert Einstein", "Eureka",
+  4, 100, 83, 70, 5, 1,["plan", "rumor", "sage", "harass", "chu_ko_nu", "siege"]) #items  
 # moderation / analytic
 
 def army_mysticsoft(armyid, color):
@@ -81,6 +94,7 @@ def army_unknown(armyid, color):
      Unit(Grant, 20, 10),
      Unit(CaoCao, 20, 10),
      Unit(ZhugeLiang, 20, 10),
+     Unit(Einstein, 20, 10),
      Unit(Wyatt, 10, 18)],                
     4), armyid, color)
 

@@ -62,18 +62,11 @@ class Event(object):
         return
     # time to activate this event on the queue; note the event has its own context, battle, etc.
     #   Yan has already activated using the tactic fire on Jing
-    EVENTS[self.event_type]["func"](self.context)
-    # if there is an event func, just run it
-    # else:
-    #   calculate probability of success
-    #     start with base prob
-    #     calculate
-    #   if successful,
-
-  # def defer(self, event_queue):
-  #   """ defer this event to end of turn"""
-  #   self.context.battle.gq.appendleft(self)
-
+    result = EVENTS[self.event_type]["func"](self.context)
+    # if result and EVENTS[self.event_type]["can_aoe"]:
+    #   # this is a tactic and we might be able to chain
+    #   possible_aoe = self.context.ctarget.position 
+      
   @classmethod
   def gain_status(cls, stat_str, context, ctarget):
     """ Basically, nothing should call add_unit_status except for this, so all the handlers are tehre."""
@@ -230,20 +223,27 @@ def indirect_raid(context):
   context.battle.place_event("arrow_strike",
                              context.copy(additional_opt={"vulnerable":vulnerable}),
                              "Q_RESOLVE")
+  possible_aoe = tuple([u for u in ctarget.position.units[ctarget.armyid] if u != ctarget])
+  possible_lure_candidates = tuple(context.battle.armies[csource.armyid].live_units())
+  # eventually make it just the people who are in position
+  lure_candidates = tuple(lc for lc in possible_lure_candidates if lc.has_unit_status("lure"))
+  newcontext = context.copy(additional_opt={"possible_aoe":possible_aoe,
+                                            "lure_candidates":lure_candidates})
+    # later: probably also add a check of panicked, etc.
   # fire
   if (random.random() < 0.4 and
       csource.has_unit_status("fire_tactic") and
       not context.battle.is_raining()):
-    context.battle.place_event("fire_tactic", context, "Q_RESOLVE")
+    context.battle.place_event("fire_tactic", newcontext, "Q_RESOLVE")
   panicprob = 0.20
   if random.random() < panicprob and csource.has_unit_status("panic_tactic"):
-    context.battle.place_event("panic_tactic", context, "Q_RESOLVE")
+    context.battle.place_event("panic_tactic", newcontext, "Q_RESOLVE")
   jeerprob = 0.60
   if random.random() < jeerprob and csource.has_unit_status("jeer"):
-    context.battle.place_event("jeer", context, "Q_RESOLVE")
+    context.battle.place_event("jeer", newcontext, "Q_RESOLVE")
   waterprob = 0.80
   if random.random() < waterprob and csource.has_unit_status("water_tactic") and context.battle.is_raining():
-    context.battle.place_event("water_tactic", context, "Q_RESOLVE")
+    context.battle.place_event("water_tactic", newcontext, "Q_RESOLVE")
 
 #################
 # RESOLVE PHASE #
@@ -336,7 +336,6 @@ EVENTS_MISC = {
 # for ev in EVENTS_RECEIVE:
 #   EVENTS_RECEIVE[ev]["panic_blocked"] = True
 # No common rules here...
-
   
 def receive_damage(context):
   ctarget = context.ctarget
@@ -350,13 +349,13 @@ def receive_damage(context):
   fdmgstr = dmgstr + hpbar + " {} -> {} ({} damage)".format(
     ctarget.size,
     ctarget.size - damage,
-    color_damage(damage))
+    textutils.color_damage(damage))
   ctarget.size -= damage
   if ctarget.size == 0:
     fdmgstr += "; " + Colors.RED + "DESTROYED!" + Colors.ENDC
   yprint(fdmgstr)
   if context.dmglog:
-    yprint(context.dmglog)
+    yprint(context.dmglog, debug=True)
   # if not context.battle.armies[ctarget.armyid].is_alive():
   #   Event("army_destroyed", context.rebase({"ctarget_army":ctarget.armyid})).defer()
 
@@ -380,6 +379,32 @@ def counter_arrow_strike(context):
   csource.narrate("Come on boys; let's show these guys how to actually use arrows!")
   Event("arrow_strike",
         context.rebase({"csource":csource, "ctarget":ctarget})).activate()
+  return True
+
+def lure_tactic(context, base_chance, improved_chance, possible_aoe, lure_candidates,
+                lure_success_text,
+                generic_success_text, stat_str):
+  base_lure_chance = base_chance
+  improved_lure_chance = improved_chance
+  additional_activations = []
+  for targ in possible_aoe:
+    roll = random.random()
+    if roll > improved_lure_chance:
+      continue
+    elif roll > base_lure_chance and not lure_candidates: # we do not activate
+      continue
+    else: # we activate
+      if roll > base_lure_chance:
+          # this means we came from a lure
+        lurer = random.choice(context.lure_candidates)
+        skill_narration("lure", "", True)
+        lurer.narrate("Here, kitty kitty kitty...")
+        skill_narration("lure", lure_success_text.format(**{"lurer":lurer, "ctarget":targ}), True)
+      else:
+        yprint(generic_success_text.format(ctarget=targ))
+      additional_activations.append(targ)
+  for targ in tuple(additional_activations):
+    Event.gain_status(stat_str, context.rebase({"ctarget":targ}), targ)
 
 def fire_tactic(context):
   csource = context.csource
@@ -390,9 +415,15 @@ def fire_tactic(context):
   if success:
     csource.narrate("It's going to get pretty hot!")
     Event.gain_status("burned", context, ctarget)
+    # compute AOE
+    lure_tactic(context, 0.5, 0.7, context.possible_aoe, context.lure_candidates,
+                "{lurer} " + Colors.GREEN + "lures " + Colors.ENDC + "{ctarget} into the flames!",
+                "  {ctarget} was also entangled into the flames!",
+                "burned")
   else:
     ctarget.narrate("No need to play with fire, boys. Fight like real men!")
   skill_narration("fire_tactic", "", success)
+  return success
 
 def jeer(context):
   csource = context.csource
@@ -406,9 +437,15 @@ def jeer(context):
   if success:
     ctarget.narrate("Why you...")
     Event.gain_status("berserk", context, ctarget)
+    # compute AOE
+    lure_tactic(context, 0.5, 0.7, context.possible_aoe, context.lure_candidates,
+                "{lurer} lures {ctarget} into the chaos!",
+                "  {ctarget} was also entangled into the chaos!",
+                "berserk")
   else:
     ctarget.narrate(ins[1])  
   skill_narration("jeer", "", success)
+  return success
     
 def panic_tactic(context):
   csource = context.csource
@@ -423,9 +460,14 @@ def panic_tactic(context):
   if success:
     csource.narrate("{} will be out of commission for a while...".format(ctarget))
     Event.gain_status("panicked", context, ctarget)
+    lure_tactic(context, 0.3, 0.6, context.possible_aoe, context.lure_candidates,
+                "{lurer} lures {ctarget} into the panic!",
+                "  {ctarget} was also entangled into the panic!",
+                "panicked")
   else:
     ctarget.narrate("Keep calm. Don't let {}'s trickery get to you.".format(csource))
   skill_narration("panic_tactic", "", success)
+  return success
 
 def water_tactic(context):
   csource = context.csource
@@ -440,10 +482,15 @@ def water_tactic(context):
     Event("receive_damage", context.copy(
       additional_opt={"damage":damage, "dmgstr":dmgstr, "dmglog":""})).activate()
     csource.narrate("This is painful to look at...")
+    # lure_tactic(context, 0.3, 0.6, context.possible_aoe, context.lure_candidates,
+    #             "{lurer} lures {ctarget} into the chaos!",
+    #             "{ctarget} was also entangled into the chaos!",
+    #             "berserk")
   else:
     ctarget.narrate("We narrowly avoided being swept away. Water is a very scary force of nature!")
   skill_narration("water_tactic", "", success)
-  
+  return success
+
   
 EVENTS_SKILLS = {
   "counter_arrow_strike": {
@@ -509,7 +556,7 @@ def burned_eot(context):
     Event("receive_damage", context.copy(
       additional_opt={"damage":damage, "dmgstr":dmgstr, "dmglog":""})).activate()
     if random.random() < 0.5:
-      yprint("s put out the fire." % ctarget)
+      yprint("{} has put out the fire.".format(ctarget))
       ctarget.remove_unit_status("burned")
     else:
       yprint("The fire burning %s rages on." % ctarget)

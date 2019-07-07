@@ -32,7 +32,7 @@ class Status(object):
       STATUSES[ss][func_key+'_func'](context.copy(additional_opt={"status":ss}))
 
 def info(status_str, key):
-  """ return None otherwise """
+  """ Main auxiliary function; gets a piece of info about a status type, return None otherwise """
   if key in STATUSES[status_str]:
     return STATUSES[status_str][key]
   return None

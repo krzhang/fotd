@@ -62,7 +62,7 @@ class Event(object):
         return
     # time to activate this event on the queue; note the event has its own context, battle, etc.
     #   Yan has already activated using the tactic fire on Jing
-    result = EVENTS[self.event_type]["func"](self.context)
+    result = info(self.event_type, "func")(self.context)
     # if result and EVENTS[self.event_type]["can_aoe"]:
     #   # this is a tactic and we might be able to chain
     #   possible_aoe = self.context.ctarget.position 
@@ -78,6 +78,12 @@ class Event(object):
   def remove_status(cls, stat_str, context, ctarget):
     pass
 
+def info(event_str, key):
+  """ Main auxilary function; gets a piece of info about an event type, and None otherwise."""
+  if key in EVENTS[event_str]:
+    return EVENTS[event_str][key]
+  return None
+  
 ################################
 # Utility functions #
 ################################a

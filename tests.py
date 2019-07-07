@@ -11,6 +11,7 @@ import sys
 # power/intel/pol/cha/coolness/bravery
 
 SKILLS_IMPLEMENTED = ["counter_arrow",
+                      "chaos",
                       "chu_ko_nu",
                       "panic_tactic",
                       "fire_tactic",

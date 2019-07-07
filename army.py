@@ -27,7 +27,7 @@ class Character(object):
     self.color = ""
 
   def __eq__(self, other):
-    return self.id == other.id
+    return hasattr(self, "id") and hasattr(other, "id") and self.id == other.id
     
   def calc_attributes(self):
     for s in STAT_BASES:
@@ -68,7 +68,7 @@ class Unit(object):
     self.position = None
     
   def __eq__(self, other):
-    return self.character == other.character
+    return hasattr(self, "character") and hasattr(other, "character") and self.character == other.character
     
   def __repr__(self):
     return repr(self.character)

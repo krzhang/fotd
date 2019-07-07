@@ -5,6 +5,7 @@ import events
 import numpy as np
 import skills
 import status
+import positions
 from collections import deque
 from mathutils import normalize
 import utils
@@ -36,6 +37,9 @@ class Weather(object):
     return WEATHER[self.text]["viz"]
 
 class Battle(object):
+
+  QUEUE_NAMES = ["Q_PRELIM", "Q_ORDER", "Q_MANUEVER", "Q_RESOLVE", "Q_CLEANUP"]
+  
   def __init__(self, army1, army2):
     self.armies = [army1, army2]
     for a in self.armies:
@@ -47,18 +51,25 @@ class Battle(object):
           # skillstring
           # u.unit_status.append(status.Status.FromSkillName(s.skill_str))
       a.commander.add_unit_status("is_commander")
+    self.hqs = [positions.Position(self, self.armies[i].commander, i) for i in [0,1]]
     self.morale_diff = 0
-    self.gq = deque()
+    # 5 queues
+    self.queues = {}
+    for qname in Battle.QUEUE_NAMES:
+      self.queues[qname] = deque()
+    # other stuff
     self.date = 0
     self.order_history = []
     self.init_triggers()
+
+  def place_event(self, event_type, context, queue_name):
+    """ used when we want to make a new event on a queue of our choice """
+    self.queues[queue_name].append(events.Event(event_type, context))
     
   def init_triggers(self):
     self.triggers = {} # DOES NOTHIGN RIGHT NOW
     pass
 
-
-  
   def gen_AI_order(self):
     # 2 paths: RPS and story-driven soul reading
     parmy = self.armies[PLAYER_ARMY].live_units()
@@ -85,7 +96,7 @@ class Battle(object):
     
   def display_state(self):
     yprint_hrule()
-    yprint("Weather: %s" % str(self.weather))
+    yprint("Day {} {}".format(self.date, str(self.weather)))
     for i in [0,1]:
       # yprint("Army %d:" % i)
       for u in self.armies[i].live_units():
@@ -94,7 +105,7 @@ class Battle(object):
         healthbar = textutils.disp_bar(20, u.size_base, u.size)
         yprint("  {} {} (SP: {}) {}".format(healthbar, u.size_repr(), u.speed, u.status_real_repr()))
       if i == 0:
-        yprint("                                     VS")    
+        yprint("                                        VS")    
     yprint_hrule()
     return
 
@@ -107,7 +118,7 @@ class Battle(object):
       # originally these are in lists; the problem is you can change these lists, so make copies
       for unit in tuple(self.armies[i].live_units()):
         for sta in tuple(unit.unit_status):
-          ctxt = events.Context(self, opt={"target":unit})
+          ctxt = events.Context(self, opt={"ctarget":unit})
           sta.run_status_func(func_key, ctxt)
 
   def is_raining(self):
@@ -116,6 +127,15 @@ class Battle(object):
   def is_hot(self):
     return self.weather.text == "hot"
 
+  def _run_queue(self, queue_name):
+    yprint_hrule()
+    while len(self.queues[queue_name]) > 0:
+      event = self.queues[queue_name].pop()
+      event.activate()
+      if any((not self.armies[i].is_alive()) for i in [0,1]):
+        # TODO: replace with arbitary leave condition
+        return    
+  
   def take_turn(self, orders):
     self.init_turn(orders)
     # preloading events
@@ -125,14 +145,17 @@ class Battle(object):
                                                   self.order_history[-1][1],
                                                   self.armies[1].name))
     yprint_hrule()
-    self._run_status_handlers("bot")
-    while len(self.gq) > 0:
-      event = self.gq.pop()
-      event.activate()
-      if event.event_type == "army_destroyed":
-        return
-    yprint("===========================================================")
-    self._run_status_handlers("eot")
+    self._run_status_handlers("bot") # should be queue later
+    self._run_queue('Q_ORDER')
+    self._run_queue('Q_MANUEVER')
+    self._run_queue('Q_RESOLVE')    
+    self._run_status_handlers("eot") # should be queue later
+    for i in [0,1]:
+      for u in self.armies[i].units:
+        if u.position:
+          # everyone should have a position
+          u.position.remove_unit(u)
+          u.position = None
     pause(clear=True)
     
   def legal_order(self, order):
@@ -158,9 +181,8 @@ class Battle(object):
         speed += random.choice([-3,-2,-1,0,1,2,3])
         if order == 'D':
           speed += 7
-        event = events.Event(o2e[order], events.Context(self, opt={"target":u}))
-        orderlist.append((speed, event))
+        orderlist.append((speed, o2e[order], events.Context(self, opt={"ctarget":u})))
     orderlist.sort(key=lambda x: x[0])
     for o in orderlist:
-      self.gq.append(o[1])
+      self.place_event(o[1], o[2], "Q_ORDER")
       

@@ -38,19 +38,19 @@ class Status(object):
 STATUSES_BATTLE = {
   "berserk": {
     "eot":["berserk_eot"],
-    "on_receive": "{target}'s units fall into a confused rage and is now {stat_viz}!",
+    "on_receive": "{ctarget}'s units fall into a confused rage and is now {stat_viz}!",
     "viz":Colors.RED + "bErSeRk" + Colors.ENDC
   },
   "burned": {
     "bot":["burned_bot"], # these are length 1, but maybe do variable length eventually
     # this means "bot_func" will have a link to the actual function burn_bot
     "eot":["burned_eot"],
-    "on_receive": "{target} bursts into flames and is now {stat_viz}!",
+    "on_receive": "{ctarget} bursts into flames and is now {stat_viz}!",
     "viz":Colors.RED+'b'+Colors.YELLOW+'u'+Colors.RED+'r'+Colors.YELLOW+'n'+Colors.RED+'i'+Colors.YELLOW+'n'+Colors.RED+'g'+Colors.ENDC
   },
   "panicked": {
     "eot":["panic_eot"],
-    "on_receive": "{target}'s unit collapses into a chaotic {stat_viz} state",
+    "on_receive": "{ctarget}'s unit collapses into a chaotic {stat_viz} state",
     "on_remove": ""
   },
   "defended": {
@@ -63,7 +63,7 @@ STATUSES_BATTLE = {
   },
   "trymode_activated": {
     # "eot":[],
-    "on_receive": "{target} is actually trying now; they are brimming with power",    
+    "on_receive": "{ctarget} is actually trying now; they are brimming with power",    
     "on_remove": ""
   },
   "received_physical_attack": {

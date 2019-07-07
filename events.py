@@ -476,7 +476,7 @@ def jeer(context):
   skill_narration("jeer",
                   "{} prepares their best insults...".format(csource))
   ins = random.choice(insults.INSULTS)
-  csource.narrate(ins[0])
+  csource.speech(ins[0])
   if success:
     ctarget.speech("Why you...")
     Event.gain_status("berserk", context, ctarget)

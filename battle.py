@@ -2,12 +2,11 @@ import textutils
 from textutils import Colors, yprint, pause, yprint_hrule
 import random
 import events
-from intelligence import gen_AI_order, gen_player_order
+import intelligence
 import skills
 import status
 import positions
 from collections import deque
-from mathutils import normalize
 import utils
 
 WEATHER = {
@@ -122,7 +121,7 @@ class Battle(object):
   def get_orders(self):
     ordersdict = {}
     for i in [0,1]:
-      ordersdict[i] = intelligence.get_order(armies[i].intelligence_type, i)
+      ordersdict[i] = intelligence.get_order(self, self.armies[i].intelligence_type, i)
     return ordersdict
 
   def init_turn(self, orders):

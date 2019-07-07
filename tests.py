@@ -71,20 +71,20 @@ Einstein = test_char("Albert Einstein", "Eureka",
   4, 100, 83, 70, 5, 1,["plan", "rumor", "sage", "harass", "chu_ko_nu", "siege"]) #items  
 # moderation / analytic
 
-def army_mysticsoft(armyid, color):
+def army_mysticsoft(armyid, color, aitype):
   return Army("Mysticsoft", [Unit(Yan, 20, 8),
                              Unit(Jing, 16, 12),
                              Unit(Yoyo, 12, 20),
                              Unit(Han, 18, 8)],
-              armyid, color)
+              armyid, color, aitype)
 
-def army_shu(armyid):
+def army_shu(armyid, aitype):
   return Army("Shu",[Unit(LiuBei, 20, 12),
                      Unit(GuanYu, 14, 12),
                      Unit(ZhangFei, 14, 4)],
-              armyid, color)
+              armyid, color, aitype)
 
-def army_unknown(armyid, color):
+def army_unknown(armyid, color, aitype):
   return Army("Enemy Unknown", random.sample(
     [Unit(LiuBei, 20, 12),
      Unit(GuanYu, 20, 12),
@@ -96,7 +96,7 @@ def army_unknown(armyid, color):
      Unit(ZhugeLiang, 20, 10),
      Unit(Einstein, 20, 10),
      Unit(Wyatt, 20, 18)],                
-    4), armyid, color)
+    4), armyid, color, aitype)
 
 def link_data_funcs():
   """ A round of processing after getting the text data, to create links to actual functions """
@@ -118,8 +118,7 @@ link_data_funcs()
 
 def test(debug=False, resize=False):
   if resize:
-    print ("\x1b[8;{};80t".format(textutils,MAX_SCROLL_COUNT))
-    print ("ok")
+    print ("\x1b[8;{};80t".format(textutils.MAX_SCROLL_COUNT))
   textutils.SHOW_DEBUG = debug
   army0 = army_mysticsoft(0, Colors.BLUE, "PLAYER_ARMY")
   army1 = army_unknown(1, Colors.RED, "AI_ARMY")

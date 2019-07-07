@@ -60,7 +60,7 @@ class Event(object):
       if any([not getattr(self.context, foo).is_present() for foo in edict["actors"]]):
         return
     # panic handler
-    if info(self.even_type, "panic_blocked"):
+    if info(self.event_type, "panic_blocked"):
       potential_panicker = getattr(self.context, edict["primary_actor"])
       if potential_panicker.has_unit_status("panicked"):
         yprint("  %s is %s! No action" % (potential_panicker, status.Status("panicked")))

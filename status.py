@@ -31,6 +31,12 @@ class Status(object):
     if ss in STATUSES and func_key + '_func' in STATUSES[ss]:
       STATUSES[ss][func_key+'_func'](context.copy(additional_opt={"status":ss}))
 
+def info(status_str, key):
+  """ return None otherwise """
+  if key in STATUSES[status_str]:
+    return STATUSES[status_str]
+  return None
+      
   # @classmethod
   # def FromSkillName(cls, skillstr):
   #   return cls(skillstr + "_STATUS", skill_str=skillstr)

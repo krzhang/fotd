@@ -491,7 +491,7 @@ EVENTS = dict(list(EVENTS_ORDERS.items()) +
 def generic_eot_fizzle(context):
   # a bit annoying that removal is not symmetric with gaining
   stat_str = context.status
-  if status.STATUSES[stat_str]["on_remove"] != "":
+  if status.info(stat_str, "on_remove") != "":
     # eventually, maybe do specialized stuff
     yprint("{} is no longer {}".format(context.ctarget, status.Status(stat_str)))
   context.ctarget.remove_unit_status(stat_str)
@@ -499,7 +499,7 @@ def generic_eot_fizzle(context):
 def burned_bot(context):
   ctarget = context.ctarget
   if context.battle.is_raining():
-    yprint("hanks to the rain, %s put out the fire." % ctarget)
+    yprint("thanks to the rain, %s put out the fire." % ctarget)
     ctarget.remove_unit_status("burned")
   
 def burned_eot(context):

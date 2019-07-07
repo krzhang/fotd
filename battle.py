@@ -135,7 +135,6 @@ class Battle(object):
     return self.weather.text == "hot"
 
   def _run_queue(self, queue_name):
-    yprint_hrule()
     while len(self.queues[queue_name]) > 0:
       event = self.queues[queue_name].pop()
       event.activate()
@@ -146,24 +145,42 @@ class Battle(object):
   def make_position(self, ctarget):
     newpos = positions.Position(self, ctarget) # meeting in the field
     self.dynamic_positions.append(newpos)
+    return newpos
 
   def display_positions(self):
     for p in self.hqs + self.dynamic_positions:
-      p.display()
+      if not p.is_empty():
+        p.display()
     
   def take_turn(self, orders):
     self.init_turn(orders)
     # preloading events
     yprint_hrule()
-    yprint("Resolving Events: %s(%s) vs %s(%s)" % (self.order_history[-1][0],
+    yprint("Day Starts: %s (%s) vs %s (%s)" % (self.order_history[-1][0],
                                                   self.armies[0].name,
                                                   self.order_history[-1][1],
                                                   self.armies[1].name))
     yprint_hrule()
     self._run_status_handlers("bot") # should be queue later
+    yprint_hrule()
+    yprint("Running Orders;")
+    yprint_hrule()
     self._run_queue('Q_ORDER')
+    pause()
+    yprint_hrule()
+    yprint("Units Manuever;")
+    yprint_hrule()
     self._run_queue('Q_MANUEVER')
+    yprint_hrule()
+    pause()
+    yprint_hrule()
+    yprint("All Units in Position;")
+    yprint_hrule()
     self.display_positions()
+    pause()
+    yprint_hrule()
+    yprint("Fighting Resolves")
+    yprint_hrule()
     self._run_queue('Q_RESOLVE')    
     self._run_status_handlers("eot") # should be queue later
     for i in [0,1]:

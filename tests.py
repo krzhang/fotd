@@ -4,7 +4,7 @@ import battle
 import events
 import random
 import status
-
+import sys
 # power/intel/pol/cha/coolness/bravery
 
 Yan = Character("Zhang Yan", "Yellow Lightning",
@@ -107,5 +107,5 @@ while(True):
     AI_order = bat.get_AI_order()
     bat.take_turn([player_order, AI_order])
     if bat.win_army() != None:
-      exit()
+      sys.exit()
       

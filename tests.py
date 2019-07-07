@@ -1,3 +1,6 @@
+import logging
+
+import textutils
 from textutils import Colors, yprint, yinput
 from army import Character, Unit, Army
 import battle
@@ -96,16 +99,18 @@ def link_data_funcs():
     for func_type in ["eot", "bot"]:
       if func_type in STATUSES[st]:
         STATUSES[st][func_type+'_func'] = getattr(events, STATUSES[st][func_type][0])
-    
-  
+      
 link_data_funcs()
 bat = battle.Battle(army_mysticsoft(0, Colors.BLUE), army_unknown(1, Colors.RED))
-while(True):
-  # get player orders in this loop
+
+def test(debug=False):
+  textutils.SHOW_DEBUG = debug
   while(True):
-    player_order = bat.get_player_order()
-    AI_order = bat.get_AI_order()
-    bat.take_turn([player_order, AI_order])
-    if bat.win_army() != None:
-      sys.exit()
+    # get player orders in this loop
+    while(True):
+      player_order = bat.get_player_order()
+      AI_order = bat.get_AI_order()
+      bat.take_turn([player_order, AI_order])
+      if bat.win_army() != None:
+        sys.exit()
       

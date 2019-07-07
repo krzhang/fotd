@@ -123,7 +123,7 @@ class Battle(object):
   def _run_status_handlers(self, func_key):
     for i in [0,1]:
       # originally these are in lists; the problem is you can change these lists, so make copies
-      for unit in tuple(self.armies[i].live_units()):
+      for unit in tuple(self.armies[i].units):
         for sta in tuple(unit.unit_status):
           ctxt = events.Context(self, opt={"ctarget":unit})
           sta.run_status_func(func_key, ctxt)
@@ -150,7 +150,7 @@ class Battle(object):
   def display_positions(self):
     for p in self.hqs + self.dynamic_positions:
       if not p.is_empty():
-        p.display()
+        p.display(debug=True)
     
   def take_turn(self, orders):
     self.init_turn(orders)
@@ -162,25 +162,24 @@ class Battle(object):
                                                   self.armies[1].name))
     yprint_hrule()
     self._run_status_handlers("bot") # should be queue later
-    yprint_hrule()
-    yprint("Running Orders;")
-    yprint_hrule()
+    yprint_hrule(debug=True)
+    yprint("Running Orders;", debug=True)
+    yprint_hrule(debug=True)
     self._run_queue('Q_ORDER')
     pause()
-    yprint_hrule()
-    yprint("Units Manuever;")
-    yprint_hrule()
+    yprint_hrule(debug=True)
+    yprint("Units Manuever;", debug=True)
+    yprint_hrule(debug=True)
     self._run_queue('Q_MANUEVER')
-    yprint_hrule()
-    pause()
-    yprint_hrule()
-    yprint("All Units in Position;")
-    yprint_hrule()
+    yprint_hrule(debug=True)
+    yprint_hrule(debug=True)
+    yprint("All Units in Position;",debug=True)
+    yprint_hrule(debug=True)
     self.display_positions()
-    pause()
-    yprint_hrule()
-    yprint("Fighting Resolves")
-    yprint_hrule()
+    #pause()
+    yprint_hrule(debug=True)
+    yprint("Fighting Resolves",debug=True)
+    yprint_hrule(debug=True)
     self._run_queue('Q_RESOLVE')    
     self._run_status_handlers("eot") # should be queue later
     for i in [0,1]:

@@ -58,6 +58,9 @@ STATUSES_BATTLE = {
     # "on_receive": "{target} is now {stat_viz} against standard tactics",    
     "on_remove": ""
   },
+  "is_commander": {
+    "viz":Colors.YELLOW + "commander" + Colors.ENDC, 
+  },
   "trymode_activated": {
     # "eot":[],
     "on_receive": "{target} is actually trying now; they are brimming with power",    

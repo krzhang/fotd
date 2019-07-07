@@ -27,13 +27,14 @@ WEATHER = {
     "viz": Colors.BLUE + "Raining" + Colors.ENDC
   }
 }
+
 class Weather(object):
   def __init__(self, text):
     self.text = text
 
   def __str__(self):
     return WEATHER[self.text]["viz"]
-    
+
 class Battle(object):
   def __init__(self, army1, army2):
     self.armies = [army1, army2]
@@ -45,6 +46,7 @@ class Battle(object):
           # blah_STATUS without the associatied string, creating a status that's not from a
           # skillstring
           # u.unit_status.append(status.Status.FromSkillName(s.skill_str))
+      a.commander.add_unit_status("is_commander")
     self.morale_diff = 0
     self.gq = deque()
     self.date = 0
@@ -87,7 +89,8 @@ class Battle(object):
     for i in [0,1]:
       # yprint("Army %d:" % i)
       for u in self.armies[i].live_units():
-        yprint("{} {}".format(repr(u), u.character.skills))
+        charstr = "{} {}".format(repr(u), " ".join((repr(s) for s in u.character.skills)))
+        yprint(charstr)
         healthbar = textutils.disp_bar(20, u.size_base, u.size)
         yprint("  {} {} (SP: {}) {}".format(healthbar, u.size_repr(), u.speed, u.status_real_repr()))
       if i == 0:

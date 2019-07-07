@@ -60,11 +60,13 @@ class Unit(object):
     self.size = size
     self.speed = speed
     self.armyid = None
+    self.is_commander = None
     self.unit_status = [] # not to be confused with character-status
     self.targetting = None
     self.attacked = [] # enemies attacked in a turn
     self.attacked_by = []
-
+    self.position = None
+    
   def __eq__(self, other):
     return self.character == other.character
     
@@ -82,13 +84,17 @@ class Unit(object):
 
   def set_color(self, color):
     self.character.color = color
+
+  def set_position(self, pos):
+    self.position = pos
+    pos.add_unit(self)
   
   def __str__(self):
     return str(self.character)
 
   def _size_single_repr(self, size):
     if size >= 0.66*self.size_base:
-      return Colors.GREEN
+      return Colors.OKGREEN
     elif size >= 0.33*self.size_base:
       return Colors.YELLOW
     else:
@@ -151,6 +157,8 @@ class Army(object):
   def __init__(self, name, units, armyid, color):
     self.name = name
     self.units = units
+    self.commander = self.units[0]
+    self.units[0].is_commander = True
     self.color = color
     self.armyid = armyid
     for u in units:

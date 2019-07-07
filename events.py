@@ -338,7 +338,7 @@ def color_prob(prob):
   
 def color_damage(damage):
   if damage == 0:
-    return Colors.GREEN + str(damage) + Colors.ENDC
+    return Colors.OKGREEN + str(damage) + Colors.ENDC
   elif damage <= 3:
     return str(damage)
   else:

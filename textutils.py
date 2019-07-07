@@ -55,7 +55,7 @@ def pause(clear=False):
   
 def disp_bar(total, base, cur):
   """Total: length; base: max; cur: current. """
-  return  Colors.GREEN + '#'*cur + Colors.RED + '#'*(base-cur) + Colors.ENDC + '.'*(total-base)
+  return  Colors.OKGREEN + '#'*cur + Colors.RED + '#'*(base-cur) + Colors.ENDC + '.'*(total-base)
 
 def yprint_hrule():
   yprint("===========================================================")

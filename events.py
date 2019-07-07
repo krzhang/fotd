@@ -173,7 +173,8 @@ EVENTS_ORDERS = {
   "attack_order": {},
   "defense_order": {},
   "indirect_order": {},
-  "berserked_order": {}
+  "berserked_order": {},
+  "provoked_order": {}
 }
 
 for ev in EVENTS_ORDERS:

@@ -31,7 +31,7 @@ Jing = test_char("Jing Chan", "Purge",
 Jing.equip("FLAME_BLADE")
 
 Yoyo = test_char("You Zhou", "Caffeinator",
-  31, 90, 63, 21, 4, 2,["cheer", "attack_supplies", "fire_tactic", "panic_tactic", "jeer"]) 
+  31, 90, 63, 21, 4, 2,["cheer", "attack_supplies", "fire_tactic", "panic_tactic", "chaos"]) 
 
 Han = test_char("Han Xu", "Finalmente",
   90, 85, 12, 24, 2, 6,  ["sneak_attack", "dash", "jeer", "chaos_arrow", "headhunter"])
@@ -40,19 +40,19 @@ LiuBei = test_char("Liu Bei", "",
   70, 81, 89, 100, 4, 5,["cheer", "recruit_specialist"]) #items  
 
 GuanYu = test_char("Guan Yu", "War God",
-  98, 80, 53, 92, 6, 7, ["water_tactic", "study", "valor"])
+  98, 80, 53, 92, 6, 7, ["water_tactic", "study", "valor", "jeer"])
 GuanYu.equip("BLACK_DRAGON")
 GuanYu.equip("RED_HARE")
 
 ZhangFei = test_char("Zhang Fei", "",
-  99, 18, 13, 22, 1, 7, ["panic_tactic", "charge"])
+  99, 18, 13, 22, 1, 7, ["panic_tactic", "charge", "jeer"])
 ZhangFei.equip("SNAKE_SPEAR")
 
 HuangZhong = test_char("Huang Zhong", "",
   90, 51, 42, 64, 4, 7, ["counter_arrow", "chaos_arrow", "fire_arrow"])
 
 Jeanne = test_char("Jeanne D'Arc", Colors.RED + "Rose" + Colors.ENDC + " of Versailles",
-  85, 85, 85, 85, 4, 5, ["lure", "spy", "invent", "trade", "charge", "zeal", "critic", "wealth"])
+  85, 85, 85, 85, 4, 5, ["lure", "spy", "invent", "trade", "charge", "zeal", "critic", "wealth", "chaos"])
 
 Grant = test_char("Ulysses S. Grant", "",
   91, 51, 28, 62, 4, 4, ["invent", "rally", "jeer", "drop_rocks", "perfect_defense"])
@@ -65,7 +65,7 @@ CaoCao = test_char("Cao Cao", "The Usurper",
   90, 51, 42, 64, 4, 7, ["attack_supplies", "sneak_attack"])
 
 ZhugeLiang = test_char("Zhuge Liang", "The Sleeping Dragon",
-  70, 81, 89, 100, 4, 5,["chu_ko_nu", "fire_tactic", "change_weather", "empty_castle_tactic", "counter_tactic"]) #items  
+  70, 81, 89, 100, 4, 5,["chu_ko_nu", "fire_tactic", "change_weather", "empty_castle_tactic", "counter_tactic", "chaos"]) #items  
 
 Einstein = test_char("Albert Einstein", "Eureka",
   4, 100, 83, 70, 5, 1,["plan", "rumor", "sage", "harass", "chu_ko_nu", "siege"]) #items  
@@ -87,15 +87,15 @@ def army_shu(armyid):
 def army_unknown(armyid, color):
   return Army("Enemy Unknown", random.sample(
     [Unit(LiuBei, 20, 12),
-     Unit(GuanYu, 14, 12),
-     Unit(ZhangFei, 14, 4),
-     Unit(HuangZhong, 14, 10),
+     Unit(GuanYu, 20, 12),
+     Unit(ZhangFei, 20, 4),
+     Unit(HuangZhong, 20, 10),
      Unit(Jeanne, 20, 10),
      Unit(Grant, 20, 10),
      Unit(CaoCao, 20, 10),
      Unit(ZhugeLiang, 20, 10),
      Unit(Einstein, 20, 10),
-     Unit(Wyatt, 10, 18)],                
+     Unit(Wyatt, 20, 18)],                
     4), armyid, color)
 
 def link_data_funcs():

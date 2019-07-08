@@ -1,6 +1,7 @@
 import textutils
 from textutils import yprint, yprint_hrule
 from colors import Colors
+import contexts
 import random
 import events
 import intelligence
@@ -130,7 +131,7 @@ class Battle(object):
         speed += random.choice([-3,-2,-1,0,1,2,3])
         if order == 'D':
           speed += 7
-        orderlist.append((speed, rps.order_to_event[order],
+        orderlist.append((speed, rps.order_to_event(order),
                           contexts.Context(self, opt={"ctarget":u})))
     orderlist.sort(key=lambda x: x[0])
     for o in orderlist:

@@ -164,7 +164,7 @@ def berserked_order(context):
   enemyunits = context.battle.armies[armyid].present_units()
   ctarget = random.choice(enemyunits)
   yprint("{}: random {} attack -> {}; ignoring original orders".format(
-    csource, status.Status("berserk", ctarget)))
+    csource, status.Status("berserk"), ctarget))
   context.ctarget.ctargetting = ctarget
   newcontext = context.rebase({"csource":csource, "ctarget":ctarget})
   context.battle.place_event("engage", newcontext, "Q_MANUEVER")
@@ -175,7 +175,7 @@ def provoked_order(context):
   enemyunits = context.battle.armies[armyid].present_units()
   ctarget = random.choice(enemyunits)
   yprint("{}: random {} attack -> {}; ignoring original orders".format(
-    csource, status.Status("provoked", ctarget)))
+    csource, status.Status("provoked"), ctarget))
   context.ctarget.ctargetting = ctarget
   newcontext = context.rebase({"csource":csource, "ctarget":ctarget})
   context.battle.place_event("engage", newcontext, "Q_MANUEVER")  

@@ -127,8 +127,8 @@ class BattleScreen():
       
     for j in [0,1]:
       for unit in battle.armies[j].present_units():
-        header = self.disp_unit_header(unit, j)
-        situ = self.disp_unit_situ(unit, j)
+        header = self.disp_unit_newheader(unit, j)
+        situ = self.disp_unit_newsitu(unit, j)
         print(situ)
         print(header)
       if j == 0:
@@ -145,6 +145,7 @@ class BattleScreen():
       print(i)
       
   def disp_unit_header(self, unit, side):
+    """ Ex: ################.... 7/16 Sp:12 """
     char1 = "{} ".format(repr(unit))
     char2 = "{}".format(" ".join((s.short() for s in unit.character.skills)))
     if side == 0:
@@ -153,14 +154,33 @@ class BattleScreen():
     else:
       return " "*0 + char1 + char2
     
+  def disp_unit_newheader(self, unit, side):
+    healthbar = disp_bar(20, unit.size_base, unit.size)
+    charstr = "{} {} Hp:{} Sp:{}".format(healthbar, repr(unit), unit.size_repr(), unit.speed)
+    if side == 0:
+      return charstr
+    else:
+      return " "*0 + charstr
+
   def disp_unit_situ(self, unit, side):
+    """ Ex: Albert Einstein -=Eureka=- <c-k-n> """
     healthbar = disp_bar(20, unit.size_base, unit.size)
     charstr = "{} {} Sp:{} {}".format(healthbar, unit.size_repr(), unit.speed, unit.status_real_repr())
     if side == 0:
       return charstr
     else:
       return " "*0 + charstr
-        
+
+  def disp_unit_newsitu(self, unit, side):
+    charstr = "{} {}".format(unit.status_real_repr(),
+                             " ".join((s.short() for s in unit.character.skills)))
+    if side == 0:
+      # eventually may want to print differently based on which side they are on
+      return charstr
+    else:
+      return " "*0 + charstr
+
+    
   def disp_clear(self):
     os.system('cls' if os.name == 'nt' else 'clear')
     

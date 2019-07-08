@@ -36,7 +36,7 @@ class Battle(object):
 
   QUEUE_NAMES = ["Q_PRELIM", "Q_ORDER", "Q_MANUEVER", "Q_RESOLVE", "Q_CLEANUP"]
   
-  def __init__(self, army1, army2):
+  def __init__(self, army1, army2, battlescreen):
     self.armies = [army1, army2]
     for a in self.armies:
       for u in a.units:
@@ -58,6 +58,7 @@ class Battle(object):
     # other stuff
     self.date = 0
     self.order_history = []
+    self.battlescreen = battlescreen
     self.init_battle_state()
 
   def init_battle_state(self):
@@ -75,17 +76,6 @@ class Battle(object):
     """
     self.queues[queue_name].appendleft(events.Event(event_type, context))
     
-  def display_state(self):
-    yprint_hrule()
-    yprint("Day {} {}".format(self.date, str(self.weather)))
-    textutils.yprint_hrule()
-    for p in self.hqs:
-      p.display()
-      if p.hqid == 0:
-        yprint("                                               VS")
-    yprint_hrule()
-    return
-
   def _run_status_handlers(self, func_key):
     for i in [0,1]:
       # originally these are in lists; the problem is you can change these lists, so make copies
@@ -113,10 +103,10 @@ class Battle(object):
     self.dynamic_positions.append(newpos)
     return newpos
 
-  def display_positions(self):
-    for p in self.hqs + self.dynamic_positions:
-      if not p.is_empty():
-        p.display(debug=True)
+  # def display_positions(self):
+  #   for p in self.hqs + self.dynamic_positions:
+  #     if not p.is_empty():
+  #       p.display(debug=True)
 
   def get_orders(self):
     ordersdict = {}
@@ -167,7 +157,7 @@ class Battle(object):
     yprint_hrule(debug=True)
     yprint("All Units in Position;",debug=True)
     yprint_hrule(debug=True)
-    self.display_positions()
+    # self.display_positions()
     #pause()
     yprint_hrule(debug=True)
     yprint("Fighting Resolves",debug=True)

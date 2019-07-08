@@ -1,6 +1,3 @@
-import textutils
-from textutils import yprint
-
 class Position(object):
   def __init__(self, battle, initial_unit, hqid=None):
     self.battle = battle
@@ -17,16 +14,6 @@ class Position(object):
   def add_unit(self, unit):
     self.units[unit.armyid].append(unit)
     # unit.position = self
-
-  def display(self,debug=False):
-    yprint("In {}:".format(str(self)),debug)
-    for i in [0,1]:
-      for u in self.units[i]:
-        if u.is_present():
-          charstr = "{} {}".format(repr(u), " ".join((repr(s) for s in u.character.skills)))
-          yprint(charstr,debug)
-          healthbar = textutils.disp_bar(20, u.size_base, u.size)
-          yprint("  {} {} (SP: {}) {}".format(healthbar, u.size_repr(), u.speed, u.status_real_repr()),debug)
 
   def remove_unit(self, unit):
     self.units[unit.armyid].remove(unit)

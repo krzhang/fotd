@@ -30,6 +30,9 @@ class Skill(object):
   def narrate(self, otherstr):
     yprint("  " + self.activation_str() + " " + otherstr)
 
+  def short(self):
+    return "<" + Colors.GREEN + info(self.skill_str, "short") + Colors.ENDC + ">"
+
 def skill_narration(skill_str, other_str, success=None):
   if success:
     successtr = "SUCCESS!"
@@ -51,10 +54,12 @@ SKILLS = {
   },
   "counter_arrow": {
     "ai_eval": (2,1,1),
-    "desc": "Each time this officer is shot by arrows, he/she has a chance to shoot back."
+    "desc": "Each time this officer is shot by arrows, he/she has a chance to shoot back.",
+    "short": 'ctr-a',
   },
   "chu_ko_nu": {
     "ai_eval": (1,0,1),
+    "short": 'c-k-n'
   },
   "attack_supplies": {
     "ai_eval": (0,0,1),
@@ -62,6 +67,7 @@ SKILLS = {
   },
   "panic_tactic": {
     "ai_eval": (0,0,2),
+    "short": 'panic',
     "on_roll": ["{csource} sows seeds of fear and doubt in {ctarget}'s unit..."],
     "on_success_speech": [("csource", "{ctarget} will be out of commission for a while..."),
                           ("ctarget", "The soldiers are incredibly scared, of everything from spies to ghosts.")],
@@ -73,6 +79,7 @@ SKILLS = {
   },
   "fire_tactic": {
     "ai_eval": (0,0,1),
+    "short": 'fire',
     "on_roll": ["{csource} prepares embers and tinder..."],
     "on_success_speech": [("csource", "It's going to get pretty hot!"),
                           ("ctarget", "Oh no! My soldiers are engulfed in flames!")],
@@ -81,11 +88,13 @@ SKILLS = {
   },
   "lure": {
     "ai_eval": (0,0,1),
+    "short": 'lure',
     "on_success": "{lurer} " + Colors.GREEN + "lures " + Colors.ENDC + "{ctarget} into the tactic!",
     "on_success_speech": [("lurer","Here, kitty kitty kitty...")],
   },
   "jeer": {
-    "ai_eval": (0,0,2)
+    "ai_eval": (0,0,2),
+    "short": 'jeer'
   },
   "manuever": {
     "ai_eval": (1,0,1)
@@ -100,10 +109,12 @@ SKILLS = {
     "ai_eval": (2,1,0)
   },
   "trymode": {
-    "ai_eval": (3,0,0)
+    "ai_eval": (3,0,0),
+    "short": 'trym'
   },
   "water_tactic": {
     "ai_eval": (0,0,1),
+    "short": 'water',
     "on_roll": ["{csource} positions dams and ships..."],
     "on_success_speech": [("csource", "Oh my. This is going to be painful."),
                           ("csource", "The Gods of nature are unforgiving.")],

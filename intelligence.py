@@ -1,13 +1,12 @@
 # import textutils
 import numpy as np
 import skills
-from textutils import yinput, yprint
+from textutils import yinput_battle_order, yprint
 from mathutils import normalize
 
 def get_player_order(battle, armyid):
   while(True):
-    battle.display_state()
-    order = yinput("Input orders for army {}(A/D/I):".format(armyid))
+    order = yinput_battle_order("Input orders for army {}(A/D/I):".format(armyid))
     if battle.legal_order(order):
       return order.upper()
     else:

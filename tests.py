@@ -1,7 +1,7 @@
 import logging
 
 import textutils
-from textutils import Colors, yprint, yinput
+from textutils import Colors
 from army import Character, Unit, Army
 import battle
 import events
@@ -117,8 +117,6 @@ def link_data_funcs():
 link_data_funcs()
 
 def test(debug=False, resize=False, two_players=False):
-  if resize:
-    print ("\x1b[8;{};80t".format(textutils.MAX_SCROLL_COUNT))
   textutils.SHOW_DEBUG = debug
   if two_players:
     second_intelligence = "PLAYER_ARMY"
@@ -126,7 +124,11 @@ def test(debug=False, resize=False, two_players=False):
     second_intelligence = "AI_ARMY"
   army0 = army_mysticsoft(0, Colors.BLUE, "PLAYER_ARMY")
   army1 = army_unknown(1, Colors.RED, second_intelligence)
-  bat = battle.Battle(army0, army1)
+  bat = battle.Battle(army0, army1, textutils.BATTLE_SCREEN)
+  textutils.BATTLE_SCREEN.battle = bat
+  
+  if resize:
+    print ("\x1b[8;{};80t".format(textutils.BATTLE_SCREEN.max_screen_len))  
   while(True):
     bat.take_turn()
     if bat.win_army() != None:

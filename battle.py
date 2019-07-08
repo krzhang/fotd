@@ -13,7 +13,6 @@ import utils
 WEATHER = {
   "sunny": {
     "transitions": {
-      
     },
     "viz": Colors.GREEN + "Sunny" + Colors.ENDC
   },
@@ -118,7 +117,6 @@ class Battle(object):
     return ordersdict
 
   def init_turn(self, orders):
-    o2e = {"A": "attack_order", "D": "defense_order", "I":"indirect_order"}
     self.order_history.append(orders)
     orderlist = []
     for i in [0, 1]:
@@ -131,7 +129,8 @@ class Battle(object):
         speed += random.choice([-3,-2,-1,0,1,2,3])
         if order == 'D':
           speed += 7
-        orderlist.append((speed, o2e[order], events.Context(self, opt={"ctarget":u})))
+        orderlist.append((speed, rps.order_to_event[order],
+                          contexts.Context(self, opt={"ctarget":u})))
     orderlist.sort(key=lambda x: x[0])
     for o in orderlist:
       self.place_event(o[1], o[2], "Q_ORDER")

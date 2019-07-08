@@ -117,6 +117,7 @@ class Army(object):
       u.armyid = armyid
       u.set_color(color)
     self.intelligence_type = intelligence_type
+    self.yomi_edge = None # used in battles to see if RPS was won
 
   def is_present(self):
     return any([u for u in self.units if u.is_present()])

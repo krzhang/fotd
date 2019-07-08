@@ -16,30 +16,14 @@ logger.addHandler(f)
 
 SHOW_DEBUG = False
 
-from colorama import Fore, Back, Style
 from utils import read_single_keypress
 import os
+import colors
+from colors import Colors
 
-class Colors:
-  HEADER = '\033[95m'
-  OKBLUE = '\033[94m'
-  OKGREEN = '\033[92m'
-  WARNING = '\033[93m'
-  FAIL = '\033[91m'
-  # ENDC = '\033[0m'
-  ENDC = Style.RESET_ALL
-  BOLD = '\033[1m'
-  UNDERLINE = '\033[4m'
-  # mine below
-  BLUE = Fore.BLUE
-  YELLOW = Fore.YELLOW
-  RED = Fore.RED
-  GREEN = Fore.GREEN
-  MAGENTA = Fore.MAGENTA
-  CYAN = Fore.CYAN
-  # RPS
-  WIN = OKGREEN
-  LOSE = Fore.RED
+######################
+# Formatting Strings #
+######################
 
 def color_prob(prob):
   pstr = "{:4.3f}".format(prob)
@@ -60,13 +44,15 @@ def color_damage(damage):
   else:
     return Colors.RED + str(damage) + Colors.ENDC
 
+def damage_str(s_str, d_str, dicecount, hitprob, raw_damage):
+  return "[Strength: ({:4.3f} vs. {:4.3f}); {} dice with chance {} each; Final: {}]".format(
+    s_str, d_str, dicecount, color_prob(hitprob), color_damage(raw_damage))
 
 ######
 # IO #
 ######
   
-MORE_STR = Fore.BLACK + Back.WHITE + "MORE... [hit a key]" + Colors.ENDC  
-
+MORE_STR = Colors.INVERT + "MORE... [hit a key]" + Colors.ENDC  
 
 class BattleScreen():
   def __init__(self):
@@ -79,16 +65,16 @@ class BattleScreen():
 
   def _colored_strats(self, orders):
     orders = list(orders)
-    colors = []
+    ocolors = []
     for i in [0,1]:
       other = 1-i
       if rps.beats(orders[i], orders[other]):
-        colors.append(Colors.WIN)
+        ocolors.append(Colors.WIN)
       elif rps.beats(orders[other], orders[i]):
-        colors.append(Colors.LOSE)
+        ocolors.append(Colors.LOSE)
       else:
-        colors.append("")
-    return tuple([colors[i] + orders[i] + Colors.ENDC for i in [0,1]])
+        ocolors.append("")
+    return tuple([ocolors[i] + orders[i] + Colors.ENDC for i in [0,1]])
     
     
   def _day_status_str(self):

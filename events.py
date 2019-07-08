@@ -1,5 +1,6 @@
 import textutils
-from textutils import Colors, yprint
+from textutils import yprint
+from colors import Colors
 import random
 import numpy as np
 import positions
@@ -107,10 +108,11 @@ def compute_damage(csource, ctarget, dmg_type, multiplier=1):
     roll = random.random()
     if roll < hitprob:
       raw_damage += 1
-  damlog = "    [Strength: ({:4.3f} vs. {:4.3f}); {} dice with chance {} each; Final: {}]".format(
-    s_str, d_str, dicecount,
-    textutils.color_prob(hitprob), textutils.color_damage(raw_damage))
-  return raw_damage, damlog
+  dmglog = tuple((s_str, d_str, dicecount, hitprob, raw_damage))
+  # this is the data needed to create a log of the damage later; for timing purposes this needs
+  # to be passed on, because it's weird for the user to see damage computed first before
+  # seeing damage done on screen
+  return raw_damage, dmglog
 
 ################
 # Order Events #
@@ -273,10 +275,10 @@ def arrow_strike(context):
   multiplier = 1
   if "vulnerable" in context.opt and context.vulnerable:
     multiplier = 2
-  damage, damlog = compute_damage(csource, ctarget, "DMG_ARROW", multiplier=multiplier)
+  damage, dmglog = compute_damage(csource, ctarget, "DMG_ARROW", multiplier=multiplier)
   dmgstr = "{} shoots {}:".format(csource, ctarget, damage)
   Event("receive_damage",
-        context.rebase({"damage":damage, "ctarget":ctarget, "dmgstr":dmgstr, "dmglog":damlog})).activate()
+        context.rebase({"damage":damage, "ctarget":ctarget, "dmgstr":dmgstr, "dmglog":dmglog})).activate()
   if csource.has_unit_status("fire_arrow"):
     if random.random() < 0.5 and not context.battle.is_raining():
       skill_narration("fire_arrow", "{}'s arrows are covered with fire!".format(csource), True)
@@ -371,6 +373,7 @@ def receive_damage(context):
     fdmgstr += "; " + Colors.RED + "DESTROYED!" + Colors.ENDC
   yprint(fdmgstr)
   if context.dmglog:
+    dmg_str = textutils.damage_str(*context.dmglog)
     yprint(context.dmglog, debug=True)
 
 def receive_status(context):
@@ -425,7 +428,7 @@ def lure_tactic(context, base_chance, improved_chance, success_callback):
         # this means we came from a lure
         lurer = random.choice(lure_candidates)
         skill_narration("lure", "", True)
-        lurer.speech(status.info("lure", "on_success_speech"))
+        lurer.speech(skills.info("lure", "on_success_speech"))
         lure_success_text = skills.info("lure_tactic", "on_success")
         skill_narration("lure", lure_success_text.format(**{"lurer":lurer, "ctarget":targ}), True)
       else:

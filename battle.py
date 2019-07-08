@@ -1,5 +1,6 @@
 import textutils
-from textutils import Colors, yprint, yprint_hrule
+from textutils import yprint, yprint_hrule
+from colors import Colors
 import random
 import events
 import intelligence

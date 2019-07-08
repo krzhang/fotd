@@ -1,7 +1,8 @@
 import skills
 import status
 import textutils
-from textutils import Colors, yprint
+from colors import Colors
+from textutils import yprint
 
 STAT_BASES = {"power":"power_base",
               "intel":"intel_base",

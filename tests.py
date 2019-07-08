@@ -1,7 +1,7 @@
 import logging
 
 import textutils
-from textutils import Colors
+from colors import Colors
 from army import Character, Unit, Army
 import battle
 import events

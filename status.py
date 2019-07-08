@@ -1,4 +1,5 @@
-from textutils import Colors, yprint
+from textutils import yprint
+from colors import Colors
 import skills
 
 STATUSES = {}

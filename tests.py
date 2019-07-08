@@ -63,14 +63,43 @@ Wyatt = test_char("Wyatt Earp", "",
 
 # need to fix stats
 CaoCao = test_char("Cao Cao", "The Usurper",
-  90, 51, 42, 64, 4, 7, ["attack_supplies", "sneak_attack"])
+  82, 93, 92, 97, 6, 5, ["attack_supplies", "sneak_attack", "spy", "reversal", "aid", "scout", "dash", "repair", "riot", "rumor", "flood", "rally", "jeer", "sap", "zeal"])
+CaoCao.equip("SWORD_OF_HEAVEN") # +10
+CaoCao.equip("SWORD_OF_LIGHT") # +10
+CaoCao.equip("MENG_DE_MANUAL") # +3 Skill:reversal
+CaoCao.equip("SHADOW_RUNNER")
 
 ZhugeLiang = test_char("Zhuge Liang", "The Sleeping Dragon",
-  70, 81, 89, 100, 4, 5,["chu_ko_nu", "fire_tactic", "change_weather", "empty_castle_tactic", "counter_tactic", "chaos"]) #items  
+  78, 100, 98, 85, 7, 3,["chu_ko_nu", "fire_tactic", "change_weather", "empty_castle_tactic", "counter_tactic", "chaos", "chart", "flood", "wile", "rumor", "reversal"]) #items  
+ZhugeLiang.equip("24_WAR_MANUALS") # int+8 skill:invent
+ZhugeLiang.equip("SLEEVE_DARTS")
 
 Einstein = test_char("Albert Einstein", "Eureka",
   4, 100, 83, 70, 5, 1,["plan", "rumor", "sage", "harass", "chu_ko_nu", "siege"]) #items  
 # moderation / analytic
+
+YuanShu = test_char("Yuan Shu", "The Usurper",
+                    65,65,16,44,4,4, ["fame", "connections", "debate", "siege", "weapons"])
+
+# idea: can have godlike skills that are given early game to particular generals
+# such as these
+
+LuBu = test_char("Lu Bu", "The Unmatched",
+     100, 38, 13, 40, 1,7, ["avatar"]) # do 4X damage, then do 1.5X damage ignoring defense
+
+ZhouYu= test_char("Zhou Yu", "The Dandy of Zhou",
+       71, 96, 97, 86, 2, 5, ["god_of_fire"])
+
+PangTong = test_char("Pang Tong", "The Young Phoenix",
+         34, 97, 78, 85, 4, 4, ["chain_tactics"])
+
+LuMeng = test_char("Lu Meng", "",
+       81,89,91,78,4,4,["attack_heart"]) # basically vampirism
+
+GuanYinPing = test_char("Guan Yinping", "",
+            82, 52, 56, 78, 2, 6, ["escape_route"]) # daughter of Guan Yu
+
+# add: CaoRen + stonewall/iron wall
 
 def army_mysticsoft(armyid, color, aitype):
   return Army("Mysticsoft", [Unit(Yan, 20, 8),
@@ -96,6 +125,12 @@ def army_unknown(armyid, color, aitype):
      Unit(CaoCao, 20, 10),
      Unit(ZhugeLiang, 20, 10),
      Unit(Einstein, 20, 10),
+     Unit(YuanShu, 20, 10),
+     Unit(LuBu, 20, 10),
+     Unit(ZhouYu, 20, 10),
+     Unit(PangTong, 20, 10),
+     Unit(LuMeng, 20, 10),
+     Unit(GuanYinPing, 20, 10),
      Unit(Wyatt, 20, 18)],                
     4), armyid, color, aitype)
 

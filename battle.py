@@ -4,6 +4,7 @@ from colors import Colors
 import random
 import events
 import intelligence
+import rps
 import skills
 import status
 import positions
@@ -65,7 +66,7 @@ class Battle(object):
     self.date = 1
     self.weather = Weather(random.choice(list(WEATHER)))
     for i in [0,1]:
-      armies[i].yomi_edge = None
+      self.armies[i].yomi_edge = None
       for u in self.armies[i].units:
         u.position = self.hqs[i]
         self.hqs[i].add_unit(u)

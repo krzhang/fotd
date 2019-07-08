@@ -1,15 +1,14 @@
-# Fall of the Dragon
+# Fall of the Dragon: A roguelike-inspired strategy game
 
-## A roguelike-inspired take on KOEI's officer-based strategy games
-
-Fall of the Dragon is a nod to the officer-based strategy titles I enjoyed as a kid, mainly inspired by KOEI's Romance of the Three Kingdoms (and also in increasing obscurity: Nobunaga's Ambition, Gemfire, Taikou Risshinden, Celtic Tales: Balor of the Evil Eye...) series. Its main features are:
+They say that which falls apart for a long time must reunite, and that which units for a long time must fall apart. The kingdom has fallen. You are one of its pieces.
 
 * dynamically generated world and officers, with their own personalities and relationships
-* strategic style (fewer decisions, no micromanagement) of both the strategy (kingdom-building) and tactical (battle) layers, driven by mechanically simple (rock-paper-scissors-like) option spaces but providing rich bluffing/outwitting situation-dependent play
+* strategic (fewer decisions, no micromanagement) design choice of both the strategy (kingdom-building) and tactical (battle) layers
+* poker-like situation-dependent play, rewarding bluffing/outwitting opponents in a mechanically simple option space
 
-## On KOEI Games and FOTD's Design
+## Design Manifesto
 
-From a design perspective, the main strengths are:
+Fall of the Dragon is a nod to the officer-based strategy titles I enjoyed as a kid, mainly inspired by KOEI's Romance of the Three Kingdoms (and also in increasing obscurity: Nobunaga's Ambition, Gemfire, Taikou Risshinden, Celtic Tales: Balor of the Evil Eye...) series. Compared to those games, FOTD removes much of the complex systems and crafted world in exchange for procedural generation and tactical choices. From a design perspective, the main strengths of KOEI's games are:
 
 * the fundamental unit of your kingdom is offers you can be attached to (as opposed to nameless military units), so you can live / tell your friends the stories you had with particular officers that feel real as they grow stronger, die, etc. In strategy games this feeling is also captured well in games like XCOM, and occasionally in small flashes such as heroes of Master of Orion 2, but they really take center field in KOEI games with a lot of dialogue, dynamic interactions, and events.
 * officers are more than military units; they also run your kingdom, go on quests, have feelings, ignore your orders, betray you, etc. this sets up for dynamic relationships between the characters: in one game, Lu Bu may be on the same team as Zhang Fei, in another story, they may be bitter rivals. This feature is echoed by games like Civilization (India can be your friend in one but foe the other, etc.), but in KOEI games this also happens on the level of your officers instead of the macro-level kingdoms.

@@ -127,7 +127,7 @@ class Army(object):
     return any([u for u in self.units if u.is_present()])
 
   def present_units(self):
-    return [u for u in self.units if u.is_present()]
+    return (u for u in self.units if u.is_present())
 
   def str_estimate(self):
     return sum([u.size for u in self.units], 0)

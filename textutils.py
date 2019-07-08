@@ -60,7 +60,7 @@ class BattleScreen():
     self.max_screen_len = 24
     self.max_stat_len = 3
     self.max_armies_len = 20
-    self.max_console_len = 5
+    self.max_console_len = 4
     self.battle = None # needs one eventually
 
   def _colored_strats(self, orders):
@@ -115,8 +115,8 @@ class BattleScreen():
       for unit in battle.armies[j].present_units():
         header = self.disp_unit_newheader(unit, j)
         situ = self.disp_unit_newsitu(unit, j)
-        print(situ)
         print(header)
+        print(situ)
       if j == 0:
         print(" "*39 + "VS" + " "*39)
           
@@ -154,8 +154,13 @@ class BattleScreen():
       return " "*0 + charstr
 
   def disp_unit_newsitu(self, unit, side):
-    charstr = "{} {}".format(unit.status_real_repr(),
-                             " ".join((s.short() for s in unit.character.skills)))
+    charstr = " "*21
+    statuses = unit.status_real_repr()
+    if statuses:
+      charstr += "(" + statuses + "|"
+    else:
+      charstr += "("
+    charstr += " ".join((s.short() for s in unit.character.skills)) + ")"
     if side == 0:
       # eventually may want to print differently based on which side they are on
       return charstr

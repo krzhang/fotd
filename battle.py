@@ -66,6 +66,7 @@ class Battle(object):
     self.date = 1
     self.weather = Weather(random.choice(list(WEATHER)))
     for i in [0,1]:
+      armies[i].yomi_edge = None
       for u in self.armies[i].units:
         u.position = self.hqs[i]
         self.hqs[i].add_unit(u)
@@ -162,12 +163,6 @@ class Battle(object):
     self._run_queue('Q_RESOLVE')    
     self._run_status_handlers("eot") # should be queue later
     self.battlescreen.pause_and_display() # could have undisplayed stuff
-    for i in [0,1]:
-      for u in self.armies[i].units:
-        if u.position:
-          u.move(self.hqs[u.armyid])
-    assert all((p.is_empty() for p in self.dynamic_positions))
-    self.dynamic_positions = []
     self._next_day()
 
   def _next_day(self):
@@ -176,9 +171,11 @@ class Battle(object):
     for i in [0,1]:
       for u in self.armies[i].units:
         u.last_turn_size = u.size
-    
-  def legal_order(self, order):
-    return order.upper() in ["A", "D", "I"]
+        if u.position:
+          u.move(self.hqs[u.armyid])
+      self.armies[i].yomi_edge = None
+    assert all((p.is_empty() for p in self.dynamic_positions))
+    self.dynamic_positions = []
   
   def win_army(self):
     for i in [0, 1]:

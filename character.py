@@ -1,5 +1,6 @@
 from colors import Colors
 from textutils import yprint
+import skills
 
 STAT_BASES = {"power":"power_base",
               "intel":"intel_base",

@@ -2,7 +2,8 @@ import logging
 
 import textutils
 from colors import Colors
-from army import Character, Unit, Army
+from character import Character
+from army import Unit, Army
 import battle
 import events
 import random

@@ -1,6 +1,7 @@
 import skills
 import status
 import textutils
+from colors import Colors
 
 class Unit(object):
   def __init__(self, character, size, speed):
@@ -25,8 +26,9 @@ class Unit(object):
 
   def size_repr(self):
     csize = self._size_single_repr(self.size) + str(self.size) + Colors.ENDC
-    return "{: <2}/{: <2}".format(str(csize), str(self.size_base))
-
+    # return "{: >2}/{: >2}".format(str(csize), str(self.size_base)) # lol now this is bad
+    return "{}/{}".format(str(csize), str(self.size_base)) # lol now this is bad
+  
   def status_real_repr(self):
     return " ".join((str(s) for s in self.unit_status if not s.is_skill()))
 

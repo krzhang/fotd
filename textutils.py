@@ -145,28 +145,9 @@ class BattleScreen():
       dmg_str = damage_str(*dmglog)
       yprint(dmglog, debug=True)
       
-  def disp_unit_header(self, unit, side):
-    """ Ex: ################.... 7/16 Sp:12 """
-    char1 = "{} ".format(repr(unit))
-    char2 = "{}".format(" ".join((s.short() for s in unit.character.skills)))
-    if side == 0:
-      # eventually may want to print differently based on which side they are on
-      return char1 + char2
-    else:
-      return " "*0 + char1 + char2
-    
   def disp_unit_newheader(self, unit, side):
     healthbar = disp_bar_day_tracker(20, unit.size_base, unit.last_turn_size, unit.size)
     charstr = "{} {} Hp:{} Sp:{}".format(healthbar, repr(unit), unit.size_repr(), unit.speed)
-    if side == 0:
-      return charstr
-    else:
-      return " "*0 + charstr
-
-  def disp_unit_situ(self, unit, side):
-    """ Ex: Albert Einstein -=Eureka=- <c-k-n> """
-    healthbar = disp_bar(20, unit.size_base, unit.size)
-    charstr = "{} {} Sp:{} {}".format(healthbar, unit.size_repr(), unit.speed, unit.status_real_repr())
     if side == 0:
       return charstr
     else:

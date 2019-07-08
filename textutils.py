@@ -1,5 +1,7 @@
 import sys
 import logging
+import rps
+
 # create logger with 'spam_application'
 logger = logging.getLogger("test")
 logger.setLevel(logging.DEBUG)
@@ -35,6 +37,9 @@ class Colors:
   GREEN = Fore.GREEN
   MAGENTA = Fore.MAGENTA
   CYAN = Fore.CYAN
+  # RPS
+  WIN = OKGREEN
+  LOSE = Fore.RED
 
 def color_prob(prob):
   pstr = "{:4.3f}".format(prob)
@@ -62,6 +67,7 @@ def color_damage(damage):
   
 MORE_STR = Fore.BLACK + Back.WHITE + "MORE... [hit a key]" + Colors.ENDC  
 
+
 class BattleScreen():
   def __init__(self):
     self.console_buf = []
@@ -71,11 +77,38 @@ class BattleScreen():
     self.max_console_len = 5
     self.battle = None # needs one eventually
 
+  def _colored_strats(self, orders):
+    orders = list(orders)
+    colors = []
+    for i in [0,1]:
+      other = 1-i
+      if rps.beats(orders[i], orders[other]):
+        colors.append(Colors.WIN)
+      elif rps.beats(orders[other], orders[i]):
+        colors.append(Colors.LOSE)
+      else:
+        colors.append("")
+    return tuple([colors[i] + orders[i] + Colors.ENDC for i in [0,1]])
+    
+    
+  def _day_status_str(self):
+    """ what to put on top"""
+    if len(self.battle.order_history) == self.battle.date: # orders were given
+      strat1, strat2 = self._colored_strats(tuple(self.battle.order_history[-1]))
+    else:
+      strat1 = strat2 = "?"
+    return "Day {}: ({}) {} vs {} ({}) {}".format(self.battle.date,
+                                                  self.battle.armies[0].name,
+                                                  strat1,
+                                                  strat2,
+                                                  self.battle.armies[1].name,
+                                                  str(self.battle.weather)) 
+    
   def blit_all_battle(self):
     # blits status
     self.disp_clear()
     print(disp_hrule()) # 1 line
-    print("Day {}: {}".format(self.battle.date, str(self.battle.weather))) # 2 lines
+    print(self._day_status_str())
     print(disp_hrule()) # 3 line
     # armies
     battle = self.battle

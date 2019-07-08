@@ -59,10 +59,15 @@ class Battle(object):
     self.date = 0
     self.order_history = []
     self.battlescreen = battlescreen
-    self.init_battle_state()
+    self.date = 1
+    self.weather = Weather(random.choice(list(WEATHER)))
+    for i in [0,1]:
+      for u in self.armies[i].units:
+        u.position = self.hqs[i]
+        self.hqs[i].add_unit(u)
 
   def init_battle_state(self):
-    self.date += 1
+    self.date = 1
     self.weather = Weather(random.choice(list(WEATHER)))
     for i in [0,1]:
       for u in self.armies[i].units:
@@ -138,11 +143,6 @@ class Battle(object):
     self.init_turn((orders[0], orders[1]))
     # preloading events
     yprint_hrule()
-    yprint("Day Starts: %s (%s) vs %s (%s)" % (self.order_history[-1][0],
-                                                  self.armies[0].name,
-                                                  self.order_history[-1][1],
-                                                  self.armies[1].name))
-    yprint_hrule()
     self._run_status_handlers("bot") # should be queue later
     yprint_hrule(debug=True)
     yprint("Running Orders;", debug=True)
@@ -164,13 +164,18 @@ class Battle(object):
     yprint_hrule(debug=True)
     self._run_queue('Q_RESOLVE')    
     self._run_status_handlers("eot") # should be queue later
+    self.battlescreen.pause_and_display() # could have undisplayed stuff
     for i in [0,1]:
       for u in self.armies[i].units:
         if u.position:
           u.move(self.hqs[u.armyid])
     assert all((p.is_empty() for p in self.dynamic_positions))
     self.dynamic_positions = []
-    self.battlescreen.pause_and_display()
+    self._next_day()
+
+  def _next_day(self):
+    self.date += 1
+    self.weather = Weather(random.choice(list(WEATHER)))
     
   def legal_order(self, order):
     return order.upper() in ["A", "D", "I"]

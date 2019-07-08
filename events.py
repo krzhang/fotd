@@ -36,8 +36,11 @@ class Context(object):
     return self.rebase({"ctarget":self.csource, "csource":self.ctarget})
 
   def speech(self, narrator, text):
-    """Ex: context.speech('csource', 'yo{ctarget}...')"""
-    self.opt[narrator].speech(text)
+    """
+    Ex: context.speech('csource', 'yo{ctarget}...')
+    should put in the context and then pass to the speaker
+    """
+    self.opt[narrator].speech(text.format(**self.opt))
   
 class EventType(object):
   def __init__(self, inputdict):
@@ -419,15 +422,15 @@ def lure_tactic(context, base_chance, improved_chance, success_callback):
       continue
     else: # we activate
       if roll > base_lure_chance:
-          # this means we came from a lure
-        lurer = random.choice(context.lure_candidates)
+        # this means we came from a lure
+        lurer = random.choice(lure_candidates)
         skill_narration("lure", "", True)
         lurer.speech(status.info("lure", "on_success_speech"))
         lure_success_text = skills.info("lure_tactic", "on_success")
         skill_narration("lure", lure_success_text.format(**{"lurer":lurer, "ctarget":targ}), True)
       else:
         # still a success, but it is not because of the lure
-        yprint("{ctarget} was also entangled into the tactic!".format(**{"ctarget":ctarget}))
+        yprint("{ctarget} was also entangled into the tactic!".format(**{"ctarget":target}))
       additional_activations.append(targ)
   for targ in tuple(additional_activations):
     success_callback(context.rebase({"ctarget":targ}))
@@ -448,9 +451,10 @@ def target_skill_tactic(context, cskill, cchance, success_callback):
   # TODO cchance = calc_chance(target, skill) or something
   cskill_on_prep = random.choice(skills.info(cskill, "on_roll")).format(**context.opt)
   skill_narration(cskill, cskill_on_prep)
+  # import pdb;pdb.set_trace()
   if success:
     narrator_str, narrate_text = random.choice(skills.info(cskill, "on_success_speech"))
-    context.speech(narator_str, narrate_text)
+    context.speech(narrator_str, narrate_text)
     success_callback(context)
     lure_tactic(context,
                 0.25, # base entanglement chance
@@ -458,7 +462,7 @@ def target_skill_tactic(context, cskill, cchance, success_callback):
                 success_callback)
   else:
     narrator_str, narrate_text = random.choice(skills.info(cskill, "on_fail_speech"))
-    context.speech(narator_str, narrate_text)
+    context.speech(narrator_str, narrate_text)
   skill_narration(cskill, "", success)
   return success  
 

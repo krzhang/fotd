@@ -334,21 +334,10 @@ def receive_damage(context):
   dmgstr = context.dmgstr
   if damage >= ctarget.size:
     damage = ctarget.size
-  hpbar = textutils.disp_bar(20, ctarget.size, ctarget.size - damage)
-  if dmgstr:
-    dmgstr = dmgstr + " "
-  fdmgstr = dmgstr + hpbar + " {} -> {} ({} damage)".format(
-    ctarget.size,
-    ctarget.size - damage,
-    textutils.color_damage(damage))
+  dmglog = context.dmglog or None
+  context.battle.battlescreen.disp_damage(20, ctarget.size, damage, dmgstr, dmglog)
   ctarget.size -= damage
-  if ctarget.size == 0:
-    fdmgstr += "; " + Colors.RED + "DESTROYED!" + Colors.ENDC
-  yprint(fdmgstr)
-  if context.dmglog:
-    dmg_str = textutils.damage_str(*context.dmglog)
-    yprint(context.dmglog, debug=True)
-
+  
 def receive_status(context):
   ctarget = context.ctarget
   stat_str = context.status

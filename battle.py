@@ -60,12 +60,7 @@ class Battle(object):
     self.date = 0
     self.order_history = []
     self.battlescreen = battlescreen
-    self.date = 1
-    self.weather = Weather(random.choice(list(WEATHER)))
-    for i in [0,1]:
-      for u in self.armies[i].units:
-        u.position = self.hqs[i]
-        self.hqs[i].add_unit(u)
+    self.init_battle_state()
 
   def init_battle_state(self):
     self.date = 1
@@ -74,7 +69,8 @@ class Battle(object):
       for u in self.armies[i].units:
         u.position = self.hqs[i]
         self.hqs[i].add_unit(u)
-    
+        u.last_turn_size = u.size
+
   def place_event(self, event_type, context, queue_name):
     """ 
     used when we want to make a new event on a queue of our choice 
@@ -177,6 +173,9 @@ class Battle(object):
   def _next_day(self):
     self.date += 1
     self.weather = Weather(random.choice(list(WEATHER)))
+    for i in [0,1]:
+      for u in self.armies[i].units:
+        u.last_turn_size = u.size
     
   def legal_order(self, order):
     return order.upper() in ["A", "D", "I"]

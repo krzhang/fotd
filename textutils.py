@@ -129,6 +129,21 @@ class BattleScreen():
     print(disp_hrule()) # 3 line      
     for i in self.console_buf:
       print(i)
+
+  def disp_damage(self, max_pos, oldsize, damage, dmgstr, dmglog):
+    newsize = oldsize - damage
+    hpbar = disp_bar_single_hit(20, oldsize, newsize)
+    ndmgstr = dmgstr
+    if ndmgstr:
+      ndmgstr += " "
+    fdmgstr = ndmgstr + hpbar + " {} -> {} ({} damage)".format(
+      oldsize, newsize, color_damage(damage))
+    if newsize == 0:
+      fdmgstr += "; " + Colors.RED + "DESTROYED!" + Colors.ENDC
+    yprint(fdmgstr)
+    if dmglog:
+      dmg_str = damage_str(*dmglog)
+      yprint(dmglog, debug=True)
       
   def disp_unit_header(self, unit, side):
     """ Ex: ################.... 7/16 Sp:12 """
@@ -141,7 +156,7 @@ class BattleScreen():
       return " "*0 + char1 + char2
     
   def disp_unit_newheader(self, unit, side):
-    healthbar = disp_bar(20, unit.size_base, unit.size)
+    healthbar = disp_bar_day_tracker(20, unit.size_base, unit.last_turn_size, unit.size)
     charstr = "{} {} Hp:{} Sp:{}".format(healthbar, repr(unit), unit.size_repr(), unit.speed)
     if side == 0:
       return charstr
@@ -202,11 +217,32 @@ def yprint(text, debug=False):
     return
   # so we get here if either SHOW_DEBUG or debug=False, which means we send it to the buffer
   BATTLE_SCREEN.print_line(text)
+
+def disp_bar_custom(colors, chars, nums):
+  """
+  all iterators, to make bars like this: '####$$$$----@@@@@@@@' etc.
+  k colors
+  k chars
+  k nums
+  the nums are meant to go from large to small, so max size first, etc.
+  """
+  makestr = ""
+  for i in zip(colors, chars, nums):
+    makestr += i[0]
+    makestr += i[1]*i[2]
+  return makestr
   
-  
-def disp_bar(total, base, cur):
+def disp_bar_single_hit(max_pos, oldhp, newhp):
   """Total: length; base: max; cur: current. """
-  return  Colors.OKGREEN + '#'*cur + Colors.RED + '#'*(base-cur) + Colors.ENDC + '.'*(total-base)
+  return disp_bar_custom([Colors.OKGREEN, Colors.RED, Colors.ENDC],
+                         ['#', '#', ' '],
+                         [newhp, oldhp-newhp, max_pos-oldhp ])
+  # return  Colors.OKGREEN + '#'*cur + Colors.RED + '#'*(base-cur) + Colors.ENDC + '.'*(total-base)
+
+def disp_bar_day_tracker(max_pos, base, last_turn, cur):
+  return disp_bar_custom([Colors.OKGREEN, Colors.RED, Colors.ENDC, Colors.ENDC],
+                         ['#', '#', '.', " "],
+                         [cur, last_turn-cur, base-last_turn, max_pos-base])
 
 def disp_hrule():
   return("="*80)

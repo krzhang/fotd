@@ -17,6 +17,7 @@ class Unit(object):
     self.attacked = [] # enemies attacked in a turn
     self.attacked_by = []
     self.position = None
+    self.last_turn_size = None
     
   def __eq__(self, other):
     return hasattr(self, "character") and hasattr(other, "character") and self.character == other.character

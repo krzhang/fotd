@@ -1,4 +1,5 @@
 import textutils
+from contexts import Context
 from textutils import yprint
 from colors import Colors
 import random
@@ -15,34 +16,6 @@ import insults
 # now only have to think about interplays between statuses and events (as opposed to aslo have)
 # skills involved
 
-class Context(object):
-  def __init__(self, battle, opt={}):
-    self.battle = battle
-    self.opt = opt
-    for o in opt:
-      setattr(self, o, opt[o])
-
-  def copy(self, additional_opt):
-    """Make a copy with the same battle context"""
-    nopt = self.opt.copy()
-    nopt.update(additional_opt)
-    return Context(self.battle, opt=nopt)
-
-  def rebase(self, opt):
-    """Make a copy with the same battle context"""
-    return Context(self.battle, opt=opt)
-
-  def rebase_switch(self):
-    """Most common usecase: create a context with switched source/ctargets. """
-    return self.rebase({"ctarget":self.csource, "csource":self.ctarget})
-
-  def speech(self, narrator, text):
-    """
-    Ex: context.speech('csource', 'yo{ctarget}...')
-    should put in the context and then pass to the speaker
-    """
-    self.opt[narrator].speech(text.format(**self.opt))
-  
 class EventType(object):
   def __init__(self, inputdict):
     for s in inputdict:
@@ -75,7 +48,7 @@ class Event(object):
     # if result and EVENTS[self.event_type]["can_aoe"]:
     #   # this is a tactic and we might be able to chain
     #   possible_aoe = self.context.ctarget.position 
-      
+
   @classmethod
   def gain_status(cls, stat_str, context, ctarget):
     """ Basically, nothing should call add_unit_status except for this, so all the handlers are tehre."""

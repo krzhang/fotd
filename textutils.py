@@ -68,7 +68,7 @@ class BattleScreen():
     self.max_screen_len = 24
     self.max_stat_len = 3
     self.max_armies_len = 20
-    self.max_console_len = 20
+    self.max_console_len = 5
     self.battle = None # needs one eventually
 
   def blit_all_battle(self):
@@ -94,8 +94,12 @@ class BattleScreen():
       
     for j in [0,1]:
       for unit in battle.armies[j].present_units():
-        print(self.disp_unit_header(unit, j))
-        print(self.disp_unit_situ(unit, j))
+        header = self.disp_unit_header(unit, j)
+        situ = self.disp_unit_situ(unit, j)
+        print(situ)
+        print(header)
+      if j == 0:
+        print(" "*39 + "VS" + " "*39)
           
     # # blits console
     # for i in range(self.max_console_len): # 11
@@ -103,10 +107,9 @@ class BattleScreen():
     #     print(self.console_buf[i])
     #   else:
     #     print("")
+    print(disp_hrule()) # 3 line      
     for i in self.console_buf:
       print(i)
-
-    print(disp_hrule()) # 3 line      
       
   def disp_unit_header(self, unit, side):
     char1 = "{} ".format(repr(unit))
@@ -127,7 +130,7 @@ class BattleScreen():
         
   def disp_clear(self):
     os.system('cls' if os.name == 'nt' else 'clear')
-
+    
   def pause_and_display(self):
     self.blit_all_battle()
     read_single_keypress()
@@ -144,13 +147,14 @@ BATTLE_SCREEN = BattleScreen()
     
 def yinput_battle_order(prompt):
   # return input(prompt)
-  inp = ' '
-  while(inp.upper() not in ['A', 'D', 'I']):
+  while(True):
     BATTLE_SCREEN.console_buf = []
-    BATTLE_SCREEN.print_line(prompt, end="")
     BATTLE_SCREEN.blit_all_battle()
+    print(prompt)
     inp = read_single_keypress()[0]
-  return inp.upper()
+    if inp.upper() in ['A', 'D', 'I']:
+      return inp.upper()
+      
 
 def yprint(text, debug=False):
   global SHOW_DEBUG
@@ -160,9 +164,6 @@ def yprint(text, debug=False):
   # so we get here if either SHOW_DEBUG or debug=False, which means we send it to the buffer
   BATTLE_SCREEN.print_line(text)
   
-def pause(clear=False):
-  console_buf.append(MORE_STR)
-  console_buf.pause_and_display()
   
 def disp_bar(total, base, cur):
   """Total: length; base: max; cur: current. """

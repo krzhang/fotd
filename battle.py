@@ -1,5 +1,5 @@
 import textutils
-from textutils import Colors, yprint, pause, yprint_hrule
+from textutils import Colors, yprint, yprint_hrule
 import random
 import events
 import intelligence
@@ -148,7 +148,7 @@ class Battle(object):
     yprint("Running Orders;", debug=True)
     yprint_hrule(debug=True)
     self._run_queue('Q_ORDER')
-    pause()
+    self.battlescreen.pause_and_display()
     yprint_hrule(debug=True)
     yprint("Units Manuever;", debug=True)
     yprint_hrule(debug=True)
@@ -170,7 +170,7 @@ class Battle(object):
           u.move(self.hqs[u.armyid])
     assert all((p.is_empty() for p in self.dynamic_positions))
     self.dynamic_positions = []
-    pause(clear=True)
+    self.battlescreen.pause_and_display()
     
   def legal_order(self, order):
     return order.upper() in ["A", "D", "I"]

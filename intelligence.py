@@ -5,12 +5,7 @@ from textutils import yinput_battle_order, yprint
 from mathutils import normalize
 
 def get_player_order(battle, armyid):
-  while(True):
-    order = yinput_battle_order("Input orders for army {}(A/D/I):".format(armyid))
-    if battle.legal_order(order):
-      return order.upper()
-    else:
-      yprint("Illegal order.")        
+  return yinput_battle_order("Input orders for army {}(A/D/I):".format(armyid))
     
 def get_AI_order(battle, armyid):
   # 2 paths: RPS and story-driven soul reading

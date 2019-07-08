@@ -446,10 +446,10 @@ def target_skill_tactic(context, cskill, cchance, success_callback):
   ctarget = context.ctarget
   success = random.random() < cchance # can replace with harder functions later
   # TODO cchance = calc_chance(target, skill) or something
-  cskill_on_prep = status.info(cskill, "on_roll").format(**context.opt)
+  cskill_on_prep = random.choice(skills.info(cskill, "on_roll")).format(**context.opt)
   skill_narration(cskill, cskill_on_prep)
   if success:
-    narrator_str, narrate_text = random.choice(status.info(cskill, "on_success_speech"))
+    narrator_str, narrate_text = random.choice(skills.info(cskill, "on_success_speech"))
     context.speech(narator_str, narrate_text)
     success_callback(context)
     lure_tactic(context,
@@ -457,7 +457,7 @@ def target_skill_tactic(context, cskill, cchance, success_callback):
                 0.6, # improved entanglement chance
                 success_callback)
   else:
-    narrator_str, narrate_text = random.choice(status.info(cskill, "on_fail_speech"))
+    narrator_str, narrate_text = random.choice(skills.info(cskill, "on_fail_speech"))
     context.speech(narator_str, narrate_text)
   skill_narration(cskill, "", success)
   return success  

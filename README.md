@@ -8,7 +8,7 @@ They say that which falls apart for a long time must reunite, and that which uni
 
 ## Inspirations
 
-Fall of the Dragon is a nod to the officer-based strategy titles I enjoyed as a kid, mainly inspired by KOEI's Romance of the Three Kingdoms (ROTK) series. Compared to those games, FOTD removes the static world and complex systems in exchange for procedural generation and simple but tactical choices. Its other main inspirations for FOTD are:
+Fall of the Dragon is a nod to the officer-based strategy titles I enjoyed as a kid, mainly inspired by KOEI's Romance of the Three Kingdoms (ROTK) series. Compared to those games, FOTD removes the static world and complex systems in exchange for procedural generation and simple but tactical choices. Its other main inspirations are:
 * Fighting games de-emphasizing complex combos and execution: Dive Kick, Nidhogg, Smash Brothers
 * Games based on outwitting with simple systems: Poker, Yomi, Coup, Love Letter, Go
 * Roguelikes with small decision spaces but are tactically interesting: Dream Quest, Slay the Spire

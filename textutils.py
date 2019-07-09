@@ -91,8 +91,10 @@ class BattleScreen():
                                                   strat2,
                                                   self.battle.armies[1].name,
                                                   str(self.battle.weather)) 
-    
-  def blit_all_battle(self):
+
+  
+  
+  def blit_all_battle(self, pause_str=None):
     # blits status
     self.disp_clear()
     print(disp_hrule()) # 1 line
@@ -131,7 +133,7 @@ class BattleScreen():
     #     print("")
     print(disp_hrule()) # 3 line      
     for i in self.console_buf:
-      print(i)
+      print(console_buf[i])
 
   def disp_damage(self, max_pos, oldsize, damage, dmgstr, dmglog):
     newsize = oldsize - damage
@@ -184,15 +186,14 @@ class BattleScreen():
       if inp.upper() in ['A', 'D', 'I']:
         return inp.upper()      
     
-  def pause_and_display(self):
-    self.blit_all_battle()
+  def pause_and_display(self, pause_str=None):
+    self.blit_all_battle(, pause_str=pause_str)
     read_single_keypress()
     self.console_buf = []
 
   def print_line(self, text):
     if len(self.console_buf) == self.max_console_len-2:
-      self.console_buf.append(MORE_STR)
-      self.pause_and_display()
+      self.pause_and_display(pause_str=MORE_STR)
     logging.info(text)
     self.console_buf.append(text)
 

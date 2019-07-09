@@ -35,10 +35,6 @@ class Character(object):
   def equip(self, item):
     self.items.append(item)
     self.calc_attributes()
-
-  def speech(self, otherstr):
-    """When this character says something """
-    return "  " + repr(self) + ": '" + Colors.GREEN + otherstr + Colors.ENDC + "'"
     
   def __repr__(self):
     if self.title:

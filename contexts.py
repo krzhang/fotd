@@ -24,10 +24,10 @@ class Context(object):
     """Most common usecase: create a context with switched source/ctargets. """
     return self.rebase({"ctarget":self.csource, "csource":self.ctarget})
 
-  def speech(self, narrator, text):
-    """
-    Ex: context.speech('csource', 'yo{ctarget}...')
-    should put in the context and then pass to the speaker
-    """
-    self.opt[narrator].speech(text.format(**self.opt))
+  # def speech(self, narrator, text):
+  #   """
+  #   Ex: context.speech('csource', 'yo{ctarget}...')
+  #   should put in the context and then pass to the speaker
+  #   """
+  #   self.opt[narrator].speech(text.format(**self.opt))
   

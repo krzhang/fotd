@@ -146,7 +146,6 @@ class Battle(object):
     orders = self.get_orders()
     self.init_turn((orders[0], orders[1]))
     # preloading events
-    self.yprint_hrule()
     self._run_status_handlers("bot") # should be queue later
     self.yprint("Running Orders;", debug=True)
     self._run_queue('Q_ORDER')
@@ -185,3 +184,4 @@ class Battle(object):
     if other_str == "":
       other_str = success_color(success) + successtr + Colors.ENDC
     self.yprint(skills.Skill(skill_str).activation_str(success) + " " + other_str)
+

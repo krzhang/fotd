@@ -59,9 +59,10 @@ class BattleScreen():
   def __init__(self, battle):
     self.console_buf = []
     self.max_screen_len = 24
-    self.max_stat_len = 3
-    self.max_armies_len = 20
-    self.max_console_len = 4
+    self.max_stat_len = 2
+    self.max_armies_len = 18
+    self.max_console_len = 3
+    self.max_footer_len = 1
     self.battle = battle # needs one eventually
     # self.screen = graphics.Screen.wrapper(graphics.battle_screen)
 
@@ -93,47 +94,59 @@ class BattleScreen():
                                                   str(self.battle.weather)) 
 
   
-  
-  def blit_all_battle(self, pause_str=None):
-    # blits status
-    self.disp_clear()
-    print(disp_hrule()) # 1 line
+
+  def _disp_statline(self):
     statline = self._day_status_str()
     print(statline)
-    print(disp_hrule()) # 3 line
-    # armies
+    print(disp_hrule()) # 2 lines
+
+  def _disp_armies(self): # 18 lines
     battle = self.battle
     armies_buf = []
-    disp1 = {0:None, 1:None}
-    disp2 = {0:None, 1:None}
-
-    # for i in range(5):
-    #   for j in [0,1]:
-    #     if len(battle.armies[j].present_units()) > i:
-    #       disp1[j] = self.disp_unit_header(battle.armies[j].present_units()[i], j)
-    #       disp2[j] = self.disp_unit_situ(battle.armies[j].present_units()[i], j)
-    #     else:
-    #       disp1[j] = " "*40
-    #       disp2[j] = " "*40
       
     for j in [0,1]:
-      for unit in battle.armies[j].present_units():
-        header = self.disp_unit_newheader(unit, j)
-        situ = self.disp_unit_newsitu(unit, j)
+      for i in range(4):
+        if len(battle.armies[j].present_units()) > i:
+          unit = battle.armies[j].present_units()[i]
+          header = self.disp_unit_newheader(unit, j)
+          situ = self.disp_unit_newsitu(unit, j)
+        else:
+          header = ""
+          situ = ""
         print(header)
         print(situ)
       if j == 0:
         print(" "*39 + "VS" + " "*39)
-          
+    print(disp_hrule())
+
+  def _disp_console(self):
     # # blits console
     # for i in range(self.max_console_len): # 11
     #   if len(self.console_buf) > i:
     #     print(self.console_buf[i])
     #   else:
     #     print("")
-    print(disp_hrule()) # 3 line      
-    for i in self.console_buf:
-      print(console_buf[i])
+    for i in range(self.max_console_len):
+      if len(self.console_buf) > i:
+        print(self.console_buf[i])
+      else:
+        print("")
+
+  def _disp_footerline(self, pause_str):
+    if pause_str:
+      print(pause_str, end="", flush=True)
+    else:
+      print(disp_hrule(), end="", flush=True)
+        
+  def blit_all_battle(self, pause_str=None):
+    # blits status
+    self.disp_clear()
+    self._disp_statline() # 2 lines
+    self._disp_armies() # 18 lines
+    self._disp_console() # 3 lines
+    self._disp_footerline(pause_str) # 1 line
+    self.console_buf = []
+    return read_single_keypress()[0]
 
   def disp_damage(self, max_pos, oldsize, damage, dmgstr, dmglog):
     newsize = oldsize - damage
@@ -171,7 +184,6 @@ class BattleScreen():
       return charstr
     else:
       return " "*0 + charstr
-
     
   def disp_clear(self):
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -179,23 +191,21 @@ class BattleScreen():
   def input_battle_order(self, armyid):
     # return input(prompt)
     while(True):
-      self.console_buf = []
-      self.blit_all_battle()
-      print("Input orders for army {}(A/D/I):".format(armyid), end="", flush=True)
-      inp = read_single_keypress()[0]
+      pause_str = Colors.INVERT +  "Input orders for army {}(A/D/I):".format(armyid) + Colors.ENDC
+      inp = self.blit_all_battle(pause_str=pause_str)
       if inp.upper() in ['A', 'D', 'I']:
         return inp.upper()      
     
   def pause_and_display(self, pause_str=None):
-    self.blit_all_battle(, pause_str=pause_str)
-    read_single_keypress()
-    self.console_buf = []
+    _ = self.blit_all_battle(pause_str=pause_str)
 
   def print_line(self, text):
-    if len(self.console_buf) == self.max_console_len-2:
+    assert len(self.console_buf) <= self.max_console_len
+    self.console_buf.append(text)
+    if len(self.console_buf) == self.max_console_len:
+      # just filled
       self.pause_and_display(pause_str=MORE_STR)
     logging.info(text)
-    self.console_buf.append(text)
 
   def yprint(self, text, debug=False):
     global SHOW_DEBUG

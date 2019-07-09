@@ -55,6 +55,13 @@ class Event(object):
                                                     "stat_viz":str(status.Status(stat_str))})).activate()
 
   @classmethod
+  def make_speech(cls, unit, context, speech):
+    battle = context.battle
+    newspeech = speech.format(**context.opt)
+    Event("make_speech", context=context.copy(additional_opt={"ctarget":unit,
+                                                        "speech":newspeech})).activate()
+    
+  @classmethod
   def remove_status(cls, stat_str, context, ctarget):
     pass
 
@@ -253,15 +260,15 @@ def arrow_strike(context):
   if csource.has_unit_status("fire_arrow"):
     if random.random() < 0.5 and not context.battle.is_raining():
       context.battle.skill_narration("fire_arrow", "{}'s arrows are covered with fire!".format(csource), True)
-      context.battle.yprint(csource.speech("Light'em up!"))
+      Event.make_speech(csource, context, "Light'em up!")
       Event.gain_status("burned", context, ctarget)
   if csource.has_unit_status("chu_ko_nu"):
     if random.random() < 0.5:
       context.battle.skill_narration("chu_ko_nu", "{}'s arrows continue to rain!".format(csource), True)
       if csource.name == "Zhuge Liang":
-        context.battle.yprint(csource.speech("The name is a bit embarassing..."))
+        Event.make_speech(csource, context, "The name is a bit embarassing...")
       else:
-        context.battle.yprint(csource.speech("Have some more!"))
+        Event.make_speech(csource, context, "Have some more!")
       Event("arrow_strike", context).activate()
   if ctarget.has_unit_status("counter_arrow"):
     if random.random() < 0.85:
@@ -311,6 +318,10 @@ EVENTS_MISC = {
   #   "actors":["ctarget_army"],
   #   "primary_actor": "ctarget_army"
   # },
+  "make_speech": {
+    "actors":["ctarget"],
+    "primary_actor": "ctarget"
+  },
   "receive_damage": {
     "actors":["ctarget"],
     "primary_actor": "ctarget"
@@ -325,7 +336,12 @@ EVENTS_MISC = {
 # for ev in EVENTS_RECEIVE:
 #   EVENTS_RECEIVE[ev]["panic_blocked"] = True
 # No common rules here...
-  
+
+def make_speech(context): 
+  ctarget = context.ctarget
+  speech_str = context.speech
+  context.battle.yprint(repr(ctarget) + ": '" + Colors.GREEN + speech_str + Colors.ENDC + "'")
+
 def receive_damage(context):
   ctarget = context.ctarget
   damage = context.damage
@@ -353,7 +369,7 @@ def counter_arrow_strike(context):
   csource = context.csource
   ctarget = context.ctarget
   context.battle.skill_narration("counter_arrow", "{} counters with their own volley".format(csource), True)
-  context.battle.yprint(csource.speech("Let's show them guys how to actually use arrows!"))
+  Event.make_speech(csource, context, "Let's show them guys how to actually use arrows!")
   Event("arrow_strike",
         context.rebase({"csource":csource, "ctarget":ctarget})).activate()
   return True
@@ -417,7 +433,7 @@ def target_skill_tactic(context, cskill, cchance, success_callback):
   # import pdb;pdb.set_trace()
   if success:
     narrator_str, narrate_text = random.choice(skills.info(cskill, "on_success_speech"))
-    context.speech(narrator_str, narrate_text)
+    Event.make_speech(context.opt[narrator_str], context, narrate_text)
     success_callback(context)
     lure_tactic(context,
                 0.25, # base entanglement chance
@@ -425,7 +441,7 @@ def target_skill_tactic(context, cskill, cchance, success_callback):
                 success_callback)
   else:
     narrator_str, narrate_text = random.choice(skills.info(cskill, "on_fail_speech"))
-    context.speech(narrator_str, narrate_text)
+    Event.make_speech(context.opt[narrator_str], context, narrate_text)
   context.battle.skill_narration(cskill, "", success)
   return success  
 
@@ -443,13 +459,13 @@ def jeer(context):
   context.battle.skill_narration("jeer",
                   "{} prepares their best insults...".format(csource))
   ins = random.choice(insults.INSULTS)
-  context.battle.yprint(csource.speech(ins[0]))
+  Event.make_speech(csource, context, ins[0])
   if success:
-    context.battle.yprint(ctarget.speech("Why you..."))
+    Event.make_speech(ctarget, context, "Why you...")
     Event.gain_status("berserk", context, ctarget)
     # TODO: AOE
   else:
-    context.battle.yprint(ctarget.speech(ins[1]))
+    Event.make_speech(ctarget, context, ins[1])
   context.battle.skill_narration("jeer", "", success)
   return success
 
@@ -577,9 +593,10 @@ def trymode_status_bot(context):
   success = random.random() < trymodeprob
   context.battle.skill_narration("trymode", "{} looks for an excuse to pretend to be powered up...".format(ctarget))
   if success:
-    context.battle.yprint(ctarget.speech("Did you really think I took you seriously before?"))
+    # import pdb; pdb.set_trace()
+    Event.make_speech(ctarget, context, "Did you really think I took you seriously before?")
     Event.gain_status("trymode_activated", context, ctarget) 
   else:
-    context.battle.yprint(ctarget.speech("I have not tried yet, and I still do not need to."))
+    Event.make_speech(ctarget, context, "I have not tried yet, and I still do not need to.")
   context.battle.skill_narration("trymode", "", success)
 

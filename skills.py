@@ -1,14 +1,4 @@
-from textutils import yprint
-from colors import Colors
-
-def _success_color(success):
-  if success:
-    return Colors.OKGREEN
-  elif success == False:
-    return Colors.MAGENTA
-  else:
-    # when we don't know if it failed
-    return Colors.GREEN
+from colors import Colors, success_color
 
 class Skill(object):
 
@@ -23,25 +13,13 @@ class Skill(object):
     return self.skill_str == other.skill_str
   
   def activation_str(self, success=None):
-    return "<" + _success_color(success) + " ".join(self.skill_str.upper().split("_")) + Colors.ENDC + ">"
+    return "<" + success_color(success) + " ".join(self.skill_str.upper().split("_")) + Colors.ENDC + ">"
 
   def __repr__(self):
     return "<" + Colors.GREEN + self.skill_str + Colors.ENDC + ">"
   
-  def narrate(self, otherstr):
-    yprint("  " + self.activation_str() + " " + otherstr)
-
   def short(self):
     return "<" + Colors.GREEN + info(self.skill_str, "short") + Colors.ENDC + ">"
-
-def skill_narration(skill_str, other_str, success=None):
-  if success:
-    successtr = "SUCCESS!"
-  else:
-    successtr = "FAIL!"
-  if other_str == "":
-    other_str = _success_color(success) + successtr + Colors.ENDC
-  yprint(Skill(skill_str).activation_str(success) + " " + other_str)
 
 def info(skill_str, key):
   if key in SKILLS[skill_str]:

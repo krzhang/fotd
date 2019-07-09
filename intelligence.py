@@ -1,11 +1,10 @@
 # import textutils
 import numpy as np
 import skills
-from textutils import yinput_battle_order, yprint
 from mathutils import normalize
 
 def get_player_order(battle, armyid):
-  return yinput_battle_order("Input orders for army {}(A/D/I):".format(armyid))
+  return battle.battlescreen.input_battle_order(armyid)
     
 def get_AI_order(battle, armyid):
   # 2 paths: RPS and story-driven soul reading
@@ -26,9 +25,9 @@ def get_AI_order(battle, armyid):
     priors += np.array([1-m, 1-m, 1-m])
     assert min(priors) > 0
   newpriors = normalize(priors)
-  yprint("  AI predicts player (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*newpriors))
+  battle.yprint("  AI predicts player (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*newpriors))
   counters = np.array(list(newpriors[2:]) + list(newpriors[:2]))
-  yprint("  AI counterpicks    (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters))
+  battle.yprint("  AI counterpicks    (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters))
   return np.random.choice(["A", "D", "I"], p=counters)    
 
 def get_order(battle, int_type, armyid):

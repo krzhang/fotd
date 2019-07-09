@@ -1,3 +1,4 @@
+import graphics
 import sys
 import logging
 import rps
@@ -55,13 +56,14 @@ def damage_str(s_str, d_str, dicecount, hitprob, raw_damage):
 MORE_STR = Colors.INVERT + "MORE... [hit a key]" + Colors.ENDC  
 
 class BattleScreen():
-  def __init__(self):
+  def __init__(self, battle):
     self.console_buf = []
     self.max_screen_len = 24
     self.max_stat_len = 3
     self.max_armies_len = 20
     self.max_console_len = 4
-    self.battle = None # needs one eventually
+    self.battle = battle # needs one eventually
+    # self.screen = graphics.Screen.wrapper(graphics.battle_screen)
 
   def _colored_strats(self, orders):
     orders = list(orders)
@@ -94,7 +96,8 @@ class BattleScreen():
     # blits status
     self.disp_clear()
     print(disp_hrule()) # 1 line
-    print(self._day_status_str())
+    statline = self._day_status_str()
+    print(statline)
     print(disp_hrule()) # 3 line
     # armies
     battle = self.battle
@@ -140,10 +143,10 @@ class BattleScreen():
       oldsize, newsize, color_damage(damage))
     if newsize == 0:
       fdmgstr += "; " + Colors.RED + "DESTROYED!" + Colors.ENDC
-    yprint(fdmgstr)
+    self.yprint(fdmgstr)
     if dmglog:
       dmg_str = damage_str(*dmglog)
-      yprint(dmglog, debug=True)
+      self.yprint(dmglog, debug=True)
       
   def disp_unit_newheader(self, unit, side):
     healthbar = disp_bar_day_tracker(20, unit.size_base, unit.last_turn_size, unit.size)
@@ -170,6 +173,16 @@ class BattleScreen():
     
   def disp_clear(self):
     os.system('cls' if os.name == 'nt' else 'clear')
+
+  def input_battle_order(self, armyid):
+    # return input(prompt)
+    while(True):
+      self.console_buf = []
+      self.blit_all_battle()
+      print("Input orders for army {}(A/D/I):".format(armyid), end="", flush=True)
+      inp = read_single_keypress()[0]
+      if inp.upper() in ['A', 'D', 'I']:
+        return inp.upper()      
     
   def pause_and_display(self):
     self.blit_all_battle()
@@ -177,32 +190,22 @@ class BattleScreen():
     self.console_buf = []
 
   def print_line(self, text):
-    if len(self.console_buf) == self.max_console_len:
+    if len(self.console_buf) == self.max_console_len-2:
       self.console_buf.append(MORE_STR)
       self.pause_and_display()
     logging.info(text)
     self.console_buf.append(text)
 
-BATTLE_SCREEN = BattleScreen()
-    
-def yinput_battle_order(prompt):
-  # return input(prompt)
-  while(True):
-    BATTLE_SCREEN.console_buf = []
-    BATTLE_SCREEN.blit_all_battle()
-    print(prompt)
-    inp = read_single_keypress()[0]
-    if inp.upper() in ['A', 'D', 'I']:
-      return inp.upper()
-      
-
-def yprint(text, debug=False):
-  global SHOW_DEBUG
-  logging.debug(text) # always log this
-  if debug and not SHOW_DEBUG:
-    return
-  # so we get here if either SHOW_DEBUG or debug=False, which means we send it to the buffer
-  BATTLE_SCREEN.print_line(text)
+  def yprint(self, text, debug=False):
+    global SHOW_DEBUG
+    logging.debug(text) # always log this
+    if debug and not SHOW_DEBUG:
+      return
+    # so we get here if either SHOW_DEBUG or debug=False, which means we send it to the buffer
+    self.print_line(text)
+	  
+  def yprint_hrule(self, debug=False):
+    self.yprint(disp_hrule(), debug)
 
 def disp_bar_custom(colors, chars, nums):
   """
@@ -232,9 +235,7 @@ def disp_bar_day_tracker(max_pos, base, last_turn, cur):
 
 def disp_hrule():
   return("="*80)
-
-def yprint_hrule(debug=False):
-  yprint(disp_hrule(), debug)
+  
 # import pygcurse
 # win = pygcurse.PygcurseWindow(40, 25, 'Fall of the Dragon')
 # print = win.pygprint

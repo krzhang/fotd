@@ -1,6 +1,5 @@
 import textutils
-from textutils import yprint, yprint_hrule
-from colors import Colors
+from colors import Colors, success_color
 import contexts
 import random
 import events
@@ -38,7 +37,7 @@ class Battle(object):
 
   QUEUE_NAMES = ["Q_PRELIM", "Q_ORDER", "Q_MANUEVER", "Q_RESOLVE", "Q_CLEANUP"]
   
-  def __init__(self, army1, army2, battlescreen):
+  def __init__(self, army1, army2):
     self.armies = [army1, army2]
     for a in self.armies:
       for u in a.units:
@@ -60,7 +59,7 @@ class Battle(object):
     # other stuff
     self.date = 0
     self.order_history = []
-    self.battlescreen = battlescreen
+    self.battlescreen = textutils.BattleScreen(self)
     self.init_battle_state()
 
   def init_battle_state(self):
@@ -79,6 +78,12 @@ class Battle(object):
     we pop from right, so we should place left.
     """
     self.queues[queue_name].appendleft(events.Event(event_type, context))
+
+  def yprint(self, text, debug=False):
+    self.battlescreen.yprint(text, debug)
+
+  def yprint_hrule(self, debug=False):
+    self.battlescreen.yprint_hrule(debug)
     
   def _run_status_handlers(self, func_key):
     for i in [0,1]:
@@ -141,26 +146,14 @@ class Battle(object):
     orders = self.get_orders()
     self.init_turn((orders[0], orders[1]))
     # preloading events
-    yprint_hrule()
+    self.yprint_hrule()
     self._run_status_handlers("bot") # should be queue later
-    yprint_hrule(debug=True)
-    yprint("Running Orders;", debug=True)
-    yprint_hrule(debug=True)
+    self.yprint("Running Orders;", debug=True)
     self._run_queue('Q_ORDER')
-    self.battlescreen.pause_and_display()
-    yprint_hrule(debug=True)
-    yprint("Units Manuever;", debug=True)
-    yprint_hrule(debug=True)
+    self.yprint("Units Manuever;", debug=True)
     self._run_queue('Q_MANUEVER')
-    yprint_hrule(debug=True)
-    yprint_hrule(debug=True)
-    yprint("All Units in Position;",debug=True)
-    yprint_hrule(debug=True)
-    # self.display_positions()
-    #pause()
-    yprint_hrule(debug=True)
-    yprint("Fighting Resolves",debug=True)
-    yprint_hrule(debug=True)
+    self.yprint("All Units in Position;",debug=True)
+    self.yprint("Fighting Resolves",debug=True)
     self._run_queue('Q_RESOLVE')    
     self._run_status_handlers("eot") # should be queue later
     self.battlescreen.pause_and_display() # could have undisplayed stuff
@@ -184,3 +177,11 @@ class Battle(object):
         return 1-i
     return None
     
+  def skill_narration(self, skill_str, other_str, success=None):
+    if success:
+      successtr = "SUCCESS!"
+    else:
+      successtr = "FAIL!"
+    if other_str == "":
+      other_str = success_color(success) + successtr + Colors.ENDC
+    self.yprint(skills.Skill(skill_str).activation_str(success) + " " + other_str)

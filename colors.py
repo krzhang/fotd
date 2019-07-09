@@ -22,3 +22,12 @@ class Colors:
   LOSE = Fore.RED
   INVERT = Fore.BLACK + Back.WHITE
 
+def success_color(success):
+  if success:
+    return Colors.OKGREEN
+  elif success == False:
+    return Colors.MAGENTA
+  else:
+    # when we don't know if it failed
+    return Colors.GREEN
+

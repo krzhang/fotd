@@ -1,4 +1,3 @@
-from textutils import yprint
 from colors import Colors
 import skills
 

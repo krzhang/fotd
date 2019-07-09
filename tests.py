@@ -160,13 +160,15 @@ def test(debug=False, resize=False, two_players=False):
     second_intelligence = "AI_ARMY"
   army0 = army_mysticsoft(0, Colors.BLUE, "PLAYER_ARMY")
   army1 = army_unknown(1, Colors.RED, second_intelligence)
-  bat = battle.Battle(army0, army1, textutils.BATTLE_SCREEN)
-  textutils.BATTLE_SCREEN.battle = bat
-  
   if resize:
-    print ("\x1b[8;{};80t".format(textutils.BATTLE_SCREEN.max_screen_len))  
+    print ("\x1b[8;24;80t")
+    # print ("\x1b[8;{};80t".format(textutils.BATTLE_SCREEN.max_screen_len))
+  bat = battle.Battle(army0, army1)
+  
   while(True):
     bat.take_turn()
     if bat.win_army() != None:
       sys.exit(0)
       
+if __name__ == "__main__":
+  test(resize=True)

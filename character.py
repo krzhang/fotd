@@ -1,5 +1,4 @@
 from colors import Colors
-from textutils import yprint
 import skills
 
 STAT_BASES = {"power":"power_base",
@@ -39,7 +38,7 @@ class Character(object):
 
   def speech(self, otherstr):
     """When this character says something """
-    yprint("  " + repr(self) + ": '" + Colors.GREEN + otherstr + Colors.ENDC + "'")
+    return "  " + repr(self) + ": '" + Colors.GREEN + otherstr + Colors.ENDC + "'"
     
   def __repr__(self):
     if self.title:

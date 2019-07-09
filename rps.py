@@ -13,7 +13,7 @@ STRATEGIC_ORDERS = {
     "event": "defense_order",
   },
   "I": {
-    "event:": "indirect_order"
+    "event": "indirect_order"
   }
 }
 o2e = {"A": "attack_order", "D": "defense_order", "I":"indirect_order"}

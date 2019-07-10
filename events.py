@@ -1,5 +1,4 @@
 from contexts import Context
-from colors import Colors
 import random
 import numpy as np
 import positions
@@ -342,7 +341,7 @@ EVENTS_MISC = {
 def make_speech(context): 
   ctarget = context.ctarget
   speech_str = context.speech
-  context.battle.yprint(repr(ctarget) + ": '" + Colors.GREEN + speech_str + Colors.ENDC + "'")
+  context.battle.yprint(repr(ctarget) + ": '$[2$]" + speech_str + "$[7$]'")
 
 def receive_damage(context):
   ctarget = context.ctarget

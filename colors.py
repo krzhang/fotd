@@ -112,4 +112,32 @@ def str_to_colorama(my_str):
   for k in STR_TO_CR:
     new_str = new_str.replace(k, STR_TO_CR[k])
   return new_str
+
+# color functions
+
+def color_prob(prob):
+  pstr = "{:4.3f}".format(prob)
+  if prob > 0.75:
+    return Colors.GREEN + pstr + Colors.ENDC
+  elif prob > 0.5:
+    return Colors.MAGENTA + pstr + Colors.ENDC
+  elif prob > 0.25:
+    return Colors.YELLOW + pstr + Colors.ENDC
+  else:
+    return Colors.RED + pstr + Colors.ENDC
   
+def color_damage(damage):
+  if damage == 0:
+    return Colors.OKGREEN + str(damage) + Colors.ENDC
+  elif damage <= 3:
+    return str(damage)
+  else:
+    return Colors.RED + str(damage) + Colors.ENDC
+
+def color_size(size, size_base):
+  if size >= 0.66*size_base:
+    return Colors.OKGREEN
+  elif size >= 0.33*size_base:
+    return Colors.YELLOW
+  else:
+    return Colors.RED

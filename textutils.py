@@ -25,29 +25,10 @@ from colors import Colors, Colours, Fore, Back, Style
 ######################
 # Formatting Strings #
 ######################
-
-def color_prob(prob):
-  pstr = "{:4.3f}".format(prob)
-  if prob > 0.75:
-    return Colors.GREEN + pstr + Colors.ENDC
-  elif prob > 0.5:
-    return Colors.MAGENTA + pstr + Colors.ENDC
-  elif prob > 0.25:
-    return Colors.YELLOW + pstr + Colors.ENDC
-  else:
-    return Colors.RED + pstr + Colors.ENDC
   
-def color_damage(damage):
-  if damage == 0:
-    return Colors.OKGREEN + str(damage) + Colors.ENDC
-  elif damage <= 3:
-    return str(damage)
-  else:
-    return Colors.RED + str(damage) + Colors.ENDC
-
 def damage_str(s_str, d_str, dicecount, hitprob, raw_damage):
   return "[Strength: ({:4.3f} vs. {:4.3f}); {} dice with chance {} each; Final: {}]".format(
-    s_str, d_str, dicecount, color_prob(hitprob), color_damage(raw_damage))
+    s_str, d_str, dicecount, colors.color_prob(hitprob), colors.color_damage(raw_damage))
 
 ######
 # Display (convert to string) Functions #
@@ -211,7 +192,7 @@ class BattleScreen():
     if ndmgstr:
       ndmgstr += " "
     fdmgstr = ndmgstr + hpbar + " {} -> {} ({} damage)".format(
-      oldsize, newsize, color_damage(damage))
+      oldsize, newsize, colors.color_damage(damage))
     if newsize == 0:
       fdmgstr += "; " + Colors.RED + "DESTROYED!" + Colors.ENDC
     self.yprint(fdmgstr)

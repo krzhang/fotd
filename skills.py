@@ -1,4 +1,4 @@
-from colors import Colors, success_color
+from colors import success_color
 
 class Skill(object):
 
@@ -13,13 +13,13 @@ class Skill(object):
     return self.skill_str == other.skill_str
   
   def activation_str(self, success=None):
-    return "<" + success_color(success) + " ".join(self.skill_str.upper().split("_")) + Colors.ENDC + ">"
+    return "<" + success_color(success) + " ".join(self.skill_str.upper().split("_")) + "$[7$]>"
 
   def __repr__(self):
-    return "<" + Colors.GREEN + self.skill_str + Colors.ENDC + ">"
+    return "<$[2$]" + self.skill_str + "$[7$]>"
   
   def short(self):
-    return "<" + Colors.GREEN + info(self.skill_str, "short") + Colors.ENDC + ">"
+    return "<$[2$]" + info(self.skill_str, "short") + "$[7$]>"
 
 def info(skill_str, key):
   if key in SKILLS[skill_str]:
@@ -68,7 +68,7 @@ SKILLS = {
   "lure": {
     "ai_eval": (0,0,1),
     "short": 'lure',
-    "on_success": "{lurer} " + Colors.GREEN + "lures " + Colors.ENDC + "{ctarget} into the tactic!",
+    "on_success": "{lurer} $[2$]lures$[7$] {ctarget} into the tactic!",
     "on_success_speech": [("lurer","Here, kitty kitty kitty...")],
   },
   "jeer": {

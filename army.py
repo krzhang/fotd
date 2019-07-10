@@ -1,7 +1,7 @@
 import skills
 import status
 import intelligence
-from colors import Colors
+import colors
 
 class Unit(object):
   def __init__(self, character, size, speed):
@@ -26,7 +26,7 @@ class Unit(object):
     return repr(self.character)
 
   def size_repr(self):
-    csize = self._size_single_repr(self.size) + str(self.size) + Colors.ENDC
+    csize = colors.color_size(self.size, self.size_base) + str(self.size) + "$[7$]"
     return "{}/{}".format(str(csize), str(self.size_base)) 
   
   def status_real_repr(self):
@@ -39,13 +39,6 @@ class Unit(object):
   def __str__(self):
     return str(self.character)
 
-  def _size_single_repr(self, size):
-    if size >= 0.66*self.size_base:
-      return Colors.OKGREEN
-    elif size >= 0.33*self.size_base:
-      return Colors.YELLOW
-    else:
-      return Colors.RED
   
   def speech(self, otherstr):
     """ When we need him to say something """

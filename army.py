@@ -38,12 +38,7 @@ class Unit(object):
 
   def __str__(self):
     return str(self.character)
-
   
-  def speech(self, otherstr):
-    """ When we need him to say something """
-    self.character.speech(otherstr)
-
   def has_unit_status(self, stat_str):
     return stat_str in [s.stat_str for s in self.unit_status]
   
@@ -109,9 +104,6 @@ class Army(object):
 
   def __repr__(self):
     return "Army({})".format(self.name)
-
-  def str_color(self):
-    return "$[{}]{}$[{}]".format(self.color, self.name, 7) # eventually move out  
 
   def is_present(self):
     return any([u for u in self.units if u.is_present()])

@@ -1,9 +1,13 @@
+
 # from collections import UserDict
 # 
 # only if we eventually inherit here.
 # [The problem with inheriting from dict and list in Python - Trey Hunner](https://treyhunner.com/2019/04/why-you-shouldnt-inherit-from-list-and-dict-in-python/)
 
 class Context(object):
+
+  # currently a terrible more complex version of a dictionary. Sigh
+  
   def __init__(self, battle, opt={}):
     self.battle = battle
     self.opt = opt

@@ -292,7 +292,10 @@ def physical_strike(context):
   # ctarget.add_unit_status("received_physical_attack")
   ctarget.attacked_by.append(csource)
   csource.attacked.append(ctarget)
-  Event("receive_damage", context.rebase({"damage":damage, "ctarget":ctarget, "dmgstr":dmgstr, "dmglog":damlog})).activate()
+  Event("receive_damage", context.rebase({"damage":damage,
+                                          "ctarget":ctarget,
+                                          "dmgstr":dmgstr,
+                                          "dmglog":damlog})).activate()
 
 EVENTS_GENERIC_CTARGETTED = {
   "arrow_strike": {},

@@ -5,6 +5,7 @@ from colors import Colors
 from character import Character
 from army import Unit, Army
 import battle
+import intelligence
 import events
 import random
 import status
@@ -155,10 +156,10 @@ link_data_funcs()
 def test(debug=False, resize=False, two_players=False):
   textutils.SHOW_DEBUG = debug
   if two_players:
-    second_intelligence = "PLAYER_ARMY"
+    second_intelligence = "INT_PLAYER"
   else:
-    second_intelligence = "AI_ARMY"
-  army0 = army_mysticsoft(0, Colors.BLUE, "PLAYER_ARMY")
+    second_intelligence = "INT_AI"
+  army0 = army_mysticsoft(0, Colors.BLUE, "INT_PLAYER")
   army1 = army_unknown(1, Colors.RED, second_intelligence)
   if resize:
     print ("\x1b[8;24;80t")

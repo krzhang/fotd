@@ -87,10 +87,10 @@ class BattleScreen():
     else:
       strat1 = strat2 = "?"
     return "Day {}: ({}) {} vs {} ({}) {}".format(self.battle.date,
-                                                  self.battle.armies[0].name,
+                                                  self.battle.armies[0],
                                                   strat1,
                                                   strat2,
-                                                  self.battle.armies[1].name,
+                                                  self.battle.armies[1],
                                                   str(self.battle.weather)) 
 
   
@@ -187,6 +187,14 @@ class BattleScreen():
     
   def disp_clear(self):
     os.system('cls' if os.name == 'nt' else 'clear')
+
+  def input_battle_formation(self, armyid):
+    # return input(prompt)
+    while(True):
+      pause_str = Colors.INVERT +  "Input formation for army {}(O/D):".format(armyid) + Colors.ENDC
+      inp = self.blit_all_battle(pause_str=pause_str)
+      if inp.upper() in ['O', 'D']:
+        return inp.upper()          
 
   def input_battle_order(self, armyid):
     # return input(prompt)

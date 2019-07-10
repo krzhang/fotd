@@ -57,14 +57,16 @@ class Battle(object):
     for qname in Battle.QUEUE_NAMES:
       self.queues[qname] = deque()
     # other stuff
-    self.date = 0
     self.order_history = []
     self.battlescreen = textutils.BattleScreen(self)
     self.init_battle_state()
 
   def init_battle_state(self):
+    # common knowledge: later take out
     self.date = 1
     self.weather = Weather(random.choice(list(WEATHER)))
+    self.formations = [None, None]
+    # setup stuff
     for i in [0,1]:
       self.armies[i].yomi_edge = None
       for u in self.armies[i].units:
@@ -117,10 +119,16 @@ class Battle(object):
   #     if not p.is_empty():
   #       p.display(debug=True)
 
+  def get_formations(self):
+    ordersdict = {}
+    for i in [0,1]:
+      ordersdict[i] = self.armies[i].intelligence.get_formation(self,  i)
+    return ordersdict
+  
   def get_orders(self):
     ordersdict = {}
     for i in [0,1]:
-      ordersdict[i] = intelligence.get_order(self, self.armies[i].intelligence_type, i)
+      ordersdict[i] = self.armies[i].intelligence.get_order(self,  i)
     return ordersdict
 
   def init_turn(self, orders):
@@ -143,6 +151,12 @@ class Battle(object):
       self.place_event(o[1], o[2], "Q_ORDER")
   
   def take_turn(self):
+    formations = self.get_formations()
+    self.formations = (formations[0], formations[1])
+    for i in [0,1]:
+      form = self.formations[i]
+      self.yprint("{} takes a {} formation.".format(self.armies[i],
+                                                    rps.FORMATION_ORDERS[form]["adj"]))
     orders = self.get_orders()
     self.init_turn((orders[0], orders[1]))
     # preloading events

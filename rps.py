@@ -5,6 +5,19 @@ BEATS = {'A':{'A':0, 'D':-1, 'I':1},
          'D':{'A':1, 'D':0, 'I':-1},
          'I':{'A':-1, 'D':1, 'I':0},}
 
+FORMATION_ORDERS = {
+  'O': {
+    "desc": "Offensive Formation",
+    "status": "form_offensive",
+    "adj": "offensive",
+  },
+  "D": {
+    "adj": "defensive",
+    "desc":"Defensive Formation",
+    "status": "form_defensive"
+  }
+}
+
 STRATEGIC_ORDERS = {
   "A": {
     "event": "attack_order",

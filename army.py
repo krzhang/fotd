@@ -27,8 +27,7 @@ class Unit(object):
 
   def size_repr(self):
     csize = self._size_single_repr(self.size) + str(self.size) + Colors.ENDC
-    # return "{: >2}/{: >2}".format(str(csize), str(self.size_base)) # lol now this is bad
-    return "{}/{}".format(str(csize), str(self.size_base)) # lol now this is bad
+    return "{}/{}".format(str(csize), str(self.size_base)) 
   
   def status_real_repr(self):
     return " ".join((str(s) for s in self.unit_status if not s.is_skill()))
@@ -47,16 +46,6 @@ class Unit(object):
     else:
       return Colors.RED
   
-  # def add_skill(self, skillstr):
-  #   """ as strings """
-  #   self.character_skills.append(skills.Skill(skillstr))
-
-  # def has_skill(self, skill):
-  #   return skill in self.character.skills
-    
-  # def remove_skill(self, skillstr):
-  #   self.character_skills.remove(skills.Skill(skillstr))
-
   def speech(self, otherstr):
     """ When we need him to say something """
     self.character.speech(otherstr)
@@ -125,8 +114,11 @@ class Army(object):
     self.yomi_edge = None # used in battles to see if RPS was won
 
   def __repr__(self):
-    return self.color + self.name + Colors.ENDC
-    
+    return "Army({})".format(self.name)
+
+  def str_color(self):
+    return "$[{}]{}$[{}]".format(self.color, self.name, 7) # eventually move out  
+
   def is_present(self):
     return any([u for u in self.units if u.is_present()])
 

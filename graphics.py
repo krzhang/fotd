@@ -12,6 +12,91 @@ from asciimatics.renderers import StaticRenderer, SpeechBubble, FigletText
 
 import sys
 
+class YTextBox(TextBox):
+  def __init__(self, height, label=None, name=None, as_string=False, line_wrap=False,
+           on_change=None, **kwargs):
+    """
+    :param height: The required number of input lines for this TextBox.
+    :param label: An optional label for the widget.
+    :param name: The name for the TextBox.
+    :param as_string: Use string with newline separator instead of a list
+    for the value of this widget.
+    :param line_wrap: Whether to wrap at the end of the line.
+    :param on_change: Optional function to call when text changes.
+  
+    Also see the common keyword arguments in :py:obj:`.Widget`.
+    """
+    super().__init__(name, **kwargs)
+        
+  def update(self, frame_no):
+    self._draw_label()
+    
+    # Calculate new visible limits if needed.
+    height = self._h
+    if not self._line_wrap:
+      self._start_column = min(self._start_column, self._column)
+      # self._start_column += _find_min_start(
+      #   self._value[self._line][self._start_column:self._column + 1],
+      #   self.width,
+      #   self._frame.canvas.unicode_aware,
+      #   self._column >= self.string_len(self._value[self._line]))
+    
+    # Clear out the existing box content
+    (colour, attr, bg) = self._pick_colours("edit_text")
+    for i in range(height):
+      self._frame.canvas.print_at(" " * self.width,
+                                  self._x + self._offset,
+                                  self._y + i,
+                                  colour, attr, bg)
+    
+    # Convert value offset to display offsets
+    # NOTE: _start_column is always in display coordinates.
+    display_text = self._reflowed_text
+    display_start_column = self._start_column
+    display_line, display_column = 0, 0
+    for i, (_, line, col) in enumerate(display_text):
+      if line <= self._line and col <= self._column:
+        display_line = i
+        display_column = self._column - col
+    
+    # Restrict to visible/valid content.
+    self._start_line = max(0, max(display_line - height + 1,
+                              min(self._start_line, display_line)))
+    
+    # # Render visible portion of the text.
+    # for line, (text, _, _) in enumerate(display_text):
+    #   if self._start_line <= line < self._start_line + height:
+    #     self._frame.canvas.print_at(
+    #       text,
+    #       # _enforce_width(text[display_start_column:], self.width,
+    #       #                self._frame.canvas.unicode_aware),
+    #       self._x + self._offset,
+    #       self._y + line - self._start_line,
+    #       colour, attr, bg)
+        
+    # for y, l in enumerate(self.value):
+    #   self._scene.add_effect(Print(self._screen,
+    #                         StaticRenderer(images=[self._render(l)]), x=0, y=y, colour=7))
+    image, colours = StaticRenderer(self.value).rendered_text
+    for (i, line) in enumerate(image):
+      self._frame.canvas.paint(line, self._x, self._y + i, self._colour,
+                                   attr=self._attr,
+                                   bg=self._bg,
+                                   transparent=self._transparent,
+                                   colour_map=colours[i])
+
+    # Since we switch off the standard cursor, we need to emulate our own
+    # if we have the input focus.
+    # if self._has_focus:
+    #   line = display_text[display_line][0]
+    #   text_width = self.string_len(line[display_start_column:display_column])
+    #   self._draw_cursor(
+    #     " " if display_column >= len(line) else line[display_column],
+    #     frame_no,
+    #     self._x + self._offset + text_width,
+    #     self._y + display_line - self._start_line)
+
+
 class BattleFrame(Frame):
   def __init__(self, screen, battle):
     super().__init__(screen,
@@ -20,34 +105,57 @@ class BattleFrame(Frame):
                      has_border=False)
     self.battle = battle
     layout = Layout([1], fill_frame=True)
-    self.statline = TextBox(2)
+    self.statline = YTextBox(2)
     self.statline.disabled = True
-    self.armystats = TextBox(18)
+    self.armystats = YTextBox(18)
     self.armystats.disabled = True
-    self.console = TextBox(3)
+    self.console = YTextBox(3)
     self.console.disabled = True
     self.add_layout(layout)
     layout.add_widget(self.statline)
     layout.add_widget(self.armystats)
     layout.add_widget(self.console)
     self.fix()
+    self._canvas.clear_buffer(0, 0, 0)
+    
+  def _prerender(self, line):
+    """ 
+    converts a my-type color string to one that can be rendered.
 
+    I'm going to end up with strings of the type ah[3]hhh[7], which should become ah${3}hhh${7}
+
+    """
+    return line.replace('$[', '${').replace('$]', '}')
+    
   def reset(self):
     # Do standard reset to clear out form, then populate with new data.
     super().reset()
-    self.statline.value = self.battle.battlescreen._disp_statline()
-    self.armystats.value = self.battle.battlescreen._disp_armies()
-    self.console.value = self.battle.battlescreen._disp_console()
-    
+    # self.statline.value = [self._render(l) for l in self.battle.battlescreen._disp_statline()]
+    # self.armystats.value = [self._render(l) for l in self.battle.battlescreen._disp_armies()]
+    # self.console.value = [self._render(l) for l in self.battle.battlescreen._disp_console()]
+     # effects = []
+        
   def process_event(self, event):
     # Do the key handling for this Frame.
     if isinstance(event, KeyboardEvent):
       if event.key_code in [ord('q'), ord('Q'), Screen.ctrl("c")]:
         self._quit()
       elif event.key_code in [ord("r"), ord("R")]:
-        pass
+        # st = self.battle.battlescreen._disp_statline() # 2 lines
+        # ar = self.battle.battlescreen._disp_armies() # 18 lines
+        # co = self.battle.battlescreen._disp_console() # 3 lines
+        # fo = self.battle.battlescreen._disp_footerline("") # 1 line
+        # assert len(st + ar + co) == self.battle.battlescreen.max_screen_len - 1
+        # for y, l in enumerate(st + ar + co):
+        #   self._scene.add_effect(Print(self._screen,
+        #                         StaticRenderer(images=[self._render(l)]), x=0, y=y, colour=7))
         # Force a refresh for improved responsiveness
-      self._last_frame = 0
+
+        self.statline.value = [self._prerender(l) for l in self.battle.battlescreen._disp_statline()]
+        self.armystats.value = [self._prerender(l) for l in self.battle.battlescreen._disp_armies()]
+        self.console.value = [self._prerender(l) for l in self.battle.battlescreen._disp_console()]
+        
+        self._last_frame = 0
 
     # Now pass on to lower levels for normal handling of the event.
     return super().process_event(event)
@@ -67,6 +175,7 @@ class BattleFrame(Frame):
       sys.exit(0)
     
 def battle_screen(screen, battle):
+  battle.battlescreen.screen = screen
   screen.play([Scene([BattleFrame(screen, battle)], -1)], stop_on_resize=True)
     
 # Screen.wrapper(BattleFrame)

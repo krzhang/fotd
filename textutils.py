@@ -20,11 +20,14 @@ SHOW_DEBUG = False
 from utils import read_single_keypress
 import os
 import colors
-from colors import Colors
+from colors import Colors, Colours
 
 ######################
 # Formatting Strings #
 ######################
+
+def cstr_army(army):
+  return "${{}}{}{{}}".format(army.color, army.name, Colours.WHITE)
 
 def color_prob(prob):
   pstr = "{:4.3f}".format(prob)
@@ -63,10 +66,8 @@ class BattleScreen():
     self.max_armies_len = 18
     self.max_console_len = 3
     self.max_footer_len = 1
-    self.battle = battle # needs one eventually
-    # self.screen = graphics.Screen.wrapper(graphics.battle_screen,
-    #                                       catch_interrupt=True,
-    #                                       arguments = [battle])    
+    self.battle = battle 
+    # self.screen = None # needs one
 
   def _colored_strats(self, orders):
     orders = list(orders)
@@ -81,7 +82,6 @@ class BattleScreen():
         ocolors.append("")
     return tuple([ocolors[i] + orders[i] + Colors.ENDC for i in [0,1]])
     
-    
   def _day_status_str(self):
     """ what to put on top"""
     if len(self.battle.order_history) == self.battle.date: # orders were given
@@ -89,13 +89,11 @@ class BattleScreen():
     else:
       strat1 = strat2 = "?"
     return "Day {}: ({}) {} vs {} ({}) {}".format(self.battle.date,
-                                                  self.battle.armies[0],
+                                                  cstr_army(self.battle.armies[0]),
                                                   strat1,
                                                   strat2,
-                                                  self.battle.armies[1],
+                                                  cstr_army(self.battle.armies[1]),
                                                   str(self.battle.weather)) 
-
-  
 
   def _disp_statline(self):
     statline = self._day_status_str()
@@ -122,30 +120,44 @@ class BattleScreen():
     return armies_buf
 
   def _disp_console(self):
-    # # blits console
-    # for i in range(self.max_console_len): # 11
-    #   if len(self.console_buf) > i:
-    #     print(self.console_buf[i])
-    #   else:
-    #     print("")
-    return self.console_buf + [""]*(self.max_console_len - len(self.console_buf)) 
+    newbuf = []
+    for i in range(self.max_console_len):
+      if i < len(self.console_buf):
+        newbuf.append(self.console_buf[i])
+      else:
+        newbuf.append("")
+    return newbuf
 
   def _disp_footerline(self, pause_str):
     if pause_str:
       return(pause_str)
     else:
       return(disp_hrule())
-        
+
+  def _prerender(self, line):
+    """ 
+    converts a my-type color string to one that can be rendered.
+
+    I'm going to end up with strings of the type ah[3]hhh[7], which should become ah${3}hhh${7},
+    which in the final print should be converted to colorama (or some other output)
+
+    """
+    return line.replace('$[', '${').replace('$]', '}')
+            
   def blit_all_battle(self, pause_str=None):
     # blits status
     self.disp_clear()
     st = self._disp_statline() # 2 lines
     ar = self._disp_armies() # 18 lines
     co = self._disp_console() # 3 lines
-    fo = self._disp_footerline(pause_str) # 1 line
-    for l in st + ar + co:
-      print(l)
+    fo = self._disp_footerline(pause_str) # 1 line, string
+    assert len(st + ar + co) == self.max_screen_len - 1
+    # effects = []
+    for y, l in enumerate(st + ar + co):
+      print(colors.str_to_colorama(self._prerender(l)))
     print(fo, end="", flush=True)
+    #  effects.append(Print(self.screen, StaticRenderer(images=self._render(l)), x=0, y=y, colour=7))
+    # screen.play([Scene(effects, -1)])
     self.console_buf = []
     return read_single_keypress()[0]
 

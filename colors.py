@@ -1,4 +1,5 @@
-from colorama import Fore, Back, Style
+from colorama import Fore, Back, Style, init
+init()
 
 class Colors:
   HEADER = '\033[95m'
@@ -21,7 +22,66 @@ class Colors:
   WIN = OKGREEN
   LOSE = Fore.RED
   INVERT = Fore.BLACK + Back.WHITE
+  
+# ESC [ 0 m       # reset all (colors and brightness)
+# ESC [ 1 m       # bright
+# ESC [ 2 m       # dim (looks same as normal brightness)
+# ESC [ 22 m      # normal brightness
 
+# # FOREGROUND:
+# ESC [ 30 m      # black
+# ESC [ 31 m      # red
+# ESC [ 32 m      # green
+# ESC [ 33 m      # yellow
+# ESC [ 34 m      # blue
+# ESC [ 35 m      # magenta
+# ESC [ 36 m      # cyan
+# ESC [ 37 m      # white
+# ESC [ 39 m      # reset
+
+# # BACKGROUND
+# ESC [ 40 m      # black
+# ESC [ 41 m      # red
+# ESC [ 42 m      # green
+# ESC [ 43 m      # yellow
+# ESC [ 44 m      # blue
+# ESC [ 45 m      # magenta
+# ESC [ 46 m      # cyan
+# ESC [ 47 m      # white
+# ESC [ 49 m      # reset
+
+# # cursor positioning
+# ESC [ y;x H     # position cursor at x across, y down
+# ESC [ y;x f     # position cursor at x across, y down
+# ESC [ n A       # move cursor n lines up
+# ESC [ n B       # move cursor n lines down
+# ESC [ n C       # move cursor n characters forward
+# ESC [ n D       # move cursor n characters backward
+
+# # clear the screen
+# ESC [ mode J    # clear the screen
+
+# # clear the line
+# ESC [ mode K    # clear the line
+     
+class Colours:
+  # for asciimatics
+  BLACK = 0
+  RED = 1
+  GREEN = 2
+  YELLOW = 3
+  BLUE = 4
+  MAGENTA = 5
+  CYAN = 6
+  WHITE = 7
+
+class Attrs:
+  # for asciimatics
+  A_BOLD = 1
+  A_NORMAL = 2
+  A_REVERSE = 3
+  A_UNDERLINE = 4
+  
 def success_color(success):
   if success:
     return Colors.OKGREEN
@@ -31,3 +91,25 @@ def success_color(success):
     # when we don't know if it failed
     return Colors.GREEN
 
+  """
+  Takes something like "${5} Yan Zhang ${7}" and converts it to Colorama codes so we can just 
+  print
+  """
+
+STR_TO_CR = {
+  "${1}":Colors.RED,
+  "${2}":Colors.GREEN,
+  "${3}":Colors.YELLOW,
+  "${4}":Colors.BLUE,
+  "${5}":Colors.MAGENTA,
+  "${6}":Colors.CYAN,
+  "${7}":Colors.ENDC,
+  "${2,1}":Colors.GREEN + Style.BRIGHT
+}
+  
+def str_to_colorama(my_str):
+  new_str = my_str
+  for k in STR_TO_CR:
+    new_str = new_str.replace(k, STR_TO_CR[k])
+  return new_str
+  

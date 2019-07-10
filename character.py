@@ -1,4 +1,3 @@
-from colors import Colors
 import skills
 
 STAT_BASES = {"power":"power_base",
@@ -35,14 +34,16 @@ class Character(object):
   def equip(self, item):
     self.items.append(item)
     self.calc_attributes()
-    
-  def __repr__(self):
+
+  def str_title(self):
     if self.title:
-      titlestr = " -=" + Colors.YELLOW + self.title + Colors.ENDC + "=-"
+      return " -={}=-".format(self.title) # eventually move out
     else:
-      titlestr = ""
-    return str(self) + titlestr
+      return ""
+
+  def __repr__(self):
+    return str(self) + self.str_title()
 
   def __str__(self):
-    return self.color + self.name + Colors.ENDC
+    return self.name
   

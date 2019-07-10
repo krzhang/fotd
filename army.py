@@ -1,6 +1,5 @@
 import skills
 import status
-import textutils
 import intelligence
 from colors import Colors
 

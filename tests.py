@@ -165,6 +165,7 @@ def test(debug=False, resize=False, two_players=False):
     print ("\x1b[8;24;80t")
     # print ("\x1b[8;{};80t".format(textutils.BATTLE_SCREEN.max_screen_len))
   bat = battle.Battle(army0, army1)
+  graphics.Screen.wrapper(graphics.battle_screen, catch_interrupt = True, arguments=[bat])
   
   while(True):
     bat.take_turn()

@@ -5,7 +5,7 @@ from asciimatics.renderers import SpeechBubble, FigletText, Box
 from asciimatics.scene import Scene
 from asciimatics.screen import Screen
 from asciimatics.exceptions import ResizeScreenError, StopApplication
-from asciimatics.widgets import Frame, Layout, MultiColumnListBox, Widget, Label, TextBox
+from asciimatics.widgets import Frame, Layout, MultiColumnListBox, Widget, Label, TextBox, PopUpDialog
 from collections import defaultdict
 from asciimatics.event import KeyboardEvent, MouseEvent
 from asciimatics.renderers import StaticRenderer, SpeechBubble, FigletText
@@ -20,11 +20,11 @@ class BattleFrame(Frame):
                      has_border=False)
     self.battle = battle
     layout = Layout([1], fill_frame=True)
-    self.statline = TextBox(1, as_string=True)
+    self.statline = TextBox(2)
     self.statline.disabled = True
-    self.armystats = TextBox(20, as_string=True)
+    self.armystats = TextBox(18)
     self.armystats.disabled = True
-    self.console = TextBox(3, as_string=True)
+    self.console = TextBox(3)
     self.console.disabled = True
     self.add_layout(layout)
     layout.add_widget(self.statline)
@@ -32,11 +32,18 @@ class BattleFrame(Frame):
     layout.add_widget(self.console)
     self.fix()
 
+  def reset(self):
+    # Do standard reset to clear out form, then populate with new data.
+    super().reset()
+    self.statline.value = self.battle.battlescreen._disp_statline()
+    self.armystats.value = self.battle.battlescreen._disp_armies()
+    self.console.value = self.battle.battlescreen._disp_console()
+    
   def process_event(self, event):
     # Do the key handling for this Frame.
     if isinstance(event, KeyboardEvent):
       if event.key_code in [ord('q'), ord('Q'), Screen.ctrl("c")]:
-        raise StopApplication("User quit")
+        self._quit()
       elif event.key_code in [ord("r"), ord("R")]:
         pass
         # Force a refresh for improved responsiveness
@@ -44,7 +51,21 @@ class BattleFrame(Frame):
 
     # Now pass on to lower levels for normal handling of the event.
     return super().process_event(event)
+  
+  def _quit(self):
+    self._scene.add_effect(
+      PopUpDialog(self._screen,
+                  "Are you sure?",
+                  ["Yes", "No"],
+                  has_shadow=True,
+                  on_close=self._quit_on_yes))
 
+  @staticmethod
+  def _quit_on_yes(selected):
+    # Yes is the first button
+    if selected == 0:
+      sys.exit(0)
+    
 def battle_screen(screen, battle):
   screen.play([Scene([BattleFrame(screen, battle)], -1)], stop_on_resize=True)
     

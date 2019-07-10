@@ -33,6 +33,7 @@ class Unit(object):
     return " ".join((str(s) for s in self.unit_status if not s.is_skill()))
 
   def set_color(self, color):
+    self.color = color
     self.character.color = color
 
   def __str__(self):

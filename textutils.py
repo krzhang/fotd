@@ -1,4 +1,4 @@
-import graphics
+# import graphics_asciimatics
 import sys
 import logging
 import rps
@@ -20,14 +20,11 @@ SHOW_DEBUG = False
 from utils import read_single_keypress
 import os
 import colors
-from colors import Colors, Colours
+from colors import Colors, Colours, Fore, Back, Style
 
 ######################
 # Formatting Strings #
 ######################
-
-def cstr_army(army):
-  return "${{}}{}{{}}".format(army.color, army.name, Colours.WHITE)
 
 def color_prob(prob):
   pstr = "{:4.3f}".format(prob)
@@ -53,8 +50,47 @@ def damage_str(s_str, d_str, dicecount, hitprob, raw_damage):
     s_str, d_str, dicecount, color_prob(hitprob), color_damage(raw_damage))
 
 ######
-# IO #
+# Display (convert to string) Functions #
 ######
+
+def disp_army(army):
+  return "$[{}$]{}$[7$]".format(army.color, army.name)
+
+def disp_unit(unit):
+  return "$[{}$]{}$[7$]".format(unit.color, unit.name)
+
+def disp_bar_custom(colors, chars, nums):
+  """
+  all iterators, to make bars like this: '####$$$$----@@@@@@@@' etc.
+  k colors
+  k chars
+  k nums
+  the nums are meant to go from large to small, so max size first, etc.
+  """
+  makestr = ""
+  for i in zip(colors, chars, nums):
+    makestr += i[0]
+    makestr += i[1]*i[2]
+  return makestr
+  
+def disp_bar_single_hit(max_pos, oldhp, newhp):
+  """Total: length; base: max; cur: current. """
+  return disp_bar_custom([Colors.OKGREEN, Colors.RED, Colors.ENDC],
+                         ['#', '#', ' '],
+                         [newhp, oldhp-newhp, max_pos-oldhp ])
+  # return  Colors.OKGREEN + '#'*cur + Colors.RED + '#'*(base-cur) + Colors.ENDC + '.'*(total-base)
+
+def disp_bar_day_tracker(max_pos, base, last_turn, cur):
+  return disp_bar_custom([Colors.OKGREEN, Colors.RED, Colors.ENDC, Colors.ENDC],
+                         ['#', '#', '.', " "],
+                         [cur, last_turn-cur, base-last_turn, max_pos-base])
+
+def disp_hrule():
+  return("="*80)
+
+######
+# IO #
+######  
   
 MORE_STR = Colors.INVERT + "MORE... [hit a key]" + Colors.ENDC  
 
@@ -84,16 +120,23 @@ class BattleScreen():
     
   def _day_status_str(self):
     """ what to put on top"""
-    if len(self.battle.order_history) == self.battle.date: # orders were given
-      strat1, strat2 = self._colored_strats(tuple(self.battle.order_history[-1]))
+    if self.battle.formations[0] == None:
+      form0 = form1 = "?"
     else:
-      strat1 = strat2 = "?"
-    return "Day {}: ({}) {} vs {} ({}) {}".format(self.battle.date,
-                                                  cstr_army(self.battle.armies[0]),
-                                                  strat1,
-                                                  strat2,
-                                                  cstr_army(self.battle.armies[1]),
-                                                  str(self.battle.weather)) 
+      form0 = self.battle.formations[0]
+      form1 = self.battle.formations[1]
+    if len(self.battle.order_history) == self.battle.date: # orders were given
+      strat0, strat1 = self._colored_strats(tuple(self.battle.order_history[-1]))
+    else:
+      strat0 = strat1 = "?"
+    return "Day {}: ({}) {} -> {} vs {} <- {} ({})".format(self.battle.date,
+                                                           disp_army(self.battle.armies[0]),
+                                                           form0,
+                                                           strat0,
+                                                           strat1,
+                                                           form1,
+                                                           disp_army(self.battle.armies[1]),
+                                                           str(self.battle.weather)) 
 
   def _disp_statline(self):
     statline = self._day_status_str()
@@ -107,8 +150,8 @@ class BattleScreen():
       for i in range(4):
         if len(battle.armies[j].present_units()) > i:
           unit = battle.armies[j].present_units()[i]
-          header = self.disp_unit_newheader(unit, j)
-          situ = self.disp_unit_newsitu(unit, j)
+          header = self._disp_unit_newheader(unit, j)
+          situ = self._disp_unit_newsitu(unit, j)
         else:
           header = ""
           situ = ""
@@ -175,16 +218,16 @@ class BattleScreen():
     if dmglog:
       dmg_str = damage_str(*dmglog)
       self.yprint(dmglog, debug=True)
-      
-  def disp_unit_newheader(self, unit, side):
+    
+  def _disp_unit_newheader(self, unit, side):
     healthbar = disp_bar_day_tracker(20, unit.size_base, unit.last_turn_size, unit.size)
-    charstr = "{} {} Hp:{} Sp:{}".format(healthbar, repr(unit), unit.size_repr(), unit.speed)
+    charstr = "{} {} Hp:{} Sp:{}".format(healthbar, disp_unit(unit), unit.size_repr(), unit.speed)
     if side == 0:
       return charstr
     else:
       return " "*0 + charstr
 
-  def disp_unit_newsitu(self, unit, side):
+  def _disp_unit_newsitu(self, unit, side):
     charstr = " "*21
     statuses = unit.status_real_repr()
     if statuses:
@@ -204,7 +247,7 @@ class BattleScreen():
   def input_battle_formation(self, armyid):
     # return input(prompt)
     while(True):
-      pause_str = Colors.INVERT +  "Input formation for army {}(O/D):".format(armyid) + Colors.ENDC
+      pause_str = Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.BLUE + Back.BLACK +  "FORMATION" + Fore.BLACK + Back.WHITE + " for army {} ".format(armyid) +  Fore.BLUE + Back.BLACK + "(O/D):" + Colors.ENDC
       inp = self.blit_all_battle(pause_str=pause_str)
       if inp.upper() in ['O', 'D']:
         return inp.upper()          
@@ -212,7 +255,7 @@ class BattleScreen():
   def input_battle_order(self, armyid):
     # return input(prompt)
     while(True):
-      pause_str = Colors.INVERT +  "Input orders for army {}(A/D/I):".format(armyid) + Colors.ENDC
+      pause_str = Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.CYAN +  Back.BLACK + "ORDERS" + Fore.BLACK + Back.WHITE + " for army {}".format(armyid) + Fore.CYAN + Back.BLACK + " (A/D/I):" +  Colors.ENDC
       inp = self.blit_all_battle(pause_str=pause_str)
       if inp.upper() in ['A', 'D', 'I']:
         return inp.upper()      
@@ -239,35 +282,6 @@ class BattleScreen():
   def yprint_hrule(self, debug=False):
     self.yprint(disp_hrule(), debug)
 
-def disp_bar_custom(colors, chars, nums):
-  """
-  all iterators, to make bars like this: '####$$$$----@@@@@@@@' etc.
-  k colors
-  k chars
-  k nums
-  the nums are meant to go from large to small, so max size first, etc.
-  """
-  makestr = ""
-  for i in zip(colors, chars, nums):
-    makestr += i[0]
-    makestr += i[1]*i[2]
-  return makestr
-  
-def disp_bar_single_hit(max_pos, oldhp, newhp):
-  """Total: length; base: max; cur: current. """
-  return disp_bar_custom([Colors.OKGREEN, Colors.RED, Colors.ENDC],
-                         ['#', '#', ' '],
-                         [newhp, oldhp-newhp, max_pos-oldhp ])
-  # return  Colors.OKGREEN + '#'*cur + Colors.RED + '#'*(base-cur) + Colors.ENDC + '.'*(total-base)
-
-def disp_bar_day_tracker(max_pos, base, last_turn, cur):
-  return disp_bar_custom([Colors.OKGREEN, Colors.RED, Colors.ENDC, Colors.ENDC],
-                         ['#', '#', '.', " "],
-                         [cur, last_turn-cur, base-last_turn, max_pos-base])
-
-def disp_hrule():
-  return("="*80)
-  
 # import pygcurse
 # win = pygcurse.PygcurseWindow(40, 25, 'Fall of the Dragon')
 # print = win.pygprint

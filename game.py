@@ -4,7 +4,7 @@ import textutils
 from character import Character
 from army import Unit, Army
 import battle
-import graphics
+# import graphics_asciimatics
 import intelligence
 import events
 import random

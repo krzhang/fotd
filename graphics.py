@@ -71,11 +71,9 @@ def battle_screen(screen, battle):
     
 # Screen.wrapper(BattleFrame)
 
-
 # Sprites used for the demo
 arrow = None
 cross_hairs = None
-
 
 class KeyboardController(DynamicPath):
     def process_event(self, event):

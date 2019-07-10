@@ -5,11 +5,13 @@ from colors import Colors
 from character import Character
 from army import Unit, Army
 import battle
+import graphics
 import intelligence
 import events
 import random
 import status
 import sys
+
 # power/intel/pol/cha/coolness/bravery
 
 SKILLS_IMPLEMENTED = ["counter_arrow",
@@ -166,11 +168,11 @@ def test(debug=False, resize=False, two_players=False):
     # print ("\x1b[8;{};80t".format(textutils.BATTLE_SCREEN.max_screen_len))
   bat = battle.Battle(army0, army1)
   graphics.Screen.wrapper(graphics.battle_screen, catch_interrupt = True, arguments=[bat])
-  
-  while(True):
-    bat.take_turn()
-    if bat.win_army() != None:
-      sys.exit(0)
+  sys.exit(0)
+  # while(True):
+  #   bat.take_turn()
+  #   if bat.win_army() != None:
+  #     sys.exit(0)
       
 if __name__ == "__main__":
   test(resize=True)

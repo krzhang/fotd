@@ -64,9 +64,9 @@ class BattleScreen():
     self.max_console_len = 3
     self.max_footer_len = 1
     self.battle = battle # needs one eventually
-    self.screen = graphics.Screen.wrapper(graphics.battle_screen,
-                                          catch_interrupt=True,
-                                          arguments = [battle])    
+    # self.screen = graphics.Screen.wrapper(graphics.battle_screen,
+    #                                       catch_interrupt=True,
+    #                                       arguments = [battle])    
 
   def _colored_strats(self, orders):
     orders = list(orders)

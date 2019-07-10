@@ -27,7 +27,7 @@ class PlayerIntelligence(Intelligence):
 class ArtificialIntelligence(Intelligence):
 
   def get_formation(battle, armyid):
-    return random.choice(['I', 'D'])
+    return random.choice(['O', 'D'])
   
   def get_order(battle, armyid):
   # 2 paths: RPS and story-driven soul reading

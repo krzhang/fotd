@@ -362,3 +362,6 @@ def main_screen(screen):
     scenes.append(Scene(effects, -1))
 
     screen.play(scenes, stop_on_resize=True)
+
+def blank_screen(screen):
+  pass

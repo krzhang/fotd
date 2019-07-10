@@ -1,5 +1,17 @@
 import logging
 
+# create logger with 'spam_application'
+logger = logging.getLogger("test")
+logger.setLevel(logging.DEBUG)
+
+f = logging.FileHandler("test.log")
+f.setLevel(logging.DEBUG)
+logger.addHandler(f)
+
+# handler = logging.StreamHandler(sys.stdout)
+# handler.setLevel(logging.DEBUG)
+# logger.addHandler(handler)
+
 import textutils
 from character import Character
 from army import Unit, Army
@@ -155,7 +167,7 @@ def link_data_funcs():
 link_data_funcs()
 
 def test(debug=False, resize=False, two_players=False):
-  textutils.SHOW_DEBUG = debug
+  
   if two_players:
     second_intelligence = "INT_PLAYER"
   else:
@@ -165,7 +177,7 @@ def test(debug=False, resize=False, two_players=False):
   if resize:
     print ("\x1b[8;24;80t")
     # print ("\x1b[8;{};80t".format(textutils.BATTLE_SCREEN.max_screen_len))
-  bat = battle.Battle(army0, army1)
+  bat = battle.Battle(army0, army1, debug_mode=debug)
   # graphics.Screen.wrapper(graphics.battle_screen, catch_interrupt = True, arguments=[bat])
   while(True):
     bat.take_turn()

@@ -37,7 +37,7 @@ class Battle(object):
 
   QUEUE_NAMES = ["Q_PRELIM", "Q_ORDER", "Q_MANUEVER", "Q_RESOLVE", "Q_CLEANUP"]
   
-  def __init__(self, army1, army2):
+  def __init__(self, army1, army2, debug_mode=False):
     self.armies = [army1, army2]
     for a in self.armies:
       for u in a.units:
@@ -58,6 +58,7 @@ class Battle(object):
       self.queues[qname] = deque()
     # other stuff
     self.order_history = []
+    self.debug_mode = debug_mode
     self.battlescreen = textutils.BattleScreen(self)
     self.init_battle_state()
 

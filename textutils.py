@@ -1,26 +1,12 @@
 # import graphics_asciimatics
-import sys
-import logging
-import rps
-
-# create logger with 'spam_application'
-logger = logging.getLogger("test")
-logger.setLevel(logging.DEBUG)
-
-f = logging.FileHandler("test.log")
-f.setLevel(logging.DEBUG)
-logger.addHandler(f)
-
-# handler = logging.StreamHandler(sys.stdout)
-# handler.setLevel(logging.DEBUG)
-# logger.addHandler(handler)
-
-SHOW_DEBUG = False
-
 from utils import read_single_keypress
 import os
+import logging
 import colors
 from colors import Colors, Colours, Fore, Back, Style
+
+import sys
+import rps
 
 ######################
 # Formatting Strings #
@@ -253,9 +239,8 @@ class BattleScreen():
     logging.info(text)
 
   def yprint(self, text, debug=False):
-    global SHOW_DEBUG
     logging.debug(text) # always log this
-    if debug and not SHOW_DEBUG:
+    if debug and not self.battle.debug_mode:
       return
     # so we get here if either SHOW_DEBUG or debug=False, which means we send it to the buffer
     self.print_line(text)

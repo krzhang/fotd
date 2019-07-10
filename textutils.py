@@ -64,7 +64,9 @@ class BattleScreen():
     self.max_console_len = 3
     self.max_footer_len = 1
     self.battle = battle # needs one eventually
-    self.screen = graphics.Screen.wrapper(graphics.blank_screen)
+    self.screen = graphics.Screen.wrapper(graphics.battle_screen,
+                                          catch_interrupt=True,
+                                          arguments = [battle])    
 
   def _colored_strats(self, orders):
     orders = list(orders)
@@ -97,8 +99,7 @@ class BattleScreen():
 
   def _disp_statline(self):
     statline = self._day_status_str()
-    print(statline)
-    print(disp_hrule()) # 2 lines
+    return [statline, disp_hrule()]
 
   def _disp_armies(self): # 18 lines
     battle = self.battle
@@ -113,11 +114,12 @@ class BattleScreen():
         else:
           header = ""
           situ = ""
-        print(header)
-        print(situ)
+        armies_buf.append(header)
+        armies_buf.append(situ)
       if j == 0:
-        print(" "*39 + "VS" + " "*39)
-    print(disp_hrule())
+        armies_buf.append(" "*39 + "VS" + " "*39)
+    armies_buf.append(disp_hrule())
+    return armies_buf
 
   def _disp_console(self):
     # # blits console
@@ -126,25 +128,24 @@ class BattleScreen():
     #     print(self.console_buf[i])
     #   else:
     #     print("")
-    for i in range(self.max_console_len):
-      if len(self.console_buf) > i:
-        print(self.console_buf[i])
-      else:
-        print("")
+    return self.console_buf + [""]*(self.max_console_len - len(self.console_buf)) 
 
   def _disp_footerline(self, pause_str):
     if pause_str:
-      print(pause_str, end="", flush=True)
+      return(pause_str)
     else:
-      print(disp_hrule(), end="", flush=True)
+      return(disp_hrule())
         
   def blit_all_battle(self, pause_str=None):
     # blits status
     self.disp_clear()
-    self._disp_statline() # 2 lines
-    self._disp_armies() # 18 lines
-    self._disp_console() # 3 lines
-    self._disp_footerline(pause_str) # 1 line
+    st = self._disp_statline() # 2 lines
+    ar = self._disp_armies() # 18 lines
+    co = self._disp_console() # 3 lines
+    fo = self._disp_footerline(pause_str) # 1 line
+    for l in st + ar + co:
+      print(l)
+    print(fo, end="", flush=True)
     self.console_buf = []
     return read_single_keypress()[0]
 

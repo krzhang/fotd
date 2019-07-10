@@ -32,6 +32,7 @@ def _speak(screen, text, pos, start):
     start_frame=start,
     stop_frame=start+50)
 
+
 class BattleFrame(Frame):
   def __init__(self, screen, battle):
     super().__init__(screen,
@@ -65,7 +66,7 @@ class BattleFrame(Frame):
     # Now pass on to lower levels for normal handling of the event.
     return super().process_event(event)
 
-def battle_screen(screen):
+def battle_screen(screen, battle):
   screen.play([Scene([BattleFrame(screen, battle)], -1)], stop_on_resize=True)
     
 # Screen.wrapper(BattleFrame)
@@ -186,7 +187,7 @@ class CrossHairs(Sprite):
             self._scene.add_effect(Print(
                 self._screen,
                 SpeechBubble(sound), y, x, clear=True, delete_count=50))
-
+  
 def demo_top(screen):
   screen.play([Scene([DemoFrame(screen)], -1)], stop_on_resize=True)
 

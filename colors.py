@@ -86,20 +86,9 @@ class Attrs:
   A_REVERSE = 3
   A_UNDERLINE = 4
   
-def success_color(success):
-  if success:
-    return Colors.OKGREEN
-  elif success == False:
-    return Colors.MAGENTA
-  else:
-    # when we don't know if it failed
-    return Colors.GREEN
 
-  """
-  Takes something like "${5} Yan Zhang ${7}" and converts it to Colorama codes so we can just 
-  print
-  """
 
+# Takes something like "${5} Yan Zhang ${7}" and converts it to Colorama codes so we can just 
 STR_TO_CR = {
   "${1}":Colors.RED,
   "${2}":Colors.GREEN,
@@ -119,6 +108,15 @@ def str_to_colorama(my_str):
   return new_str
 
 # color functions
+
+def color_bool(success):
+  if success:
+    return Colors.OKGREEN
+  elif success == False:
+    return Colors.MAGENTA
+  else:
+    # when we don't know if it failed
+    return Colors.GREEN
 
 def color_prob(prob):
   pstr = "{:4.3f}".format(prob)

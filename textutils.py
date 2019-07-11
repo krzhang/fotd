@@ -31,6 +31,9 @@ def disp_army(army):
 def disp_form_short(formation):
   return rps.FORMATION_ORDERS[formation]["short"]
 
+def disp_skill_activation(skill_str, success=None):
+  return "<" + colors.color_bool(success) + " ".join(skill_str.upper().split("_")) + "$[7$]>"
+
 def disp_order_short(order):
   return rps.STRATEGIC_ORDERS[order]["short"]
 
@@ -80,8 +83,8 @@ def disp_hrule():
   
 PAUSE_STRS = {
   "MORE_STR": Colors.INVERT + "MORE... [hit a key]" + Colors.ENDC,
-  "FORMATION_STR": Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.BLUE + Back.BLACK +  "FORMATION" + Fore.BLACK + Back.WHITE + " for army {}$[7$] " + "({}):".format("/".join([rps.FORMATION_ORDERS[i]["short"] for i in ("O", "D")])) + Colors.ENDC,
-  "ORDER_STR": Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.CYAN +  Back.BLACK + "ORDERS" + Fore.BLACK + Back.WHITE + " for army {} $[7$] " + "({}):".format("$[7$]/".join([rps.STRATEGIC_ORDERS[i]["short"] for i in ("A", "D", "I")])) + Colors.ENDC
+  "FORMATION_STR": Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.BLUE + Back.BLACK +  "FORMATION" + Fore.BLACK + Back.WHITE + " for army {}$[7$] " + "({}):".format("/".join([rps.formation_info(i, "short") for i in ("O", "D")])) + Colors.ENDC,
+  "ORDER_STR": Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.CYAN +  Back.BLACK + "ORDERS" + Fore.BLACK + Back.WHITE + " for army {} $[7$] " + "({}):".format("$[7$]/".join([rps.order_info(i,"short") for i in ("A", "D", "I")])) + Colors.ENDC
 }
 
 class BattleScreen():
@@ -267,7 +270,18 @@ class BattleScreen():
     return self._get_input(PAUSE_STRS['ORDER_STR'].format(armyid), ['O','D'])
 
   def make_speech(self, unit, speech):
+    """ What to display when a unit says something """
     self.yprint("{}: {}".format(disp_unit(unit), speech))
+
+  def make_skill_narration(self, skill_str, other_str, success=None):
+    """ What to display when we want to make a narration involving a skill """
+    if success:
+      successtr = "SUCCESS!"
+    else:
+      successtr = "FAIL!"
+    if other_str == "":
+      other_str = colors.color_bool(success) + successtr + Colors.ENDC
+    self.yprint(disp_skill_activation(skill_str, success) + " " + other_str)
     
   def pause_and_display(self, pause_str=None):
     _ = self.blit_all_battle(pause_str=pause_str)

@@ -1,5 +1,4 @@
 import textutils
-from colors import Colors, success_color
 import contexts
 import random
 import events
@@ -39,6 +38,8 @@ class Battle(object):
     self.debug_mode = debug_mode
     self.battlescreen = textutils.BattleScreen(self)
     self.date = 0
+    self.yomi_winner = None
+    self.yomis = None
     self.formations = None
     self.orders = None
     self.init_day()
@@ -49,6 +50,8 @@ class Battle(object):
     self.weather = weather.random_weather()
     self.formations = None
     self.orders = None
+    self.yomi_winner = None
+    self.yomis = None
     # setup stuff
     for i in [0,1]:
       self.armies[i].yomi_edge = None
@@ -61,9 +64,11 @@ class Battle(object):
     assert all((p.is_empty() for p in self.dynamic_positions))
     self.dynamic_positions = []
         
-
   def make_speech(self, unit, speech):
     self.battlescreen.make_speech(unit, speech)
+
+  def make_skill_narration(self, skill_str, other_str, success=None):
+    self.battlescreen.make_skill_narration(skill_str, other_str, success)
 
   def place_event(self, event_type, context, queue_name):
     """ 
@@ -126,9 +131,15 @@ class Battle(object):
 
   def _initiate_orders(self, orders):
     self.order_history.append(orders)
+    self.yomi_winner = rps.orders_to_winning_army(orders)
+    self.yomis = (rps.beats(orders[0], orders[1]), rps.beats(orders[1], orders[0]))
     orderlist = []
     for i in [0, 1]:
       order = orders[i]
+      formation = self.formations[i]
+        cost = rps.formation_info(formation, "morale_cost")[order]
+        if cost:
+          
       for u in self.armies[i].present_units():
         u.attacked = []
         u.attacked_by = []
@@ -148,7 +159,7 @@ class Battle(object):
     for i in [0,1]:
       form = self.formations[i]
       self.yprint("{} takes a {}.".format(self.armies[i],
-                                          rps.FORMATION_ORDERS[form]["desc"]))
+                                          rps.formation_info(form, "desc")))
     self.orders = self.get_orders()
     self._initiate_orders(self.orders)
     # preloading events
@@ -170,12 +181,3 @@ class Battle(object):
         return 1-i
     return None
     
-  def skill_narration(self, skill_str, other_str, success=None):
-    if success:
-      successtr = "SUCCESS!"
-    else:
-      successtr = "FAIL!"
-    if other_str == "":
-      other_str = success_color(success) + successtr + Colors.ENDC
-    self.yprint(skills.Skill(skill_str).activation_str(success) + " " + other_str)
-

@@ -12,9 +12,6 @@ class Skill(object):
     # this allows us to e.g. remove
     return self.skill_str == other.skill_str
   
-  def activation_str(self, success=None):
-    return "<" + success_color(success) + " ".join(self.skill_str.upper().split("_")) + "$[7$]>"
-
   def __repr__(self):
     return "<$[2$]" + self.skill_str + "$[7$]>"
   

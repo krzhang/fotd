@@ -64,6 +64,7 @@ class Unit(object):
   def physical_offense(self):
     val = rps.get_formation_bonus(self.army.formation, "physical_offense")
     val *= float(self.size)/3.5
+    val *= self._generic_multiplier()
     return float(dam)
 
   def physical_defense(self):
@@ -72,16 +73,19 @@ class Unit(object):
     val *= 1.5 # geeric defense bonus
     if self.is_defended():
       val *= 1.5
+    val *= self._generic_multiplier()
     return float(dam)
   
   def arrow_offense(self):
     val = rps.get_formation_bonus(self.army.formation, "arrow_offense")
     val *= 2.0
+    val *= self._generic_multiplier()
     return val
 
   def arrow_defense(self):
     val = rps.get_formation_bonus(self.army.formation, "arrow_defense")
     val *= 18.0
+    val *= self._generic_multiplier()
     return val
   
   def is_defended(self):

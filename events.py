@@ -275,12 +275,12 @@ def arrow_strike(context):
         context.rebase({"damage":damage, "ctarget":ctarget, "dmgdata":dmgdata, "dmglog":dmglog})).activate()
   if csource.has_unit_status("fire_arrow"):
     if random.random() < 0.5 and not context.battle.is_raining():
-      context.battle.skill_narration("fire_arrow", "{}'s arrows are covered with fire!".format(csource), True)
+      context.battle.make_skill_narration("fire_arrow", "{}'s arrows are covered with fire!".format(csource), True)
       Event.make_speech(csource, context, "Light'em up!")
       Event.gain_status("burned", context, ctarget)
   if csource.has_unit_status("chu_ko_nu"):
     if random.random() < 0.5:
-      context.battle.skill_narration("chu_ko_nu", "{}'s arrows continue to rain!".format(csource), True)
+      context.battle.make_skill_narration("chu_ko_nu", "{}'s arrows continue to rain!".format(csource), True)
       if csource.name == "Zhuge Liang":
         Event.make_speech(csource, context, "The name is a bit embarassing...")
       else:
@@ -387,7 +387,7 @@ def receive_status(context):
 def counter_arrow_strike(context):
   csource = context.csource
   ctarget = context.ctarget
-  context.battle.skill_narration("counter_arrow", "{} counters with their own volley".format(csource), True)
+  context.battle.make_skill_narration("counter_arrow", "{} counters with their own volley".format(csource), True)
   Event.make_speech(csource, context, "Let's show them guys how to actually use arrows!")
   Event("arrow_strike",
         context.rebase({"csource":csource, "ctarget":ctarget})).activate()
@@ -422,10 +422,10 @@ def lure_tactic(context, base_chance, improved_chance, success_callback):
       if roll > base_lure_chance:
         # this means we came from a lure
         lurer = random.choice(lure_candidates)
-        context.battle.skill_narration("lure", "", True)
+        context.battle.make_skill_narration("lure", "", True)
         context.battle.yprint(lurer.speech(skills.info("lure", "on_success_speech")))
         lure_success_text = skills.info("lure_tactic", "on_success")
-        context.battle.skill_narration("lure", lure_success_text.format(**{"lurer":lurer, "ctarget":targ}), True)
+        context.battle.make_skill_narration("lure", lure_success_text.format(**{"lurer":lurer, "ctarget":targ}), True)
       else:
         # still a success, but it is not because of the lure
         context.battle.yprint("{ctarget} was also entangled into the tactic!".format(**{"ctarget":target}))
@@ -448,7 +448,7 @@ def target_skill_tactic(context, cskill, cchance, success_callback):
   success = random.random() < cchance # can replace with harder functions later
   # TODO cchance = calc_chance(target, skill) or something
   cskill_on_prep = random.choice(skills.info(cskill, "on_roll")).format(**context.opt)
-  context.battle.skill_narration(cskill, cskill_on_prep)
+  context.battle.make_skill_narration(cskill, cskill_on_prep)
   # import pdb;pdb.set_trace()
   if success:
     narrator_str, narrate_text = random.choice(skills.info(cskill, "on_success_speech"))
@@ -461,7 +461,7 @@ def target_skill_tactic(context, cskill, cchance, success_callback):
   else:
     narrator_str, narrate_text = random.choice(skills.info(cskill, "on_fail_speech"))
     Event.make_speech(context.opt[narrator_str], context, narrate_text)
-  context.battle.skill_narration(cskill, "", success)
+  context.battle.make_skill_narration(cskill, "", success)
   return success  
 
 def _fire_tactic_success(context):
@@ -475,7 +475,7 @@ def jeer(context):
   ctarget = context.ctarget
   # should interrupt this, but right now it should be fine
   success = random.random() < 0.3
-  context.battle.skill_narration("jeer",
+  context.battle.make_skill_narration("jeer",
                   "{} prepares their best insults...".format(csource))
   ins = random.choice(insults.INSULTS)
   Event.make_speech(csource, context, ins[0])
@@ -485,7 +485,7 @@ def jeer(context):
     # TODO: AOE
   else:
     Event.make_speech(ctarget, context, ins[1])
-  context.battle.skill_narration("jeer", "", success)
+  context.battle.make_skill_narration("jeer", "", success)
   return success
 
 def _panic_tactic_success(context):
@@ -609,12 +609,12 @@ def trymode_status_bot(context):
   ctarget = context.ctarget
   trymodeprob = (ctarget.size_base-ctarget.size)/ctarget.size_base
   success = random.random() < trymodeprob
-  context.battle.skill_narration("trymode", "{} looks for an excuse to pretend to be powered up...".format(ctarget))
+  context.battle.make_skill_narration("trymode", "{} looks for an excuse to pretend to be powered up...".format(ctarget))
   if success:
     # import pdb; pdb.set_trace()
     Event.make_speech(ctarget, context, "Did you really think I took you seriously before?")
     Event.gain_status("trymode_activated", context, ctarget) 
   else:
     Event.make_speech(ctarget, context, "I have not tried yet, and I still do not need to.")
-  context.battle.skill_narration("trymode", "", success)
+  context.battle.make_skill_narration("trymode", "", success)
 

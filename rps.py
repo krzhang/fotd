@@ -5,7 +5,7 @@ BEATS = {'A':{'A':0, 'D':-1, 'I':1},
          'D':{'A':1, 'D':0, 'I':-1},
          'I':{'A':-1, 'D':1, 'I':0},}
 
-FORMATION_ORDERS = {
+FORMATIONS = {
   'O': {
     "desc": "$[1$]offensive formation$[7$]",
     "status": "form_offensive",
@@ -53,4 +53,18 @@ def order_to_event(order_str):
   return STRATEGIC_ORDERS[order_str]["event"]
 
 def formation_info(form, info_key):
-  return FORMATION_ORDERS[form][info_key]
+  return FORMATIONS[form][info_key]
+
+def order_info(order, info_key):
+  return STRATEGIC_ORDERS[order][info_key]
+
+
+def orders_to_winning_army(orders):
+  """
+  Given a tuple (x,y) of orders, returns the Yomi status, which means a winner (0 or 1) if either
+  won, or -1 otherwise.
+  """
+  x,y = orders
+  if x == y:
+    return -1
+  return BEATS[y][x] 

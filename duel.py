@@ -21,9 +21,11 @@ def duel_commit(context, source, target):
       desperation_multiplier = 1.0
     gains_estimate = (5 + opponent.size)*desperation_multiplier
     losses_estimate = (5 + actor.size)
-    EV = winning_chance_estimate*gains_estimate - (1-winning_chance_estimate)*losses_estimate
-    acceptances[i] = bool(EV > 0)
-    dueldata[i] = (winning_chance_estimate, gains_estimate, losses_estimate, EV)
+    evwin = winning_chance_estimate*gains_estimate
+    evloss = (1-winning_chance_estimate)*losses_estimate
+    ratio = evwin/(evwin + evloss)
+    acceptances[i] = bool(random.random() < ratio)
+    dueldata[i] = (winning_chance_estimate, gains_estimate, losses_estimate, ratio)
   return acceptances, dueldata
 
 PRE_DUEL_SPEECHES = {

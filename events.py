@@ -30,6 +30,12 @@ class Event(object):
     if not info(self.event_type, "allow_non_present_actors"):
       if any([not getattr(self.context, foo).is_present() for foo in edict["actors"]]):
         return
+    # berserk handler on orders
+    if self.event_type in ["attack_order", "defense_order", "indirect_order"]:
+      ctarget = self.context.ctarget
+      if ctarget.has_unit_status("berserk"):
+        Event("berserked_order", context).activate()
+        return
     # panic handler
     if info(self.event_type, "panic_blocked"):
       potential_panicker = getattr(self.context, edict["primary_actor"])
@@ -37,11 +43,7 @@ class Event(object):
         self.context.battle.yprint("  %s is %s! No action" % (potential_panicker, status.Status("panicked")))
         return
     # time to activate this event on the queue; note the event has its own context, battle, etc.
-    #   Yan has already activated using the tactic fire on Jing
     result = info(self.event_type, "func")(self.context)
-    # if result and EVENTS[self.event_type]["can_aoe"]:
-    #   # this is a tactic and we might be able to chain
-    #   possible_aoe = self.context.ctarget.position 
 
   @classmethod
   def gain_status(cls, stat_str, context, ctarget):
@@ -86,7 +88,6 @@ def compute_physical_damage(csource, ctarget, multiplier=1):
   """ We already know who is hitting whom, just computing damage """
   s_str = csource.physical_offense()
   d_str = ctarget.physical_defense()
-
   dicecount = int(csource.size*multiplier)
   # this is the data needed to create a log of the damage later; for timing purposes this needs
   raw_damage, hitprob  = roll_dice(s_str, d_str, dicecount)
@@ -112,47 +113,40 @@ def compute_arrow_damage(csource, ctarget, multiplier=1):
 # after these, there should be a ctarget
 
 def attack_order(context):
-  csource = context.ctarget
-  if csource.has_unit_status("berserk"):
-    Event("berserked_order", context).activate()
-    return
-  myarmyid = csource.army.armyid
+  ctarget = context.ctarget
+  myarmyid = ctarget.army.armyid
   enemy = context.battle.armies[1-myarmyid]
   enemyunits = enemy.present_units()
   if len(enemyunits) == 0:
     context.battle.yprint("No unit to attack!")
     return
-  ctarget = random.choice(enemyunits)
-  context.ctarget.ctargetting = ("marching", ctarget)
-  context.battle.yprint("{}: marching -> {};".format(csource, ctarget), debug=True)
-  newcontext = context.rebase({"csource":csource, "ctarget":ctarget})
+  cnewsource = context.ctarget # new event
+  cnewtarget = random.choice(enemyunits)
+  cnewsource.ctargetting = ("marching", cnewtarget)
+  context.battle.yprint("{}: marching -> {};".format(cnewsource, cnewtarget), debug=True)
+  newcontext = context.rebase({"csource":cnewsource, "ctarget":cnewtarget})
   context.battle.place_event("engage", newcontext, "Q_MANUEVER")
 
 def defense_order(context):
   ctarget = context.ctarget
-  if ctarget.has_unit_status("berserk"): # note different dude
-    Event("berserked_order", context).activate()
-    return
-  context.ctarget.ctargetting = ("defending", ctarget)
+  ctarget.ctargetting = ("defending", ctarget)
   ctarget.move(context.battle.hqs[ctarget.army.armyid])
   context.battle.yprint("{}: staying put at {};".format(ctarget, context.ctarget.position), debug=True)
   Event.gain_status("defended", context, ctarget)
 
 def indirect_order(context):
   csource = context.ctarget
-  if csource.has_unit_status("berserk"):
-    Event("berserked_order", context).activate()
-    return
   myarmyid = csource.army.armyid
   enemy = context.battle.armies[1-myarmyid]
   enemyunits = enemy.present_units()
   if len(enemyunits) == 0:
     context.battle.yprint("No unit to target!")
     return
-  ctarget = random.choice(enemyunits)
-  context.ctarget.ctargetting = ("sneaking", ctarget)
-  context.battle.yprint("{}: sneaking -> {}; planning strategery".format(csource, ctarget), debug=True)
-  newcontext = context.rebase({"csource":csource, "ctarget":ctarget})
+  cnewsource = context.ctarget # new event
+  cnewtarget = random.choice(enemyunits)
+  cnewsource.ctargetting = ("sneaking", cnewtarget)
+  context.battle.yprint("{}: sneaking -> {}; planning strategery".format(cnewsource, cnewtarget), debug=True)
+  newcontext = context.rebase({"csource":cnewsource, "ctarget":cnewtarget})
   context.battle.place_event("indirect_raid", newcontext, "Q_MANUEVER")
 
 def berserked_order(context):
@@ -198,21 +192,25 @@ def engage(context):
   csource = context.csource
   ctarget = context.ctarget
   if ctarget in csource.attacked_by:
-    context.battle.yprint("{} was planning to engage {}, but they already engaged".format(csource, ctarget))
+    context.battle.yprint("{} already engaged {}, but they already engaged".format(csource, ctarget), debug=True)
     return
+  if ctarget.is_defended():
+    readytext = "$[2$]defended!$[7$]"
+  else:
+    readytext = textutils.disp_unit_ctargetting(ctarget)
   context.battle.yprint("{} ({}) engages {} ({})".format(csource,
                                                          textutils.disp_unit_ctargetting(csource),
                                                          ctarget,
-                                                         textutils.disp_unit_ctargetting(ctarget)))
+                                                         readytext))
+  context.battle.place_event("duel_consider", context, "Q_RESOLVE")
   converging = bool(ctarget.ctargetting[1] == csource) # if other ctarget is coming towards you
   if ctarget.is_defended():
     assert ctarget.position == context.battle.hqs[ctarget.army.armyid] # meeting at hq
     csource.move(ctarget.position)
-    context.battle.yprint("  but %s is ready!" % ctarget)
-    context.battle.yprint("  %s able to launch defensive arrow volley" % ctarget)
+    context.battle.yprint("  %s able to launch defensive arrow volley" % ctarget, debug=True)
     context.battle.place_event("arrow_strike", context.rebase_switch(), "Q_RESOLVE")
     if random.random() < 0.5:    
-      context.battle.yprint("  %s able to launch offensive arrow volley" % csource)
+      context.battle.yprint("  %s able to launch offensive arrow volley" % csource, debug=True)
       context.battle.place_event("arrow_strike", context, "Q_RESOLVE")
     context.battle.place_event("physical_clash", context.rebase_switch(), "Q_RESOLVE")
   else:
@@ -220,12 +218,12 @@ def engage(context):
     csource.move(newpos)
     ctarget.move(newpos)
     if random.random() < 0.5:
-      context.battle.yprint("  %s able to launch offensive arrow volley" % csource)
+      context.battle.yprint("  %s able to launch offensive arrow volley" % csource, debug=True)
       context.battle.place_event("arrow_strike", context, "Q_RESOLVE")
     # defense doesn't have time to shoot arrows, unless they were coming in this direction
     if converging:
       if random.random() < 0.5:
-        context.battle.yprint("  %s able to launch defensive arrow volley" % ctarget)
+        context.battle.yprint("  %s able to launch defensive arrow volley" % ctarget, debug=True)
         context.battle.place_event("arrow_strike", context.rebase_switch(), "Q_RESOLVE")
     # need logic for when 2 attackers rush into each other
     context.battle.place_event("physical_clash", context, "Q_RESOLVE")
@@ -240,6 +238,7 @@ def indirect_raid(context):
                                                          textutils.disp_unit_ctargetting(csource),
                                                          ctarget,
                                                          textutils.disp_unit_ctargetting(ctarget)))
+  context.battle.place_event("duel_consider", context, "Q_RESOLVE")
   # tactic 1: raid
   vulnerable = False
   if ctarget.ctargetting[0] == "defending":
@@ -272,7 +271,47 @@ def indirect_raid(context):
 #################
 # RESOLVE PHASE #
 #################
+
+def duel_accepted(context):
+  csource = context.csource
+  ctarget = context.ctarget
+  actors = [csource, ctarget]
+  healths = [100, 100]
+  context.battle.yprint("{csource} and {ctarget} face off!".format(**context))
+  health_history = [(100, 100)]
+  loser_history = [None]
+  while (healths[0] > 0 and healths[1] > 0):
+    first_win = random.random() < source.character.power/(target.character.power + source.character.power)
+    if first_win:
+      loser = 1
+    else:
+      loser = 0
+    loser.history.append(loser)
+    healths[0] -= random(10)
+    health_history.append(tuple(healths))
+  context.battle.disp_duel(csource, ctarget, loser_history, health_history)
+  for i in [0,1]:
+    if healths[i] <= 0:
+      context.battle.yprint("{ctarget} collapses; unit retreats!", context={"ctarget":actors[i]})
+      Event("receive_damage", context.rebase({"damage":actors[i].size,
+                                            "ctarget":actors[i],
+                                            "dmgdata":"",
+                                            "dmglog":""})).activate()
+
     
+def duel_consider(context):
+  csource = context.csource
+  ctarget = context.ctarget
+  acceptances, duel_data = duel.duel_commit(context, (csource, ctarget))
+  yprint(str(duel_data), debug=True)
+  if acceptances[0]:
+    Event.make_speech(csource, context, duel.get_pre_duel_speech("challenge"))
+    if acceptances[1]:
+      Event.make_speech(ctarget, context, duel.get_pre_duel_speech("accept"))
+      Event("duel_accepted", context).activate()
+    else:
+      Event.make_speech(ctarget, context, duel.get_pre_duel_speech("deny"))
+      
 def arrow_strike(context):
   csource = context.csource
   ctarget = context.ctarget
@@ -291,7 +330,7 @@ def arrow_strike(context):
   if csource.has_unit_status("chu_ko_nu"):
     if random.random() < 0.5:
       context.battle.make_skill_narration("chu_ko_nu", "{}'s arrows continue to rain!".format(csource), True)
-      if csource.name == "Zhuge Liang":
+      if random.random() < 0.5 and csource.name == "Zhuge Liang":
         Event.make_speech(csource, context, "The name is a bit embarassing...")
       else:
         Event.make_speech(csource, context, "Have some more!")
@@ -325,6 +364,8 @@ def physical_strike(context):
 
 EVENTS_GENERIC_CTARGETTED = {
   "arrow_strike": {},
+  "duel_consider": {},
+  "duel_accepted": {},
   "engage": {},
   "indirect_raid": {},
   "physical_clash": {},

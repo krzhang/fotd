@@ -13,7 +13,6 @@ import utils
 import weather
 
 class Battle(object):
-
   
   def __init__(self, army1, army2, debug_mode=False):
     self.armies = [army1, army2]
@@ -82,15 +81,12 @@ class Battle(object):
     """
     self.queues[queue_name].appendleft(events.Event(event_type, context))
 
-  def yprint(self, text, debug=False):
-    self.battlescreen.yprint(text, debug)
+  def yprint(self, text, context={}, debug=False):
+    self.battlescreen.yprint(text, context, debug)
 
-  # def yprint_hrule(self, debug=False):
-  #   self.battlescreen.yprint_hrule(debug)
-    
   def _run_status_handlers(self, func_key):
     for i in [0,1]:
-      # originally these are in lists; the problem is you can change these lists, so make copies
+      # originally these were in lists; the problem is you can change these lists, so make copies
       for unit in tuple(self.armies[i].units):
         for sta in tuple(unit.unit_status):
           ctxt = events.Context(self, opt={"ctarget":unit})
@@ -114,11 +110,6 @@ class Battle(object):
     newpos = positions.Position(self, ctarget) # meeting in the field
     self.dynamic_positions.append(newpos)
     return newpos
-
-  # def display_positions(self):
-  #   for p in self.hqs + self.dynamic_positions:
-  #     if not p.is_empty():
-  #       p.display(debug=True)
 
   def get_formations(self):
     orders = [None, None]

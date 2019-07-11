@@ -14,9 +14,9 @@ class Skill(object):
     return "<$[2$]" + self.skill_str + "$[7$]>"
   
   def short(self):
-    return "<$[2$]" + info(self.skill_str, "short") + "$[7$]>"
+    return "<$[2$]" + skill_info(self.skill_str, "short") + "$[7$]>"
 
-def info(skill_str, key):
+def skill_info(skill_str, key):
   if key in SKILLS[skill_str]:
     return SKILLS[skill_str][key]
   return None

@@ -46,7 +46,7 @@ Jing = test_char("Jing Chan", "Purge",
 Jing.equip("FLAME_BLADE")
 
 Yoyo = test_char("You Zhou", "Caffeinator",
-  31, 90, 63, 21, 4, 2,["cheer", "attack_supplies", "fire_tactic", "panic_tactic", "chaos"]) 
+  31, 90, 63, 21, 4, 2,["cheer", "attack_supplies", "dash", "fire_tactic", "panic_tactic", "chaos"]) 
 
 Han = test_char("Han Xu", "Finalmente",
   90, 85, 12, 24, 2, 6,  ["sneak_attack", "dash", "jeer", "chaos_arrow", "headhunter"])
@@ -120,13 +120,13 @@ def army_mysticsoft(armyid, color, aitype):
                              Unit(Jing, 16, 12),
                              Unit(Yoyo, 12, 20),
                              Unit(Han, 18, 8)],
-              armyid, color, aitype)
+              armyid, color, aitype, 7)
 
 def army_shu(armyid, aitype):
   return Army("Shu",[Unit(LiuBei, 20, 12),
                      Unit(GuanYu, 14, 12),
                      Unit(ZhangFei, 14, 4)],
-              armyid, color, aitype)
+              armyid, color, aitype, 7)
 
 def army_unknown(armyid, color, aitype):
   return Army("Enemy Unknown", random.sample(
@@ -146,7 +146,7 @@ def army_unknown(armyid, color, aitype):
      Unit(LuMeng, 20, 10),
      Unit(GuanYinPing, 20, 10),
      Unit(Wyatt, 20, 18)],                
-    4), armyid, color, aitype)
+    4), armyid, color, aitype, 7)
 
 def link_data_funcs():
   """ A round of processing after getting the text data, to create links to actual functions """
@@ -181,7 +181,7 @@ def test(debug=False, resize=False, two_players=False):
   # graphics.Screen.wrapper(graphics.battle_screen, catch_interrupt = True, arguments=[bat])
   while(True):
     bat.take_turn()
-    if bat.win_army() != (None, None):
+    if any(bat.losing_status()):
       sys.exit(0)
       
 if __name__ == "__main__":

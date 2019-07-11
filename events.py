@@ -1,21 +1,19 @@
+import battle_constants
 from contexts import Context
 import random
 import numpy as np
 import positions
+import rps
 import skills
 import status
 import utils
 import insults
+import textutils
 
 # <2019-07-04 Thu> 
 # had both statuses and skills here, and decided to offload all skills into statuses, and so
 # now only have to think about interplays between statuses and events (as opposed to aslo have)
 # skills involved
-
-class EventType(object):
-  def __init__(self, inputdict):
-    for s in inputdict:
-      self.s = inputdict[s]
 
 EVENTS = {}
 
@@ -73,7 +71,7 @@ def info(event_str, key):
 # Utility functions #
 ################################a
 
-def roll_dice(s_str, d_str, dicecount, hitprob):
+def roll_dice(s_str, d_str, dicecount):
   if d_str + s_str < 0.00001: # to avoid dividing by 0
     return 0
   hitprob = float(s_str) / (d_str + s_str)
@@ -82,16 +80,16 @@ def roll_dice(s_str, d_str, dicecount, hitprob):
     roll = random.random()
     if roll < hitprob:
       raw_damage += 1
-  return rawdamage
+  return raw_damage, hitprob
 
 def compute_physical_damage(csource, ctarget, multiplier=1):
   """ We already know who is hitting whom, just computing damage """
-  s_str = csource.physical_strength()
+  s_str = csource.physical_offense()
   d_str = ctarget.physical_defense()
 
   dicecount = int(csource.size*multiplier)
   # this is the data needed to create a log of the damage later; for timing purposes this needs
-  raw_damage = roll_dice(s_str, d_str, dicecount, hitprob)
+  raw_damage, hitprob  = roll_dice(s_str, d_str, dicecount)
   dmglog = tuple((s_str, d_str, dicecount, hitprob, raw_damage))
   # we pass this on instead of printing it immediately, both for MVC purposes and because
   # it's weird for the user to see damage computed first before seeing damage done on screen  
@@ -104,7 +102,7 @@ def compute_arrow_damage(csource, ctarget, multiplier=1):
   if ctarget.is_defended():
     d_str *= 1.5
   dicecount = int(csource.size*multiplier)
-  raw_damage = roll_dice(s_str, d_str, dicecount, hitprob)
+  raw_damage, hitprob = roll_dice(s_str, d_str, dicecount)
   dmglog = tuple((s_str, d_str, dicecount, hitprob, raw_damage))
   return raw_damage, dmglog
 
@@ -125,8 +123,8 @@ def attack_order(context):
     context.battle.yprint("No unit to attack!")
     return
   ctarget = random.choice(enemyunits)
-  context.ctarget.ctargetting = ctarget
-  context.battle.yprint("{}: marching -> {};".format(csource, ctarget))
+  context.ctarget.ctargetting = ("marching", ctarget)
+  context.battle.yprint("{}: marching -> {};".format(csource, ctarget), debug=True)
   newcontext = context.rebase({"csource":csource, "ctarget":ctarget})
   context.battle.place_event("engage", newcontext, "Q_MANUEVER")
 
@@ -135,9 +133,9 @@ def defense_order(context):
   if ctarget.has_unit_status("berserk"): # note different dude
     Event("berserked_order", context).activate()
     return
-  context.ctarget.ctargetting = None
+  context.ctarget.ctargetting = ("defending", ctarget)
   ctarget.move(context.battle.hqs[ctarget.army.armyid])
-  context.battle.yprint("{}: staying put at {};".format(ctarget, context.ctarget.position))
+  context.battle.yprint("{}: staying put at {};".format(ctarget, context.ctarget.position), debug=True)
   Event.gain_status("defended", context, ctarget)
 
 def indirect_order(context):
@@ -149,11 +147,11 @@ def indirect_order(context):
   enemy = context.battle.armies[1-myarmyid]
   enemyunits = enemy.present_units()
   if len(enemyunits) == 0:
-    context.battle.yprint("No unit to ctarget!")
+    context.battle.yprint("No unit to target!")
     return
   ctarget = random.choice(enemyunits)
-  context.ctarget.ctargetting = ctarget
-  context.battle.yprint("{}: sneaking -> {}; planning strategery".format(csource, ctarget))
+  context.ctarget.ctargetting = ("sneaking", ctarget)
+  context.battle.yprint("{}: sneaking -> {}; planning strategery".format(csource, ctarget), debug=True)
   newcontext = context.rebase({"csource":csource, "ctarget":ctarget})
   context.battle.place_event("indirect_raid", newcontext, "Q_MANUEVER")
 
@@ -164,7 +162,7 @@ def berserked_order(context):
   ctarget = random.choice(enemyunits)
   context.battle.yprint("{}: random {} attack -> {}; ignoring original orders".format(
     csource, status.Status("berserk"), ctarget))
-  context.ctarget.ctargetting = ctarget
+  context.ctarget.ctargetting = ("marching", ctarget)
   newcontext = context.rebase({"csource":csource, "ctarget":ctarget})
   context.battle.place_event("engage", newcontext, "Q_MANUEVER")
 
@@ -175,7 +173,7 @@ def provoked_order(context):
   ctarget = random.choice(enemyunits)
   context.battle.yprint("{}: random {} attack -> {}; ignoring original orders".format(
     csource, status.Status("provoked"), ctarget))
-  context.ctarget.ctargetting = ctarget
+  context.ctarget.ctargetting = ("marching", ctarget)
   newcontext = context.rebase({"csource":csource, "ctarget":ctarget})
   context.battle.place_event("engage", newcontext, "Q_MANUEVER")  
   
@@ -202,8 +200,11 @@ def engage(context):
   if ctarget in csource.attacked_by:
     context.battle.yprint("{} was planning to engage {}, but they already engaged".format(csource, ctarget))
     return
-  context.battle.yprint("{} engages {} (-> {})".format(csource, ctarget, ctarget.ctargetting))
-  converging = bool(ctarget.ctargetting == csource) # if other ctarget is coming towards you
+  context.battle.yprint("{} ({}) engages {} ({})".format(csource,
+                                                         textutils.disp_unit_ctargetting(csource),
+                                                         ctarget,
+                                                         textutils.disp_unit_ctargetting(ctarget)))
+  converging = bool(ctarget.ctargetting[1] == csource) # if other ctarget is coming towards you
   if ctarget.is_defended():
     assert ctarget.position == context.battle.hqs[ctarget.army.armyid] # meeting at hq
     csource.move(ctarget.position)
@@ -235,12 +236,21 @@ def indirect_raid(context):
   if len(csource.attacked_by) > 0:
     context.battle.yprint("{}'s sneaking up on {} was interrupted by {}!".format(csource, ctarget, csource.attacked_by[0]))
     return
-  context.battle.yprint("{} sneaks up on {}".format(csource, ctarget))  
+  context.battle.yprint("{} ({}) sneaks up on {} ({})".format(csource,
+                                                         textutils.disp_unit_ctargetting(csource),
+                                                         ctarget,
+                                                         textutils.disp_unit_ctargetting(ctarget)))
   # tactic 1: raid
   vulnerable = False
-  if ctarget.has_unit_status("defended"):
-    context.battle.yprint("  {} is defended against standard attacks but not raids!".format(ctarget))
+  if ctarget.ctargetting[0] == "defending":
+    context.battle.yprint("  {} is caught unawares by the indirect approach!".format(ctarget))
     vulnerable = True
+  elif ctarget.ctargetting[0] == "marching":
+    context.battle.yprint("  {}'s marching soldiers are vigilant!".format(ctarget))
+  # elif ctarget.ctargetting[0] == "marching":
+  #   context.battle.yprint("  {}'s marching soldiers are vigilant!".format(ctarget))
+  # elif ctarget.ctargetting[0] == "sneaking":
+  #   context.battle.yprint("  {}'s sneaking soldiers are vigilant!".format(ctarget))    
   context.battle.place_event("arrow_strike",
                              context.copy(additional_opt={"vulnerable":vulnerable}),
                              "Q_RESOLVE")
@@ -349,7 +359,15 @@ EVENTS_MISC = {
     "actors":["ctarget"],
     "primary_actor": "ctarget"
     #"need_live_actors":False # maybe need "Captured" etc.
-  }
+  },
+  "order_change": {
+    "actors":["ctarget_army"],
+    "primary_actor": "ctarget_army"
+  },
+  "change_morale": {
+    "actors":["ctarget_army"],
+    "primary_actor": "ctarget_army"
+  },
 }
 
 # for ev in EVENTS_RECEIVE:
@@ -359,7 +377,7 @@ EVENTS_MISC = {
 def make_speech(context): 
   ctarget = context.ctarget
   speech_str = context.speech
-  context.battle.make_speech(ctarget, ": '$[2$]" + speech_str + "$[7$]'")
+  context.battle.make_speech(ctarget, speech_str)
 
 def receive_damage(context):
   ctarget = context.ctarget
@@ -368,7 +386,8 @@ def receive_damage(context):
   if damage >= ctarget.size:
     damage = ctarget.size
   dmglog = context.dmglog or None
-  context.battle.battlescreen.disp_damage(20, ctarget.size, damage, dmgdata, dmglog)
+  context.battle.battlescreen.disp_damage(battle_constants.ARMY_SIZE_MAX,
+                                          ctarget.size, damage, dmgdata, dmglog)
   ctarget.size -= damage
   
 def receive_status(context):
@@ -382,10 +401,23 @@ def receive_status(context):
 
 # for armies
 
+def order_change(context):
+  ctarget_army = context.ctarget_army
+  morale_change = context.morale_change
+  context.battle.yprint("It was a feint! {} suddenly {}.".format(
+    textutils.disp_army(ctarget_army),
+    rps.order_info(ctarget_army.get_order(), "verb")))
+  Event("change_morale", context).activate()
+
+  
 def change_morale(context):
   ctarget_army = context.ctarget_army
   morale_change = context.morale_change
-  ctarget_army.morale += morale_change
+  newmorale = ctarget_army.morale + morale_change
+  newmorale = min(newmorale, battle_constants.MORALE_MAX)
+  newmorale = max(newmorale, battle_constants.MORALE_MIN)
+  ctarget_army.morale = newmorale
+  
   # context.battle.battlescreen.disp_morale_change()
   
 ################################
@@ -431,8 +463,8 @@ def lure_tactic(context, base_chance, improved_chance, success_callback):
         # this means we came from a lure
         lurer = random.choice(lure_candidates)
         context.battle.make_skill_narration("lure", "", True)
-        context.battle.yprint(lurer.speech(skills.info("lure", "on_success_speech")))
-        lure_success_text = skills.info("lure_tactic", "on_success")
+        context.battle.yprint(lurer.speech(skills.skill_info("lure", "on_success_speech")))
+        lure_success_text = skills.skill_info("lure_tactic", "on_success")
         context.battle.make_skill_narration("lure", lure_success_text.format(**{"lurer":lurer, "ctarget":targ}), True)
       else:
         # still a success, but it is not because of the lure
@@ -455,11 +487,11 @@ def target_skill_tactic(context, cskill, cchance, success_callback):
   ctarget = context.ctarget
   success = random.random() < cchance # can replace with harder functions later
   # TODO cchance = calc_chance(target, skill) or something
-  cskill_on_prep = random.choice(skills.info(cskill, "on_roll")).format(**context.opt)
+  cskill_on_prep = random.choice(skills.skill_info(cskill, "on_roll")).format(**context.opt)
   context.battle.make_skill_narration(cskill, cskill_on_prep)
   # import pdb;pdb.set_trace()
   if success:
-    narrator_str, narrate_text = random.choice(skills.info(cskill, "on_success_speech"))
+    narrator_str, narrate_text = random.choice(skills.skill_info(cskill, "on_success_speech"))
     Event.make_speech(context.opt[narrator_str], context, narrate_text)
     success_callback(context)
     lure_tactic(context,
@@ -467,7 +499,7 @@ def target_skill_tactic(context, cskill, cchance, success_callback):
                 0.6, # improved entanglement chance
                 success_callback)
   else:
-    narrator_str, narrate_text = random.choice(skills.info(cskill, "on_fail_speech"))
+    narrator_str, narrate_text = random.choice(skills.skill_info(cskill, "on_fail_speech"))
     Event.make_speech(context.opt[narrator_str], context, narrate_text)
   context.battle.make_skill_narration(cskill, "", success)
   return success  
@@ -503,7 +535,7 @@ def panic_tactic(context):
   return target_skill_tactic(context, "panic_tactic", 0.5, _panic_tactic_success)
 
 def _water_tactic_success(context):
-  damdice = 12
+  damdice = battle.battle_constants.WATER_TACTIC_DAMDICE
   damage = random.choice(range(damdice))
   dmgdata = (context.csource, context.ctarget, "floods", damage)
   Event("receive_damage", context.copy(

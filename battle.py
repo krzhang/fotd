@@ -6,6 +6,7 @@ import intelligence
 import rps
 import skills
 import status
+import battle_constants
 import positions
 from collections import deque
 import utils
@@ -13,7 +14,6 @@ import weather
 
 class Battle(object):
 
-  QUEUE_NAMES = ["Q_PRELIM", "Q_ORDER", "Q_MANUEVER", "Q_RESOLVE", "Q_CLEANUP"]
   
   def __init__(self, army1, army2, debug_mode=False):
     self.armies = [army1, army2]
@@ -31,7 +31,7 @@ class Battle(object):
     self.morale_diff = 0
     # 5 queues
     self.queues = {}
-    for qname in Battle.QUEUE_NAMES:
+    for qname in battle_constants.QUEUE_NAMES:
       self.queues[qname] = deque()
     # other stuff
     self.order_history = []
@@ -60,6 +60,7 @@ class Battle(object):
       self.armies[i].formation_bonus = 1.0
       for u in self.armies[i].units:
         u.move(self.hqs[u.army.armyid])
+        u.ctargetting = None
         u.last_turn_size = u.size        
     assert all((p.is_empty() for p in self.dynamic_positions))
     self.dynamic_positions = []
@@ -137,12 +138,9 @@ class Battle(object):
     for i in [0, 1]:
       order = orders[i]
       formation = self.formations[i]
-        cost = rps.formation_info(formation, "morale_cost")[order]
-        orderlist.append((0, "change_morale",  contexts.Context(self, opt={"ctarget_army":self.armies[i], "morale_change":-cost})))
-        if cost:
-          self.yprint("It was a feint! {} suddenly {}.".format(
-            disp_army(self.armies[i]),
-            rps.order_info(order, "verb")))
+      cost = rps.formation_info(formation, "morale_cost")[order]
+      if cost:
+        orderlist.append((0, "order_change",  contexts.Context(self, opt={"ctarget_army":self.armies[i], "morale_change":-cost})))
               
       for u in self.armies[i].present_units():
         u.attacked = []
@@ -186,5 +184,5 @@ class Battle(object):
         losing[i] = True
       if self.armies[i].morale <= 0:
         losing[i] = True
-    return tuple(losing))
+    return tuple(losing)
     

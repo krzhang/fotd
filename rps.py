@@ -11,10 +11,10 @@ FORMATIONS = {
     "status": "form_offensive",
     "adj": "offensive",
     "short": "$[1$]O$[7$]",
-    "physical_offense": 1.3,
+    "physical_offense": 1.0,
     "physical_defense": 1.0,
-    "arrow_offense:": 1.0,
-    "arrow_defense:": 1.0,
+    "arrow_offense": 1.0,
+    "arrow_defense": 1.0,
     "morale_cost":{'A':0, 'D':1, 'I':1}
   },
   "D": {
@@ -22,10 +22,10 @@ FORMATIONS = {
     "desc":"$[4$]defensive formation$[7$]",
     "status": "form_defensive",
     "short": "$[4$]D$[7$]",
-    "physical_offense": 0.7,
-    "physical_defense": 1.3,
-    "arrow_offense:": 0.8,
-    "arrow_defense:": 1.2,
+    "physical_offense": 0.8,
+    "physical_defense": 1.2,
+    "arrow_offense": 0.8,
+    "arrow_defense": 1.2,
     "morale_cost":{'A':1, 'D':0, 'I':1}
   }
 }
@@ -46,11 +46,11 @@ STRATEGIC_ORDERS = {
   "I": {
     "event": "indirect_order",
     "short": "$[1,3$]I$[7$]",
-    "noun": "defense",
+    "noun": "skullduggery",
     "verb": "scatters",
   }
 }
-o2e = {"A": "attack_order", "D": "defense_order", "I":"indirect_order"}
+# o2e = {"A": "attack_order", "D": "defense_order", "I":"indirect_order"}
 
 def beats(t1, t2):
   return BEATS[t1][t2] == 1
@@ -63,7 +63,6 @@ def formation_info(form, info_key):
 
 def order_info(order, info_key):
   return STRATEGIC_ORDERS[order][info_key]
-
 
 def orders_to_winning_army(orders):
   """

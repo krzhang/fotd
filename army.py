@@ -3,6 +3,7 @@ import status
 import intelligence
 import colors
 from textutils import disp_unit
+import rps
 
 class Unit(object):
   def __init__(self, character, size, speed):
@@ -41,6 +42,9 @@ class Unit(object):
     if not self.has_unit_status(stat_str):
       self.unit_status.append(status.Status(stat_str))
 
+  def get_order(self):
+    return self.army.order
+  
   def move(self, newpos):
     if self.position:
       # could come here from None
@@ -62,28 +66,28 @@ class Unit(object):
     return val
   
   def physical_offense(self):
-    val = rps.get_formation_bonus(self.army.formation, "physical_offense")
+    val = rps.formation_info(self.army.formation, "physical_offense")
     val *= float(self.size)/3.5
     val *= self._generic_multiplier()
-    return float(dam)
+    return float(val)
 
   def physical_defense(self):
-    val = rps.get_formation_bonus(self.army.formation, "physical_defense")
+    val = rps.formation_info(self.army.formation, "physical_defense")
     val *= float(self.size)/3.5
-    val *= 1.5 # geeric defense bonus
+    val *= 2 # generic defense bonus
     if self.is_defended():
       val *= 1.5
     val *= self._generic_multiplier()
-    return float(dam)
+    return float(val)
   
   def arrow_offense(self):
-    val = rps.get_formation_bonus(self.army.formation, "arrow_offense")
+    val = rps.formation_info(self.army.formation, "arrow_offense")
     val *= 2.0
     val *= self._generic_multiplier()
     return val
 
   def arrow_defense(self):
-    val = rps.get_formation_bonus(self.army.formation, "arrow_defense")
+    val = rps.formation_info(self.army.formation, "arrow_defense")
     val *= 18.0
     val *= self._generic_multiplier()
     return val
@@ -95,7 +99,7 @@ class Unit(object):
     return self.size > 0 and self.character.health > 0
 
 class Army(object):
-  def __init__(self, name, units, armyid, color, intelligence_type):
+  def __init__(self, name, units, armyid, color, intelligence_type, morale):
     self.name = name
     self.units = units
     self.commander = self.units[0]
@@ -107,9 +111,10 @@ class Army(object):
       u.set_color(color)
     self.intelligence_type = intelligence_type
     self.intelligence = intelligence.INTELLIGENCE_FROM_TYPE[intelligence_type]
+    self.morale = morale
+    # things to be linked later
     self.turn_status = {} # status for each turn; yomi edge, formation bonus, etc.
     self.yomi_edge = None # used in battles to see if RPS was won
-    self.morale = 10
     self.battle = None
     self.formation_bonus = 1.0
     self.formation = None
@@ -117,6 +122,9 @@ class Army(object):
     
   def __repr__(self):
     return "Army({})".format(self.name)
+
+  def get_order(self):
+    return self.order
 
   def is_present(self):
     return any([u for u in self.units if u.is_present()])

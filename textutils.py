@@ -1,4 +1,5 @@
 # import graphics_asciimatics
+import battle_constants
 from utils import read_single_keypress
 import os
 import logging
@@ -29,7 +30,7 @@ def disp_army(army):
   return "$[{}$]{}$[7$]".format(army.color, army.name)
 
 def disp_form_short(formation):
-  return rps.FORMATION_ORDERS[formation]["short"]
+  return rps.formation_info(formation, "short")
 
 def disp_skill_activation(skill_str, success=None):
   return "<" + colors.color_bool(success) + " ".join(skill_str.upper().split("_")) + "$[7$]>"
@@ -43,6 +44,17 @@ def disp_unit(unit):
 def disp_unit_size(unit):
   csize = colors.color_size(unit.size, unit.size_base) + str(unit.size) + "$[7$]"
   return "{}/{}".format(str(csize), str(unit.size_base)) 
+
+def disp_unit_ctargetting(unit):
+  """ ex: 'sneaking towards' """
+  if not unit.ctargetting: # set to none etc.
+    return "doing nothing"
+  if unit.ctargetting[0] == "marching":
+    return "marching -> " + disp_unit(unit.ctargetting[1])
+  elif unit.ctargetting[0] == "defending":
+    return "staying put"
+  elif unit.ctargetting[0] == "sneaking":
+    return "sneaking -> " + disp_unit(unit.ctargetting[1])
 
 def disp_unit_status_noskills(unit):
   """ string for the unit's statuses that do NOT include skills"""
@@ -143,7 +155,7 @@ class BattleScreen():
       strat1,
       form1,
       disp_army(self.battle.armies[1]),
-      disp_bar_morale(10, self.battle.armies[0].morale))
+      disp_bar_morale(10, self.battle.armies[1].morale))
   
   def _disp_statline(self):
     statline = self._day_status_str()
@@ -210,8 +222,8 @@ class BattleScreen():
     fo = self._disp_footerline(pause_str) # 1 line, string
     assert len(st + ar + co) == self.max_screen_len - 1
     # effects = []
-    for y, l in enumerate(st + ar + co):
-      print(self._render(l))
+    for y, li in enumerate(st + ar + co):
+      print(self._render(li))
     print(self._render(fo), end="", flush=True)
     #  effects.append(Print(self.screen, StaticRenderer(images=self._render(l)), x=0, y=y, colour=7))
     # screen.play([Scene(effects, -1)])
@@ -220,7 +232,7 @@ class BattleScreen():
   
   def disp_damage(self, max_pos, oldsize, damage, dmgdata, dmglog):
     newsize = oldsize - damage
-    hpbar = disp_bar_single_hit(20, oldsize, newsize)
+    hpbar = disp_bar_single_hit(battle_constants.ARMY_SIZE_MAX, oldsize, newsize)
     if not dmgdata:
       ndmgstr += " "
     elif dmgdata[0]: # this means there is a source; janky
@@ -235,10 +247,10 @@ class BattleScreen():
     self.yprint(fdmgstr)
     if dmglog:
       dmg_str = disp_damage_calc(*dmglog)
-      self.yprint(dmglog, debug=True)
+      self.yprint(dmg_str, debug=True)
     
   def _disp_unit_newheader(self, unit, side):
-    healthbar = disp_bar_day_tracker(20, unit.size_base, unit.last_turn_size, unit.size)
+    healthbar = disp_bar_day_tracker(battle_constants.ARMY_SIZE_MAX, unit.size_base, unit.last_turn_size, unit.size)
     charstr = "{} {} Hp:{} Sp:{}".format(healthbar, disp_unit(unit), disp_unit_size(unit), unit.speed)
     if side == 0:
       return charstr
@@ -274,11 +286,11 @@ class BattleScreen():
     return self._get_input(PAUSE_STRS['FORMATION_STR'].format(armyid), ['O','D'])
 
   def input_battle_order(self, armyid):
-    return self._get_input(PAUSE_STRS['ORDER_STR'].format(armyid), ['O','D'])
+    return self._get_input(PAUSE_STRS['ORDER_STR'].format(armyid), ['A','D', 'I'])
 
   def make_speech(self, unit, speech):
     """ What to display when a unit says something """
-    self.yprint("{}: {}".format(disp_unit(unit), speech))
+    self.yprint("{}: '$[2$]{}$[7$]'".format(disp_unit(unit), speech))
 
   def make_skill_narration(self, skill_str, other_str, success=None):
     """ What to display when we want to make a narration involving a skill """

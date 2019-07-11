@@ -33,15 +33,21 @@ FORMATIONS = {
 STRATEGIC_ORDERS = {
   "A": {
     "event": "attack_order",
-    "short": "$[1$]A$[7$]"
+    "short": "$[1$]A$[7$]",
+    "noun": "attack",
+    "verb": "marches",
     },
   "D": {
     "event": "defense_order",
-    "short": "$[4$]D$[7$]"
+    "short": "$[4$]D$[7$]",
+    "noun": "defense",
+    "verb": "fortifies",
   },
   "I": {
     "event": "indirect_order",
-    "short": "$[1,3$]I$[7$]"
+    "short": "$[1,3$]I$[7$]",
+    "noun": "defense",
+    "verb": "scatters",
   }
 }
 o2e = {"A": "attack_order", "D": "defense_order", "I":"indirect_order"}

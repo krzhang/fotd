@@ -379,6 +379,14 @@ def receive_status(context):
     disp = status.STATUSES_BATTLE[stat_str]["on_receive"].format(**context.opt)
     context.battle.yprint("  " + disp)
   context.ctarget.add_unit_status(stat_str)
+
+# for armies
+
+def change_morale(context):
+  ctarget_army = context.ctarget_army
+  morale_change = context.morale_change
+  ctarget_army.morale += morale_change
+  # context.battle.battlescreen.disp_morale_change()
   
 ################################
 # targetted Events from Skills #

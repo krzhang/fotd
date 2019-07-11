@@ -181,7 +181,7 @@ def test(debug=False, resize=False, two_players=False):
   # graphics.Screen.wrapper(graphics.battle_screen, catch_interrupt = True, arguments=[bat])
   while(True):
     bat.take_turn()
-    if bat.win_army() != None:
+    if bat.win_army() != (None, None):
       sys.exit(0)
       
 if __name__ == "__main__":

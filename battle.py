@@ -138,8 +138,12 @@ class Battle(object):
       order = orders[i]
       formation = self.formations[i]
         cost = rps.formation_info(formation, "morale_cost")[order]
+        orderlist.append((0, "change_morale",  contexts.Context(self, opt={"ctarget_army":self.armies[i], "morale_change":-cost})))
         if cost:
-          
+          self.yprint("It was a feint! {} suddenly {}.".format(
+            disp_army(self.armies[i]),
+            rps.order_info(order, "verb")))
+              
       for u in self.armies[i].present_units():
         u.attacked = []
         u.attacked_by = []
@@ -175,9 +179,12 @@ class Battle(object):
     self.battlescreen.pause_and_display() # could have undisplayed stuff
     self.init_day()
 
-  def win_army(self):
+  def losing_status(self):
+    losing = [False, False] # they can theoretically both lose
     for i in [0, 1]:
       if not self.armies[i].is_present():
-        return 1-i
-    return None
+        losing[i] = True
+      if self.armies[i].morale <= 0:
+        losing[i] = True
+    return tuple(losing))
     

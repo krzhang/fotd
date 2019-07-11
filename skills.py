@@ -1,5 +1,3 @@
-from colors import success_color
-
 class Skill(object):
 
   def __init__(self, skill_str):

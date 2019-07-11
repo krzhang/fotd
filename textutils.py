@@ -61,7 +61,12 @@ def disp_bar_custom(colors, chars, nums):
     makestr += i[0]
     makestr += i[1]*i[2]
   return makestr
-  
+
+def disp_bar_morale(max_morale, cur_morale):
+  return disp_bar_custom([Colors.BLUE + Style.DIM, Colors.ENDC],
+                         ['o', '.'],
+                         [cur_morale, max_morale - cur_morale])
+
 def disp_bar_single_hit(max_pos, oldhp, newhp):
   """Total: length; base: max; cur: current. """
   return disp_bar_custom([Colors.OKGREEN, Colors.RED, Colors.ENDC],
@@ -130,12 +135,15 @@ class BattleScreen():
       strat1 = disp_order_short(strat1)      
     else:
       strat0 = strat1 = "?"
-    return "               ({}) {} -> {} VS {} <- {} ({})".format(disp_army(self.battle.armies[0]),
-                                                     form0,
-                                                     strat0,
-                                                     strat1,
-                                                     form1,
-                                                     disp_army(self.battle.armies[1]))
+    return "      {} ({}) {} -> {} VS {} <- {} ({}) {}".format(
+      disp_bar_morale(10, self.battle.armies[0].morale),
+      disp_army(self.battle.armies[0]),
+      form0,
+      strat0,
+      strat1,
+      form1,
+      disp_army(self.battle.armies[1]),
+      disp_bar_morale(10, self.battle.armies[0].morale))
   
   def _disp_statline(self):
     statline = self._day_status_str()
@@ -261,8 +269,7 @@ class BattleScreen():
       inp = self.blit_all_battle(pause_str=pause_str)
       if inp.upper() in accepted_inputs:
         return inp.upper()          
-    
-    
+        
   def input_battle_formation(self, armyid):
     return self._get_input(PAUSE_STRS['FORMATION_STR'].format(armyid), ['O','D'])
 
@@ -301,9 +308,6 @@ class BattleScreen():
     # so we get here if either SHOW_DEBUG or debug=False, which means we send it to the buffer
     self.print_line(text)
 	  
-  def yprint_hrule(self, debug=False):
-    self.yprint(disp_hrule(), debug)
-
 # import pygcurse
 # win = pygcurse.PygcurseWindow(40, 25, 'Fall of the Dragon')
 # print = win.pygprint

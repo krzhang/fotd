@@ -1,3 +1,5 @@
+import random
+
 WEATHER = {
   "sunny": {
     "transitions": {
@@ -20,3 +22,5 @@ class Weather(object):
   def __str__(self):
     return WEATHER[self.text]["viz"]
 
+def random_weather():
+  return Weather(random.choice(list(WEATHER)))

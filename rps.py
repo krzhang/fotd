@@ -7,26 +7,31 @@ BEATS = {'A':{'A':0, 'D':-1, 'I':1},
 
 FORMATION_ORDERS = {
   'O': {
-    "desc": "Offensive Formation",
+    "desc": "$[1$]offensive formation$[7$]",
     "status": "form_offensive",
     "adj": "offensive",
+    "short": "$[1$]O$[7$]"
   },
   "D": {
     "adj": "defensive",
-    "desc":"Defensive Formation",
-    "status": "form_defensive"
+    "desc":"$[4$]Defensive Formation$[7$]",
+    "status": "form_defensive",
+    "short": "$[4$]D$[7$]"
   }
 }
 
 STRATEGIC_ORDERS = {
   "A": {
     "event": "attack_order",
+    "short": "$[1$]A$[7$]"
     },
   "D": {
     "event": "defense_order",
+    "short": "$[4$]D$[7$]"
   },
   "I": {
-    "event": "indirect_order"
+    "event": "indirect_order",
+    "short": "$[1,3$]I$[7$]"
   }
 }
 o2e = {"A": "attack_order", "D": "defense_order", "I":"indirect_order"}

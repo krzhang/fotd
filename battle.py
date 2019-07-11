@@ -10,28 +10,7 @@ import status
 import positions
 from collections import deque
 import utils
-
-WEATHER = {
-  "sunny": {
-    "transitions": {
-    },
-    "viz": Colors.GREEN + "Sunny" + Colors.ENDC
-  },
-  "hot": {
-    "viz": Colors.RED+ "HOT" + Colors.ENDC    
-  },
-  "raining": {
-    "blocks": [],
-    "viz": Colors.BLUE + "Raining" + Colors.ENDC
-  }
-}
-
-class Weather(object):
-  def __init__(self, text):
-    self.text = text
-
-  def __str__(self):
-    return WEATHER[self.text]["viz"]
+import weather
 
 class Battle(object):
 
@@ -49,7 +28,6 @@ class Battle(object):
           # u.unit_status.append(status.Status.FromSkillName(s.skill_str))
       a.commander.add_unit_status("is_commander")
     self.hqs = [positions.Position(self, self.armies[i].commander, i) for i in [0,1]]
-        
     self.dynamic_positions = []
     self.morale_diff = 0
     # 5 queues
@@ -60,20 +38,26 @@ class Battle(object):
     self.order_history = []
     self.debug_mode = debug_mode
     self.battlescreen = textutils.BattleScreen(self)
-    self.init_battle_state()
+    self.date = 0
+    self.init_day()
 
-  def init_battle_state(self):
+  def init_day(self):
     # common knowledge: later take out
-    self.date = 1
-    self.weather = Weather(random.choice(list(WEATHER)))
+    self.date += 1
+    self.weather = weather.random_weather()
     self.formations = [None, None]
     # setup stuff
     for i in [0,1]:
       self.armies[i].yomi_edge = None
       for u in self.armies[i].units:
-        u.position = self.hqs[i]
-        self.hqs[i].add_unit(u)
+        u.move(self.hqs[u.armyid])
         u.last_turn_size = u.size
+    assert all((p.is_empty() for p in self.dynamic_positions))
+    self.dynamic_positions = []
+        
+
+  def make_speech(self, unit, speech):
+    self.battlescreen.make_speech(unit, speech)
 
   def place_event(self, event_type, context, queue_name):
     """ 
@@ -85,8 +69,8 @@ class Battle(object):
   def yprint(self, text, debug=False):
     self.battlescreen.yprint(text, debug)
 
-  def yprint_hrule(self, debug=False):
-    self.battlescreen.yprint_hrule(debug)
+  # def yprint_hrule(self, debug=False):
+  #   self.battlescreen.yprint_hrule(debug)
     
   def _run_status_handlers(self, func_key):
     for i in [0,1]:
@@ -156,8 +140,8 @@ class Battle(object):
     self.formations = (formations[0], formations[1])
     for i in [0,1]:
       form = self.formations[i]
-      self.yprint("{} takes a {} formation.".format(self.armies[i],
-                                                    rps.FORMATION_ORDERS[form]["adj"]))
+      self.yprint("{} takes a {}.".format(self.armies[i],
+                                          rps.FORMATION_ORDERS[form]["desc"]))
     orders = self.get_orders()
     self.init_turn((orders[0], orders[1]))
     # preloading events
@@ -171,20 +155,8 @@ class Battle(object):
     self._run_queue('Q_RESOLVE')    
     self._run_status_handlers("eot") # should be queue later
     self.battlescreen.pause_and_display() # could have undisplayed stuff
-    self._next_day()
+    self.init_day()
 
-  def _next_day(self):
-    self.date += 1
-    self.weather = Weather(random.choice(list(WEATHER)))
-    for i in [0,1]:
-      for u in self.armies[i].units:
-        u.last_turn_size = u.size
-        if u.position:
-          u.move(self.hqs[u.armyid])
-      self.armies[i].yomi_edge = None
-    assert all((p.is_empty() for p in self.dynamic_positions))
-    self.dynamic_positions = []
-  
   def win_army(self):
     for i in [0, 1]:
       if not self.armies[i].is_present():

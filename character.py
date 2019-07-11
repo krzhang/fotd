@@ -35,15 +35,6 @@ class Character(object):
     self.items.append(item)
     self.calc_attributes()
 
-  def str_title(self):
-    if self.title:
-      return " -={}=-".format(self.title) # eventually move out
-    else:
-      return ""
-
-  def __repr__(self):
-    return str(self) + self.str_title()
-
   def __str__(self):
     return self.name
   

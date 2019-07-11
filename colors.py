@@ -22,6 +22,10 @@ class Colors:
   WIN = OKGREEN
   LOSE = Fore.RED
   INVERT = Fore.BLACK + Back.WHITE
+
+# Fore: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.
+# Back: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.
+# Style: DIM, NORMAL, BRIGHT, RESET_ALL
   
 # ESC [ 0 m       # reset all (colors and brightness)
 # ESC [ 1 m       # bright
@@ -104,7 +108,8 @@ STR_TO_CR = {
   "${5}":Colors.MAGENTA,
   "${6}":Colors.CYAN,
   "${7}":Colors.ENDC,
-  "${2,1}":Colors.GREEN + Style.BRIGHT
+  "${2,1}":Colors.GREEN + Style.BRIGHT,
+  "${1,3}":Back.RED + Fore.WHITE,
 }
   
 def str_to_colorama(my_str):

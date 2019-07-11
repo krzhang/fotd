@@ -341,7 +341,7 @@ EVENTS_MISC = {
 def make_speech(context): 
   ctarget = context.ctarget
   speech_str = context.speech
-  context.battle.yprint(repr(ctarget) + ": '$[2$]" + speech_str + "$[7$]'")
+  context.battle.make_speech(ctarget, ": '$[2$]" + speech_str + "$[7$]'")
 
 def receive_damage(context):
   ctarget = context.ctarget

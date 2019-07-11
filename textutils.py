@@ -8,23 +8,36 @@ from colors import Colors, Colours, Fore, Back, Style
 import sys
 import rps
 
-######################
-# Formatting Strings #
-######################
-  
-def damage_str(s_str, d_str, dicecount, hitprob, raw_damage):
+#########################################
+# Display (convert to string) Functions #
+#########################################
+
+def disp_damage_calc(s_str, d_str, dicecount, hitprob, raw_damage):
   return "[Strength: ({:4.3f} vs. {:4.3f}); {} dice with chance {} each; Final: {}]".format(
     s_str, d_str, dicecount, colors.color_prob(hitprob), colors.color_damage(raw_damage))
 
-######
-# Display (convert to string) Functions #
-######
+def disp_cha_title(chara):
+  if self.title:
+    return " -={}=-".format(self.title) # eventually move out
+  else:
+    return ""
+
+def disp_cha_fullname(chara):
+  return str(chara) + chara.str_title()  
 
 def disp_army(army):
   return "$[{}$]{}$[7$]".format(army.color, army.name)
 
 def disp_unit(unit):
   return "$[{}$]{}$[7$]".format(unit.color, unit.name)
+
+def disp_unit_size(unit):
+  csize = colors.color_size(unit.size, unit.size_base) + str(unit.size) + "$[7$]"
+  return "{}/{}".format(str(csize), str(unit.size_base)) 
+
+def disp_unit_status_noskills(unit):
+  """ string for the unit's statuses that do NOT include skills"""
+  return " ".join((str(s) for s in unit.unit_status if not s.is_skill()))
 
 def disp_bar_custom(colors, chars, nums):
   """
@@ -96,15 +109,15 @@ class BattleScreen():
       strat0, strat1 = self._colored_strats(tuple(self.battle.order_history[-1]))
     else:
       strat0 = strat1 = "?"
-    return "Day {}: ({}) {} -> {} vs {} <- {} ({})".format(self.battle.date,
-                                                           disp_army(self.battle.armies[0]),
-                                                           form0,
-                                                           strat0,
-                                                           strat1,
-                                                           form1,
-                                                           disp_army(self.battle.armies[1]),
-                                                           str(self.battle.weather)) 
-
+    return "Day {}: {} ({}) {} -> {} vs {} <- {} ({})".format(self.battle.date,
+                                                              self.battle.weather,
+                                                              disp_army(self.battle.armies[0]),
+                                                              form0,
+                                                              strat0,
+                                                              strat1,
+                                                              form1,
+                                                              disp_army(self.battle.armies[1]))
+  
   def _disp_statline(self):
     statline = self._day_status_str()
     return [statline, disp_hrule()]
@@ -183,12 +196,12 @@ class BattleScreen():
       fdmgstr += "; " + Colors.RED + "DESTROYED!" + Colors.ENDC
     self.yprint(fdmgstr)
     if dmglog:
-      dmg_str = damage_str(*dmglog)
+      dmg_str = disp_damage_calc(*dmglog)
       self.yprint(dmglog, debug=True)
     
   def _disp_unit_newheader(self, unit, side):
     healthbar = disp_bar_day_tracker(20, unit.size_base, unit.last_turn_size, unit.size)
-    charstr = "{} {} Hp:{} Sp:{}".format(healthbar, disp_unit(unit), unit.size_repr(), unit.speed)
+    charstr = "{} {} Hp:{} Sp:{}".format(healthbar, disp_unit(unit), disp_unit_size(unit), unit.speed)
     if side == 0:
       return charstr
     else:
@@ -196,7 +209,7 @@ class BattleScreen():
 
   def _disp_unit_newsitu(self, unit, side):
     charstr = " "*21
-    statuses = unit.status_real_repr()
+    statuses = disp_unit_status_noskills(unit)
     if statuses:
       charstr += "(" + statuses + "|"
     else:
@@ -225,7 +238,10 @@ class BattleScreen():
       pause_str = Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.CYAN +  Back.BLACK + "ORDERS" + Fore.BLACK + Back.WHITE + " for army {}".format(armyid) + Fore.CYAN + Back.BLACK + " (A/D/I):" +  Colors.ENDC
       inp = self.blit_all_battle(pause_str=pause_str)
       if inp.upper() in ['A', 'D', 'I']:
-        return inp.upper()      
+        return inp.upper()
+
+  def make_speech(self, unit, speech):
+    self.yprint("{}: {}".format(disp_unit(unit), speech))
     
   def pause_and_display(self, pause_str=None):
     _ = self.blit_all_battle(pause_str=pause_str)

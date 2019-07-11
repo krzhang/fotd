@@ -25,13 +25,6 @@ class Unit(object):
   def __repr__(self):
     return repr(self.character)
 
-  def size_repr(self):
-    csize = colors.color_size(self.size, self.size_base) + str(self.size) + "$[7$]"
-    return "{}/{}".format(str(csize), str(self.size_base)) 
-  
-  def status_real_repr(self):
-    return " ".join((str(s) for s in self.unit_status if not s.is_skill()))
-
   def set_color(self, color):
     self.color = color
     self.character.color = color
@@ -48,7 +41,9 @@ class Unit(object):
       self.unit_status.append(status.Status(stat_str))
 
   def move(self, newpos):
-    self.position.remove_unit(self)
+    if self.position:
+      # could come here from None
+      self.position.remove_unit(self)
     newpos.add_unit(self)
     self.position = newpos
       

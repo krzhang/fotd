@@ -74,10 +74,14 @@ def disp_bar_custom(colors, chars, nums):
     makestr += i[1]*i[2]
   return makestr
 
-def disp_bar_morale(max_morale, cur_morale):
-  return disp_bar_custom([Colors.BLUE + Style.DIM, Colors.ENDC],
-                         ['o', '.'],
-                         [cur_morale, max_morale - cur_morale])
+def disp_bar_morale(max_morale, cur_morale, last_turn_morale):
+  if last_turn_morale > cur_morale:
+    return disp_bar_custom([Colors.BLUE + Style.DIM, Colors.RED, Colors.ENDC],
+                           ['o', 'o', '.'],
+                           [cur_morale, last_turn_morale-cur_morale, max_morale-last_turn_morale])
+  return disp_bar_custom([Colors.BLUE + Style.DIM, Colors.OKGREEN, Colors.ENDC],
+                         ['o', 'o', '.'],
+                         [last_turn_morale, cur_morale-last_turn_morale, max_morale-cur_morale])
 
 def disp_bar_single_hit(max_pos, oldhp, newhp):
   """Total: length; base: max; cur: current. """
@@ -148,14 +152,14 @@ class BattleScreen():
     else:
       strat0 = strat1 = "?"
     return "      {} ({}) {} -> {} VS {} <- {} ({}) {}".format(
-      disp_bar_morale(10, self.battle.armies[0].morale),
+      disp_bar_morale(10, self.battle.armies[0].morale, self.battle.armies[0].last_turn_morale),
       disp_army(self.battle.armies[0]),
       form0,
       strat0,
       strat1,
       form1,
       disp_army(self.battle.armies[1]),
-      disp_bar_morale(10, self.battle.armies[1].morale))
+      disp_bar_morale(10, self.battle.armies[1].morale, self.battle.armies[1].last_turn_morale))
   
   def _disp_statline(self):
     statline = self._day_status_str()

@@ -368,6 +368,10 @@ EVENTS_MISC = {
     "actors":["ctarget_army"],
     "primary_actor": "ctarget_army"
   },
+  "order_yomi_win": {
+    "actors":["ctarget_army"],
+    "primary_actor": "ctarget_army"
+  },
 }
 
 # for ev in EVENTS_RECEIVE:
@@ -404,12 +408,11 @@ def receive_status(context):
 def order_change(context):
   ctarget_army = context.ctarget_army
   morale_change = context.morale_change
-  context.battle.yprint("It was a feint! {} suddenly {}.".format(
+  context.battle.yprint("It was a feint. {} suddenly {}.".format(
     textutils.disp_army(ctarget_army),
     rps.order_info(ctarget_army.get_order(), "verb")))
-  Event("change_morale", context).activate()
+  # Event("change_morale", context).activate() this cost is pretty high
 
-  
 def change_morale(context):
   ctarget_army = context.ctarget_army
   morale_change = context.morale_change
@@ -417,6 +420,21 @@ def change_morale(context):
   newmorale = min(newmorale, battle_constants.MORALE_MAX)
   newmorale = max(newmorale, battle_constants.MORALE_MIN)
   ctarget_army.morale = newmorale
+
+def order_yomi_win(context):
+  ctarget_army = context.ctarget_army
+  ycount = ctarget_army.get_yomi_count() 
+  if ycount > 1:
+    combostr = " {} read chain!".format(ycount)
+  else:
+    combostr = ""
+  context.battle.yprint("{} outread the opponent!".format(
+    textutils.disp_army(ctarget_army)) + combostr)
+  Event("change_morale", context.copy(additional_opt={"morale_change":ycount})).activate()
+  Event("change_morale", context.rebase(opt={
+    "ctarget_army":context.battle.armies[1-ctarget_army.armyid],
+    "morale_change":-1})).activate()
+
   
   # context.battle.battlescreen.disp_morale_change()
   

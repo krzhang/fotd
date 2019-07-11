@@ -73,8 +73,7 @@ class Unit(object):
 
   def physical_defense(self):
     val = rps.formation_info(self.army.formation, "physical_defense")
-    val *= float(self.size)/3.5
-    val *= 2 # generic defense bonus
+    val *= float(self.size)
     if self.is_defended():
       val *= 1.5
     val *= self._generic_multiplier()
@@ -112,6 +111,7 @@ class Army(object):
     self.intelligence_type = intelligence_type
     self.intelligence = intelligence.INTELLIGENCE_FROM_TYPE[intelligence_type]
     self.morale = morale
+    self.last_turn_morale = morale
     # things to be linked later
     self.turn_status = {} # status for each turn; yomi edge, formation bonus, etc.
     self.yomi_edge = None # used in battles to see if RPS was won
@@ -126,6 +126,16 @@ class Army(object):
   def get_order(self):
     return self.order
 
+  def get_yomi_count(self):
+    ind = self.battle.date-1
+    chain = 0
+    while self.battle.yomi_list[ind][self.armyid] == 1:
+      ind -= 1
+      chain += 1
+      if ind == -1:
+        break
+    return chain
+  
   def is_present(self):
     return any([u for u in self.units if u.is_present()])
 

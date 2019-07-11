@@ -18,6 +18,7 @@ class Battle(object):
   def __init__(self, army1, army2, debug_mode=False):
     self.armies = [army1, army2]
     for a in self.armies:
+      a.battle = self
       for u in a.units:
         for s in u.character.skills:
           u.add_unit_status(s.skill_str)
@@ -38,10 +39,12 @@ class Battle(object):
     self.debug_mode = debug_mode
     self.battlescreen = textutils.BattleScreen(self)
     self.date = 0
-    self.yomi_winner = None
-    self.yomis = None
+    self.weather = None
     self.formations = None
     self.orders = None
+    self.yomis = None
+    self.yomi_winner = None
+    self.yomi_list = []
     self.init_day()
 
   def init_day(self):
@@ -51,13 +54,14 @@ class Battle(object):
     self.formations = None
     self.orders = None
     self.yomi_winner = None
-    self.yomis = None
+    self.yomis
     # setup stuff
     for i in [0,1]:
       self.armies[i].yomi_edge = None
       self.armies[i].formation = None
       self.armies[i].order = None
       self.armies[i].formation_bonus = 1.0
+      self.armies[i].last_turn_morale = self.armies[i].morale
       for u in self.armies[i].units:
         u.move(self.hqs[u.army.armyid])
         u.ctargetting = None
@@ -132,8 +136,11 @@ class Battle(object):
 
   def _initiate_orders(self, orders):
     self.order_history.append(orders)
-    self.yomi_winner = rps.orders_to_winning_army(orders)
+    self.yomi_winner = rps.orders_to_winning_army(orders) # -1 if None
     self.yomis = (rps.beats(orders[0], orders[1]), rps.beats(orders[1], orders[0]))
+    self.yomi_list.append(self.yomis)
+    self.yprint("Winner: {}".format(self.yomi_winner), debug=True)
+    self.yprint("Yomis: {}".format(self.yomis), debug=True)
     orderlist = []
     for i in [0, 1]:
       order = orders[i]
@@ -141,7 +148,8 @@ class Battle(object):
       cost = rps.formation_info(formation, "morale_cost")[order]
       if cost:
         orderlist.append((0, "order_change",  contexts.Context(self, opt={"ctarget_army":self.armies[i], "morale_change":-cost})))
-              
+      if self.yomi_winner == i:
+        orderlist.append((0, "order_yomi_win",  contexts.Context(self, opt={"ctarget_army":self.armies[i]})))
       for u in self.armies[i].present_units():
         u.attacked = []
         u.attacked_by = []
@@ -181,8 +189,12 @@ class Battle(object):
     losing = [False, False] # they can theoretically both lose
     for i in [0, 1]:
       if not self.armies[i].is_present():
+        self.yprint("{}'s units have all been defeated.".format(
+          textutils.disp_army(self.armies[i])))
         losing[i] = True
       if self.armies[i].morale <= 0:
         losing[i] = True
+        self.yprint("{} collapses due to catastrophic morale.".format(
+          textutils.disp_army(self.armies[i])))
     return tuple(losing)
     

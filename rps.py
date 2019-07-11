@@ -48,7 +48,7 @@ STRATEGIC_ORDERS = {
     "short": "$[1,3$]I$[7$]",
     "noun": "skullduggery",
     "verb": "scatters",
-  }
+   }
 }
 # o2e = {"A": "attack_order", "D": "defense_order", "I":"indirect_order"}
 
@@ -72,4 +72,7 @@ def orders_to_winning_army(orders):
   x,y = orders
   if x == y:
     return -1
-  return BEATS[y][x] 
+  if BEATS[x][y] == 1:
+    return 0
+  else:
+    return 1

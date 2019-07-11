@@ -12,11 +12,11 @@ class Position(object):
       return "the field around {}".format(self.initial_unit)
 
   def add_unit(self, unit):
-    self.units[unit.armyid].append(unit)
+    self.units[unit.army.armyid].append(unit)
     # unit.position = self
 
   def remove_unit(self, unit):
-    self.units[unit.armyid].remove(unit)
+    self.units[unit.army.armyid].remove(unit)
 
   def units_by_army(self, armyid):
     return self.units[armyid]

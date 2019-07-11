@@ -10,13 +10,23 @@ FORMATION_ORDERS = {
     "desc": "$[1$]offensive formation$[7$]",
     "status": "form_offensive",
     "adj": "offensive",
-    "short": "$[1$]O$[7$]"
+    "short": "$[1$]O$[7$]",
+    "physical_offense": 1.3,
+    "physical_defense": 1.0,
+    "arrow_offense:": 1.0,
+    "arrow_defense:": 1.0,
+    "morale_cost":{'A':0, 'D':1, 'I':1}
   },
   "D": {
     "adj": "defensive",
-    "desc":"$[4$]Defensive Formation$[7$]",
+    "desc":"$[4$]defensive formation$[7$]",
     "status": "form_defensive",
-    "short": "$[4$]D$[7$]"
+    "short": "$[4$]D$[7$]",
+    "physical_offense": 0.7,
+    "physical_defense": 1.3,
+    "arrow_offense:": 0.8,
+    "arrow_defense:": 1.2,
+    "morale_cost":{'A':1, 'D':0, 'I':1}
   }
 }
 
@@ -41,3 +51,6 @@ def beats(t1, t2):
 
 def order_to_event(order_str):
   return STRATEGIC_ORDERS[order_str]["event"]
+
+def formation_info(form, info_key):
+  return FORMATION_ORDERS[form][info_key]

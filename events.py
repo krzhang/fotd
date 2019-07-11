@@ -73,21 +73,39 @@ def info(event_str, key):
 # Utility functions #
 ################################a
 
-def compute_damage(csource, ctarget, dmg_type, multiplier=1):
-  """ We already know who is hitting whom, just computing damage """
-  s_str = max(1, csource.attack_strength(dmg_type))
-  d_str = max(1, ctarget.defense_strength(dmg_type))
+def roll_dice(s_str, d_str, dicecount, hitprob):
+  if d_str + s_str < 0.00001: # to avoid dividing by 0
+    return 0
   hitprob = float(s_str) / (d_str + s_str)
-  dicecount = int(csource.size*multiplier)
   raw_damage = 0
   for i in range(dicecount):
     roll = random.random()
     if roll < hitprob:
       raw_damage += 1
-  dmglog = tuple((s_str, d_str, dicecount, hitprob, raw_damage))
+  return rawdamage
+
+def compute_physical_damage(csource, ctarget, multiplier=1):
+  """ We already know who is hitting whom, just computing damage """
+  s_str = csource.physical_strength()
+  d_str = ctarget.physical_defense()
+
+  dicecount = int(csource.size*multiplier)
   # this is the data needed to create a log of the damage later; for timing purposes this needs
-  # to be passed on, because it's weird for the user to see damage computed first before
-  # seeing damage done on screen
+  raw_damage = roll_dice(s_str, d_str, dicecount, hitprob)
+  dmglog = tuple((s_str, d_str, dicecount, hitprob, raw_damage))
+  # we pass this on instead of printing it immediately, both for MVC purposes and because
+  # it's weird for the user to see damage computed first before seeing damage done on screen  
+  return raw_damage, dmglog
+
+def compute_arrow_damage(csource, ctarget, multiplier=1):
+  """ We already know who is hitting whom, just computing damage """
+  s_str = csource.arrow_offense()
+  d_str = ctarget.arrow_defense()
+  if ctarget.is_defended():
+    d_str *= 1.5
+  dicecount = int(csource.size*multiplier)
+  raw_damage = roll_dice(s_str, d_str, dicecount, hitprob)
+  dmglog = tuple((s_str, d_str, dicecount, hitprob, raw_damage))
   return raw_damage, dmglog
 
 ################
@@ -100,7 +118,7 @@ def attack_order(context):
   if csource.has_unit_status("berserk"):
     Event("berserked_order", context).activate()
     return
-  myarmyid = csource.armyid
+  myarmyid = csource.army.armyid
   enemy = context.battle.armies[1-myarmyid]
   enemyunits = enemy.present_units()
   if len(enemyunits) == 0:
@@ -118,7 +136,7 @@ def defense_order(context):
     Event("berserked_order", context).activate()
     return
   context.ctarget.ctargetting = None
-  ctarget.move(context.battle.hqs[ctarget.armyid])
+  ctarget.move(context.battle.hqs[ctarget.army.armyid])
   context.battle.yprint("{}: staying put at {};".format(ctarget, context.ctarget.position))
   Event.gain_status("defended", context, ctarget)
 
@@ -127,7 +145,7 @@ def indirect_order(context):
   if csource.has_unit_status("berserk"):
     Event("berserked_order", context).activate()
     return
-  myarmyid = csource.armyid
+  myarmyid = csource.army.armyid
   enemy = context.battle.armies[1-myarmyid]
   enemyunits = enemy.present_units()
   if len(enemyunits) == 0:
@@ -152,7 +170,7 @@ def berserked_order(context):
 
 def provoked_order(context):
   csource = context.ctarget
-  armyid = context.ctarget.armyid
+  armyid = context.ctarget.army.armyid
   enemyunits = context.battle.armies[armyid].present_units()
   ctarget = random.choice(enemyunits)
   context.battle.yprint("{}: random {} attack -> {}; ignoring original orders".format(
@@ -187,7 +205,7 @@ def engage(context):
   context.battle.yprint("{} engages {} (-> {})".format(csource, ctarget, ctarget.ctargetting))
   converging = bool(ctarget.ctargetting == csource) # if other ctarget is coming towards you
   if ctarget.is_defended():
-    assert ctarget.position == context.battle.hqs[ctarget.armyid] # meeting at hq
+    assert ctarget.position == context.battle.hqs[ctarget.army.armyid] # meeting at hq
     csource.move(ctarget.position)
     context.battle.yprint("  but %s is ready!" % ctarget)
     context.battle.yprint("  %s able to launch defensive arrow volley" % ctarget)
@@ -251,7 +269,7 @@ def arrow_strike(context):
   multiplier = 1
   if "vulnerable" in context.opt and context.vulnerable:
     multiplier = 2
-  damage, dmglog = compute_damage(csource, ctarget, "DMG_ARROW", multiplier=multiplier)
+  damage, dmglog = compute_arrow_damage(csource, ctarget, multiplier=multiplier)
   dmgdata = (csource, ctarget, "shoots", damage)
   Event("receive_damage",
         context.rebase({"damage":damage, "ctarget":ctarget, "dmgdata":dmgdata, "dmglog":dmglog})).activate()
@@ -285,7 +303,7 @@ def physical_strike(context):
   """ strike is the singular act of hitting """
   csource = context.csource
   ctarget = context.ctarget
-  damage, damlog = compute_damage(csource, ctarget, "DMG_PHYSICAL")
+  damage, damlog = compute_physical_damage(csource, ctarget, multiplier=1)
   dmgdata = (csource, ctarget, "hits", damage)
   # ctarget.add_unit_status("received_physical_attack")
   ctarget.attacked_by.append(csource)
@@ -389,8 +407,8 @@ def lure_tactic(context, base_chance, improved_chance, success_callback):
   base_lure_chance = base_chance
   improved_lure_chance = improved_chance
   additional_activations = []                
-  possible_aoe = tuple([u for u in context.ctarget.position.units[ctarget.armyid] if u != ctarget])
-  possible_lure_candidates = tuple(context.battle.armies[csource.armyid].present_units())
+  possible_aoe = tuple([u for u in context.ctarget.position.units[ctarget.army.armyid] if u != ctarget])
+  possible_lure_candidates = tuple(context.battle.armies[csource.army.armyid].present_units())
   # eventually make it just the people who are in position
   lure_candidates = tuple(lc for lc in possible_lure_candidates if lc.has_unit_status("lure"))
     # later: probably also add a check of panicked, etc.

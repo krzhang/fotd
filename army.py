@@ -11,7 +11,7 @@ class Unit(object):
     self.size_base = size
     self.size = size
     self.speed = speed
-    self.armyid = None
+    self.army = None
     self.is_commander = None
     self.unit_status = [] # not to be confused with character-status
     self.targetting = None
@@ -52,31 +52,38 @@ class Unit(object):
     #import pdb; pdb.set_trace()
     #self.unit_status = [s for s in self.unit_status if s.stat_str != statstr]
     self.unit_status.remove(status.Status(statstr))
-    
-  def attack_strength(self, dmg_type):
-    dam = float(self.size)/3.5
-    if dmg_type == "DMG_ARROW":
-      # arrow damage shouldn't scale with numbers
-      dam = 2.0
+
+  def _generic_multiplier(self):
+    val = 1.0
     if self.has_unit_status("trymode_activated"):
-      dam *= 1.5
+      val *= 1.5
     if self.has_unit_status("burned"):
-      dam /= 1.5
+      val /= 1.5
+    return val
+  
+  def physical_offense(self):
+    val = rps.get_formation_bonus(self.army.formation, "physical_offense")
+    val *= float(self.size)/3.5
     return float(dam)
 
-  def defense_strength(self, dmg_type):
-    de = float(self.size)
-    if dmg_type == "DMG_ARROW":
-      # arrow damage shouldn't scale with numbers
-      de = 12.0
-    if self.has_unit_status("defended"):
-      de *= 1.5
-    if self.has_unit_status("trymode_activated"):
-      de *= 1.5
-    if self.has_unit_status("burned"):
-      de /= 1.5
-    return float(de*1.5)      
+  def physical_defense(self):
+    val = rps.get_formation_bonus(self.army.formation, "physical_defense")
+    val *= float(self.size)/3.5
+    val *= 1.5 # geeric defense bonus
+    if self.is_defended():
+      val *= 1.5
+    return float(dam)
+  
+  def arrow_offense(self):
+    val = rps.get_formation_bonus(self.army.formation, "arrow_offense")
+    val *= 2.0
+    return val
 
+  def arrow_defense(self):
+    val = rps.get_formation_bonus(self.army.formation, "arrow_defense")
+    val *= 18.0
+    return val
+  
   def is_defended(self):
     return self.has_unit_status("defended")
   
@@ -92,12 +99,18 @@ class Army(object):
     self.color = color
     self.armyid = armyid
     for u in units:
-      u.armyid = armyid
+      u.army = self
       u.set_color(color)
     self.intelligence_type = intelligence_type
     self.intelligence = intelligence.INTELLIGENCE_FROM_TYPE[intelligence_type]
+    self.turn_status = {} # status for each turn; yomi edge, formation bonus, etc.
     self.yomi_edge = None # used in battles to see if RPS was won
-
+    self.morale = 10
+    self.battle = None
+    self.formation_bonus = 1.0
+    self.formation = None
+    self.order = None
+    
   def __repr__(self):
     return "Army({})".format(self.name)
 

@@ -39,19 +39,25 @@ class Battle(object):
     self.debug_mode = debug_mode
     self.battlescreen = textutils.BattleScreen(self)
     self.date = 0
+    self.formations = None
+    self.orders = None
     self.init_day()
 
   def init_day(self):
     # common knowledge: later take out
     self.date += 1
     self.weather = weather.random_weather()
-    self.formations = [None, None]
+    self.formations = None
+    self.orders = None
     # setup stuff
     for i in [0,1]:
       self.armies[i].yomi_edge = None
+      self.armies[i].formation = None
+      self.armies[i].order = None
+      self.armies[i].formation_bonus = 1.0
       for u in self.armies[i].units:
-        u.move(self.hqs[u.armyid])
-        u.last_turn_size = u.size
+        u.move(self.hqs[u.army.armyid])
+        u.last_turn_size = u.size        
     assert all((p.is_empty() for p in self.dynamic_positions))
     self.dynamic_positions = []
         
@@ -105,18 +111,20 @@ class Battle(object):
   #       p.display(debug=True)
 
   def get_formations(self):
-    ordersdict = {}
+    orders = [None, None]
     for i in [0,1]:
-      ordersdict[i] = self.armies[i].intelligence.get_formation(self,  i)
-    return ordersdict
+      orders[i] = self.armies[i].intelligence.get_formation(self,  i)
+      self.armies[i].formation = orders[i]
+    return tuple(orders)
   
   def get_orders(self):
-    ordersdict = {}
+    orders = [None, None]
     for i in [0,1]:
-      ordersdict[i] = self.armies[i].intelligence.get_order(self,  i)
-    return ordersdict
+      orders[i] = self.armies[i].intelligence.get_order(self,  i)
+      self.armies[i].order = orders[i]
+    return tuple(orders)
 
-  def init_turn(self, orders):
+  def _initiate_orders(self, orders):
     self.order_history.append(orders)
     orderlist = []
     for i in [0, 1]:
@@ -136,14 +144,13 @@ class Battle(object):
       self.place_event(o[1], o[2], "Q_ORDER")
   
   def take_turn(self):
-    formations = self.get_formations()
-    self.formations = (formations[0], formations[1])
+    self.formations = self.get_formations()
     for i in [0,1]:
       form = self.formations[i]
       self.yprint("{} takes a {}.".format(self.armies[i],
                                           rps.FORMATION_ORDERS[form]["desc"]))
-    orders = self.get_orders()
-    self.init_turn((orders[0], orders[1]))
+    self.orders = self.get_orders()
+    self._initiate_orders(self.orders)
     # preloading events
     self._run_status_handlers("bot") # should be queue later
     self.yprint("Running Orders;", debug=True)

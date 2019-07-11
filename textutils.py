@@ -114,12 +114,13 @@ class BattleScreen():
     return "Day {}: {}".format(self.battle.date, self.battle.weather)
 
   def _vs_str(self):
-    if self.battle.formations[0] == None: # formation orders were given
-      form0 = form1 = "?"
-    else:
+    if self.battle.formations: # formation orders were given
       form0 = disp_form_short(self.battle.formations[0])
       form1 = disp_form_short(self.battle.formations[1])
-    if len(self.battle.order_history) == self.battle.date: # orders were given
+    else:
+      form0 = form1 = "?"
+    if self.battle.orders:
+    # if len(self.battle.order_history) == self.battle.date: # orders were given
       # strat0, strat1 = self._colored_strats(tuple(self.battle.order_history[-1]))
       strat0, strat1 = tuple(self.battle.order_history[-1])
       strat0 = disp_order_short(strat0)

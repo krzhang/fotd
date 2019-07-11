@@ -28,6 +28,12 @@ def disp_cha_fullname(chara):
 def disp_army(army):
   return "$[{}$]{}$[7$]".format(army.color, army.name)
 
+def disp_form_short(formation):
+  return rps.FORMATION_ORDERS[formation]["short"]
+
+def disp_order_short(order):
+  return rps.STRATEGIC_ORDERS[order]["short"]
+
 def disp_unit(unit):
   return "$[{}$]{}$[7$]".format(unit.color, unit.name)
 
@@ -72,9 +78,14 @@ def disp_hrule():
 # IO #
 ######  
   
-MORE_STR = Colors.INVERT + "MORE... [hit a key]" + Colors.ENDC  
+PAUSE_STRS = {
+  "MORE_STR": Colors.INVERT + "MORE... [hit a key]" + Colors.ENDC,
+  "FORMATION_STR": Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.BLUE + Back.BLACK +  "FORMATION" + Fore.BLACK + Back.WHITE + " for army {}$[7$] " + "({}):".format("/".join([rps.FORMATION_ORDERS[i]["short"] for i in ("O", "D")])) + Colors.ENDC,
+  "ORDER_STR": Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.CYAN +  Back.BLACK + "ORDERS" + Fore.BLACK + Back.WHITE + " for army {} $[7$] " + "({}):".format("$[7$]/".join([rps.STRATEGIC_ORDERS[i]["short"] for i in ("A", "D", "I")])) + Colors.ENDC
+}
 
 class BattleScreen():
+  
   def __init__(self, battle):
     self.console_buf = []
     self.max_screen_len = 24
@@ -100,23 +111,27 @@ class BattleScreen():
     
   def _day_status_str(self):
     """ what to put on top"""
-    if self.battle.formations[0] == None:
+    return "Day {}: {}".format(self.battle.date, self.battle.weather)
+
+  def _vs_str(self):
+    if self.battle.formations[0] == None: # formation orders were given
       form0 = form1 = "?"
     else:
-      form0 = self.battle.formations[0]
-      form1 = self.battle.formations[1]
+      form0 = disp_form_short(self.battle.formations[0])
+      form1 = disp_form_short(self.battle.formations[1])
     if len(self.battle.order_history) == self.battle.date: # orders were given
-      strat0, strat1 = self._colored_strats(tuple(self.battle.order_history[-1]))
+      # strat0, strat1 = self._colored_strats(tuple(self.battle.order_history[-1]))
+      strat0, strat1 = tuple(self.battle.order_history[-1])
+      strat0 = disp_order_short(strat0)
+      strat1 = disp_order_short(strat1)      
     else:
       strat0 = strat1 = "?"
-    return "Day {}: {} ({}) {} -> {} vs {} <- {} ({})".format(self.battle.date,
-                                                              self.battle.weather,
-                                                              disp_army(self.battle.armies[0]),
-                                                              form0,
-                                                              strat0,
-                                                              strat1,
-                                                              form1,
-                                                              disp_army(self.battle.armies[1]))
+    return "               ({}) {} -> {} VS {} <- {} ({})".format(disp_army(self.battle.armies[0]),
+                                                     form0,
+                                                     strat0,
+                                                     strat1,
+                                                     form1,
+                                                     disp_army(self.battle.armies[1]))
   
   def _disp_statline(self):
     statline = self._day_status_str()
@@ -138,7 +153,8 @@ class BattleScreen():
         armies_buf.append(header)
         armies_buf.append(situ)
       if j == 0:
-        armies_buf.append(" "*39 + "VS" + " "*39)
+        # armies_buf.append(" "*39 + "VS" + " "*39)
+        armies_buf.append(self._vs_str())
     armies_buf.append(disp_hrule())
     return armies_buf
 
@@ -159,13 +175,19 @@ class BattleScreen():
 
   def _prerender(self, line):
     """ 
-    converts a my-type color string to one that can be rendered.
+    converts a my-type color string to something on the screen
 
-    I'm going to end up with strings of the type ah[3]hhh[7], which should become ah${3}hhh${7},
-    which in the final print should be converted to colorama (or some other output)
-
+    1) I start with strings of the type ah$[3$]hhh$[7$], 
+    2) which should become ah${3}hhh${7}, (this can be used by asciimatics)
+    3) which in the final output should be converted to colorama (or some other 
     """
     return line.replace('$[', '${').replace('$]', '}')
+
+  def _render(self, line):
+    """
+    converts a line of my-type of string (see prerender) to step 2, which is colorama-printable
+    """
+    return colors.str_to_colorama(self._prerender(line))
             
   def blit_all_battle(self, pause_str=None):
     # blits status
@@ -177,19 +199,23 @@ class BattleScreen():
     assert len(st + ar + co) == self.max_screen_len - 1
     # effects = []
     for y, l in enumerate(st + ar + co):
-      print(colors.str_to_colorama(self._prerender(l)))
-    print(fo, end="", flush=True)
+      print(self._render(l))
+    print(self._render(fo), end="", flush=True)
     #  effects.append(Print(self.screen, StaticRenderer(images=self._render(l)), x=0, y=y, colour=7))
     # screen.play([Scene(effects, -1)])
     self.console_buf = []
     return read_single_keypress()[0]
-
-  def disp_damage(self, max_pos, oldsize, damage, dmgstr, dmglog):
+  
+  def disp_damage(self, max_pos, oldsize, damage, dmgdata, dmglog):
     newsize = oldsize - damage
     hpbar = disp_bar_single_hit(20, oldsize, newsize)
-    ndmgstr = dmgstr
-    if ndmgstr:
+    if not dmgdata:
       ndmgstr += " "
+    elif dmgdata[0]: # this means there is a source; janky
+      ndmgstr = "{} {} {} ".format(disp_unit(dmgdata[0]), dmgdata[2], disp_unit(dmgdata[1]))
+    else:
+      # this means a single target: "I got burned"
+      ndmgstr = "{} is {} ".format(disp_unit(dmgdata[1]), dmgdata[2])
     fdmgstr = ndmgstr + hpbar + " {} -> {} ({} damage)".format(
       oldsize, newsize, colors.color_damage(damage))
     if newsize == 0:
@@ -224,21 +250,20 @@ class BattleScreen():
   def disp_clear(self):
     os.system('cls' if os.name == 'nt' else 'clear')
 
-  def input_battle_formation(self, armyid):
+  def _get_input(self, pause_str, accepted_inputs):
     # return input(prompt)
     while(True):
-      pause_str = Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.BLUE + Back.BLACK +  "FORMATION" + Fore.BLACK + Back.WHITE + " for army {} ".format(armyid) +  Fore.BLUE + Back.BLACK + "(O/D):" + Colors.ENDC
+      pause_str = pause_str
       inp = self.blit_all_battle(pause_str=pause_str)
-      if inp.upper() in ['O', 'D']:
+      if inp.upper() in accepted_inputs:
         return inp.upper()          
+    
+    
+  def input_battle_formation(self, armyid):
+    return self._get_input(PAUSE_STRS['FORMATION_STR'].format(armyid), ['O','D'])
 
   def input_battle_order(self, armyid):
-    # return input(prompt)
-    while(True):
-      pause_str = Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.CYAN +  Back.BLACK + "ORDERS" + Fore.BLACK + Back.WHITE + " for army {}".format(armyid) + Fore.CYAN + Back.BLACK + " (A/D/I):" +  Colors.ENDC
-      inp = self.blit_all_battle(pause_str=pause_str)
-      if inp.upper() in ['A', 'D', 'I']:
-        return inp.upper()
+    return self._get_input(PAUSE_STRS['ORDER_STR'].format(armyid), ['O','D'])
 
   def make_speech(self, unit, speech):
     self.yprint("{}: {}".format(disp_unit(unit), speech))
@@ -251,7 +276,7 @@ class BattleScreen():
     self.console_buf.append(text)
     if len(self.console_buf) == self.max_console_len:
       # just filled
-      self.pause_and_display(pause_str=MORE_STR)
+      self.pause_and_display(pause_str=PAUSE_STRS["MORE_STR"])
     logging.info(text)
 
   def yprint(self, text, debug=False):

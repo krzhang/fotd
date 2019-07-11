@@ -11,7 +11,7 @@ WEATHER = {
   },
   "raining": {
     "blocks": [],
-    "viz": "$[3$]raining$[7$]Raining"
+    "viz": "$[4$]raining$[7$]"
   }
 }
 

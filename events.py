@@ -252,9 +252,9 @@ def arrow_strike(context):
   if "vulnerable" in context.opt and context.vulnerable:
     multiplier = 2
   damage, dmglog = compute_damage(csource, ctarget, "DMG_ARROW", multiplier=multiplier)
-  dmgstr = "{} shoots {}:".format(csource, ctarget, damage)
+  dmgdata = (csource, ctarget, "shoots", damage)
   Event("receive_damage",
-        context.rebase({"damage":damage, "ctarget":ctarget, "dmgstr":dmgstr, "dmglog":dmglog})).activate()
+        context.rebase({"damage":damage, "ctarget":ctarget, "dmgdata":dmgdata, "dmglog":dmglog})).activate()
   if csource.has_unit_status("fire_arrow"):
     if random.random() < 0.5 and not context.battle.is_raining():
       context.battle.skill_narration("fire_arrow", "{}'s arrows are covered with fire!".format(csource), True)
@@ -286,13 +286,13 @@ def physical_strike(context):
   csource = context.csource
   ctarget = context.ctarget
   damage, damlog = compute_damage(csource, ctarget, "DMG_PHYSICAL")
-  dmgstr = "{} hits {}:".format(csource, ctarget, damage) 
+  dmgdata = (csource, ctarget, "hits", damage)
   # ctarget.add_unit_status("received_physical_attack")
   ctarget.attacked_by.append(csource)
   csource.attacked.append(ctarget)
   Event("receive_damage", context.rebase({"damage":damage,
                                           "ctarget":ctarget,
-                                          "dmgstr":dmgstr,
+                                          "dmgdata":dmgdata,
                                           "dmglog":damlog})).activate()
 
 EVENTS_GENERIC_CTARGETTED = {
@@ -346,11 +346,11 @@ def make_speech(context):
 def receive_damage(context):
   ctarget = context.ctarget
   damage = context.damage
-  dmgstr = context.dmgstr
+  dmgdata = context.dmgdata
   if damage >= ctarget.size:
     damage = ctarget.size
   dmglog = context.dmglog or None
-  context.battle.battlescreen.disp_damage(20, ctarget.size, damage, dmgstr, dmglog)
+  context.battle.battlescreen.disp_damage(20, ctarget.size, damage, dmgdata, dmglog)
   ctarget.size -= damage
   
 def receive_status(context):
@@ -479,10 +479,9 @@ def panic_tactic(context):
 def _water_tactic_success(context):
   damdice = 12
   damage = random.choice(range(damdice))
-  dmgstr = "{}'s unit is flooded by a torrent, aggravated by the pouring rain".format(
-    context.ctarget)
+  dmgdata = (context.csource, context.ctarget, "floods", damage)
   Event("receive_damage", context.copy(
-    additional_opt={"damage":damage, "dmgstr":dmgstr, "dmglog":""})).activate()
+    additional_opt={"damage":damage, "dmgdata":dmgdata, "dmglog":""})).activate()
   
 def water_tactic(context):
   return target_skill_tactic(context, "water_tactic", 0.5, _water_tactic_success)
@@ -547,9 +546,9 @@ def burned_eot(context):
     else:
       damdice = 5
     damage = random.choice(range(damdice))
-    dmgstr = "{}'s unit is {}".format(ctarget, status.Status("burned"))
+    dmgdata = (None, ctarget, "burned", damage)
     Event("receive_damage", context.copy(
-      additional_opt={"damage":damage, "dmgstr":dmgstr, "dmglog":""})).activate()
+      additional_opt={"damage":damage, "dmgdata":dmgdata, "dmglog":""})).activate()
     if random.random() < 0.5:
       context.battle.yprint("{} has put out the fire.".format(ctarget))
       ctarget.remove_unit_status("burned")

@@ -2,6 +2,7 @@ import skills
 import status
 import intelligence
 import colors
+from textutils import disp_unit
 
 class Unit(object):
   def __init__(self, character, size, speed):
@@ -21,9 +22,9 @@ class Unit(object):
     
   def __eq__(self, other):
     return hasattr(self, "character") and hasattr(other, "character") and self.character == other.character
-    
+
   def __repr__(self):
-    return repr(self.character)
+    return disp_unit(self)
 
   def set_color(self, color):
     self.color = color

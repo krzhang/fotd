@@ -98,6 +98,21 @@ def disp_bar_day_tracker(max_pos, base, last_turn, cur):
 def disp_hrule():
   return("="*80)
 
+CONVERT_CONTEXT_DISPS = {
+  "ctarget":disp_unit,
+  "csource":disp_unit,
+  "ctarget_army":disp_army,
+  "order":disp_order_short
+}
+
+
+def convert_context(context):
+  newcontext = {}
+  for key in context:
+    func = CONVERT_CONTEXT_DISPS[key]
+    newcontext[key] = func(context[key])
+  return newcontext
+
 ######
 # IO #
 ######  
@@ -317,7 +332,11 @@ class BattleScreen():
       self.pause_and_display(pause_str=PAUSE_STRS["MORE_STR"])
     logging.info(text)
 
-  def yprint(self, text, debug=False):
+  def yprint(self, text, context={}, debug=False):
+    # the converting means to convert, based on the template, which converting function to use.
+    # {ctarget} will always be converted to Unit for example
+    converted_context = convert_context(context)
+    converted_text = text.format(**converted_context)
     logging.debug(text) # always log this
     if debug and not self.battle.debug_mode:
       return

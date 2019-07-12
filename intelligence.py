@@ -51,6 +51,17 @@ class ArtificialIntelligence(Intelligence):
     counters = np.array(list(newpriors[2:]) + list(newpriors[:2]))
     battle.yprint("  AI counterpicks    (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters))
     return np.random.choice(["A", "D", "I"], p=counters)    
-    
-INTELLIGENCE_FROM_TYPE = {'INT_AI': ArtificialIntelligence, 'INT_PLAYER': PlayerIntelligence}
+
+class RockIntelligence(Intelligence):
+
+  def get_formation(battle, armyid):
+    return 'O'
+
+  def get_order(battle, armyid):
+    return 'A'
+
+  
+INTELLIGENCE_FROM_TYPE = {'INT_AI_NORMAL': ArtificialIntelligence,
+                          'INT_PLAYER': PlayerIntelligence,
+                          'INT_AI_ROCK': RockIntelligence}
     

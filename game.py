@@ -122,7 +122,7 @@ def army_mysticsoft(armyid, color, aitype):
                              Unit(Han, 18, 8)],
               armyid, color, aitype, 7)
 
-def army_shu(armyid, aitype):
+def army_shu(armyid, color, aitype):
   return Army("Shu",[Unit(LiuBei, 20, 12),
                      Unit(GuanYu, 14, 12),
                      Unit(ZhangFei, 14, 4)],
@@ -166,12 +166,12 @@ def link_data_funcs():
       
 link_data_funcs()
 
-def test(debug=False, resize=False, two_players=False):
+def test(debug=False, resize=False, two_players=False, AI="INT_AI_NORMAL"):
   
   if two_players:
     second_intelligence = "INT_PLAYER"
   else:
-    second_intelligence = "INT_AI"
+    second_intelligence = AI
   army0 = army_mysticsoft(0, 5, "INT_PLAYER")
   army1 = army_unknown(1, 6, second_intelligence)
   if resize:

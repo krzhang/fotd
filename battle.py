@@ -1,19 +1,18 @@
+from collections import deque
+import random
+
 import textutils
 import contexts
-import random
 import events
-import intelligence
 import rps
 import skills
 import status
 import battle_constants
 import positions
-from collections import deque
-import utils
 import weather
 
-class Battle(object):
-  
+class Battle():
+
   def __init__(self, army1, army2, debug_mode=False):
     self.armies = [army1, army2]
     for a in self.armies:
@@ -85,11 +84,11 @@ class Battle(object):
     self.battlescreen.yprint(text, context, debug)
 
   def _run_status_handlers(self, func_key):
-    for i in [0,1]:
+    for i in [0, 1]:
       # originally these were in lists; the problem is you can change these lists, so make copies
       for unit in tuple(self.armies[i].units):
         for sta in tuple(unit.unit_status):
-          ctxt = events.Context(self, opt={"ctarget":unit})
+          ctxt = contexts.Context(self, opt={"ctarget":unit})
           sta.run_status_func(func_key, ctxt)
 
   def is_raining(self):
@@ -99,10 +98,10 @@ class Battle(object):
     return self.weather.text == "hot"
 
   def _run_queue(self, queue_name):
-    while len(self.queues[queue_name]) > 0:
+    while self.queues[queue_name]:
       event = self.queues[queue_name].pop()
       event.activate()
-      if any((not self.armies[i].is_present()) for i in [0,1]):
+      if any((not self.armies[i].is_present()) for i in [0, 1]):
         # TODO: replace with arbitary leave condition
         return
       

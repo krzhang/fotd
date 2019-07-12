@@ -11,14 +11,15 @@ def duel_commit(context, source, target):
   actors = [source, target]
   acceptances = [None, None]
   dueldata = [None, None]
-  for i in [0,1]:
+  for i in [0, 1]:
     actor = actors[i]
     opponent = actors[1-i]
-    winning_chance_estimate = _estimate_winning_chance(context, actors, opponent)
-    if actor.army.morale <= 2 or actor.size: <= 5:
-      desperation_multiplier = 2.0
-    else:
-      desperation_multiplier = 1.0
+    winning_chance_estimate = _winning_chance_estimate(context, actor, opponent)
+    desperation_multiplier = 1.0
+    if actor.army.morale <= 2 or actor.size <= 5:
+      desperation_multiplier *= 2.0
+    if i == 1: # on defense
+      desperation_multiplier *= 1.5
     gains_estimate = (5 + opponent.size)*desperation_multiplier
     losses_estimate = (5 + actor.size)
     evwin = winning_chance_estimate*gains_estimate

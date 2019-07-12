@@ -28,7 +28,7 @@ class Character(object):
     
   def calc_attributes(self):
     for s in STAT_BASES:
-      setattr(self, s, STAT_BASES[s])
+      setattr(self, s, getattr(self, STAT_BASES[s]))
     # do items stuff
 
   def equip(self, item):

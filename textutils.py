@@ -1,12 +1,11 @@
+import os
+import logging
+
 # import graphics_asciimatics
 import battle_constants
 from utils import read_single_keypress
-import os
-import logging
 import colors
-from colors import Colors, Colours, Fore, Back, Style
-
-import sys
+from colors import Colors, Fore, Back, Style
 import rps
 
 #########################################
@@ -18,13 +17,12 @@ def disp_damage_calc(s_str, d_str, dicecount, hitprob, raw_damage):
     s_str, d_str, dicecount, colors.color_prob(hitprob), colors.color_damage(raw_damage))
 
 def disp_cha_title(chara):
-  if self.title:
-    return " -={}=-".format(self.title) # eventually move out
-  else:
-    return ""
+  if chara.title:
+    return " -={}=-".format(chara.title) # eventually move out
+  return ""
 
 def disp_cha_fullname(chara):
-  return str(chara) + chara.str_title()  
+  return str(chara) + chara.str_title()
 
 def disp_army(army):
   return "$[{}$]{}$[7$]".format(army.color, army.name)
@@ -115,8 +113,8 @@ def convert_context(context):
 
 ######
 # IO #
-######  
-  
+######
+
 PAUSE_STRS = {
   "MORE_STR": Colors.INVERT + "MORE... [hit a key]" + Colors.ENDC,
   "FORMATION_STR": Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.BLUE + Back.BLACK +  "FORMATION" + Fore.BLACK + Back.WHITE + " for army {}$[7$] " + "({}):".format("/".join([rps.formation_info(i, "short") for i in ("O", "D")])) + Colors.ENDC,
@@ -248,6 +246,16 @@ class BattleScreen():
     # screen.play([Scene(effects, -1)])
     self.console_buf = []
     return read_single_keypress()[0]
+
+  def disp_duel(csource, ctarget, loser_history, health_history, damage_history):
+    for i, healths in enumerate(health_history[1:]):
+      bars = [None, None]
+      for j in [0, 1]:
+        last_health = health_history[i][j]
+        bars[j] = disp_bar_custom([Colors.CYAN + Style.DIM, Colors.RED, Colors.ENDC],
+                                  ['=', '*', '.'],
+                                  [healths[j], last_health - healths[j], 20 - last_health])
+      self.yprint("   {} {} vs {} {}".format(disp_unit(csource)))
   
   def disp_damage(self, max_pos, oldsize, damage, dmgdata, dmglog):
     newsize = oldsize - damage

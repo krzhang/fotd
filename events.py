@@ -1,28 +1,26 @@
-import battle_constants
-from contexts import Context
 import random
-import numpy as np
-import positions
+
+import battle_constants
+import duel
 import rps
 import skills
 import status
-import utils
 import insults
 import textutils
 
-# <2019-07-04 Thu> 
+# <2019-07-04 Thu>
 # had both statuses and skills here, and decided to offload all skills into statuses, and so
 # now only have to think about interplays between statuses and events (as opposed to aslo have)
 # skills involved
 
 EVENTS = {}
 
-class Event(object):
+class Event():
 
   def __init__(self, event_type, context):
     self.event_type = event_type
     self.context = context
-      
+
   def activate(self):
     edict = EVENTS[self.event_type]
     # death handler (should later be "availability" for retreats, etc.)
@@ -34,7 +32,7 @@ class Event(object):
     if self.event_type in ["attack_order", "defense_order", "indirect_order"]:
       ctarget = self.context.ctarget
       if ctarget.has_unit_status("berserk"):
-        Event("berserked_order", context).activate()
+        Event("berserked_order", self.context).activate()
         return
     # panic handler
     if info(self.event_type, "panic_blocked"):
@@ -43,7 +41,7 @@ class Event(object):
         self.context.battle.yprint("  %s is %s! No action" % (potential_panicker, status.Status("panicked")))
         return
     # time to activate this event on the queue; note the event has its own context, battle, etc.
-    result = info(self.event_type, "func")(self.context)
+    info(self.event_type, "func")(self.context)
 
   @classmethod
   def gain_status(cls, stat_str, context, ctarget):
@@ -54,11 +52,10 @@ class Event(object):
 
   @classmethod
   def make_speech(cls, unit, context, speech):
-    battle = context.battle
     newspeech = speech.format(**context.opt)
     Event("make_speech", context=context.copy(additional_opt={"ctarget":unit,
-                                                        "speech":newspeech})).activate()
-    
+                                                              "speech":newspeech})).activate()
+
   @classmethod
   def remove_status(cls, stat_str, context, ctarget):
     pass
@@ -68,7 +65,7 @@ def info(event_str, key):
   if key in EVENTS[event_str]:
     return EVENTS[event_str][key]
   return None
-  
+
 ################################
 # Utility functions #
 ################################a
@@ -139,7 +136,7 @@ def indirect_order(context):
   myarmyid = csource.army.armyid
   enemy = context.battle.armies[1-myarmyid]
   enemyunits = enemy.present_units()
-  if len(enemyunits) == 0:
+  if enemyunits:
     context.battle.yprint("No unit to target!")
     return
   cnewsource = context.ctarget # new event
@@ -151,7 +148,7 @@ def indirect_order(context):
 
 def berserked_order(context):
   csource = context.ctarget
-  armyid = random.choice([0,1])
+  armyid = random.choice([0, 1])
   enemyunits = context.battle.armies[armyid].present_units()
   ctarget = random.choice(enemyunits)
   context.battle.yprint("{}: random {} attack -> {}; ignoring original orders".format(
@@ -169,8 +166,8 @@ def provoked_order(context):
     csource, status.Status("provoked"), ctarget))
   context.ctarget.ctargetting = ("marching", ctarget)
   newcontext = context.rebase({"csource":csource, "ctarget":ctarget})
-  context.battle.place_event("engage", newcontext, "Q_MANUEVER")  
-  
+  context.battle.place_event("engage", newcontext, "Q_MANUEVER")
+
 EVENTS_ORDERS = {
   "attack_order": {},
   "defense_order": {},
@@ -209,7 +206,7 @@ def engage(context):
     csource.move(ctarget.position)
     context.battle.yprint("  %s able to launch defensive arrow volley" % ctarget, debug=True)
     context.battle.place_event("arrow_strike", context.rebase_switch(), "Q_RESOLVE")
-    if random.random() < 0.5:    
+    if random.random() < 0.5:
       context.battle.yprint("  %s able to launch offensive arrow volley" % csource, debug=True)
       context.battle.place_event("arrow_strike", context, "Q_RESOLVE")
     context.battle.place_event("physical_clash", context.rebase_switch(), "Q_RESOLVE")
@@ -231,7 +228,7 @@ def engage(context):
 def indirect_raid(context):
   csource = context.csource
   ctarget = context.ctarget
-  if len(csource.attacked_by) > 0:
+  if csource.attacked_by:
     context.battle.yprint("{}'s sneaking up on {} was interrupted by {}!".format(csource, ctarget, csource.attacked_by[0]))
     return
   context.battle.yprint("{} ({}) sneaks up on {} ({})".format(csource,
@@ -249,7 +246,7 @@ def indirect_raid(context):
   # elif ctarget.ctargetting[0] == "marching":
   #   context.battle.yprint("  {}'s marching soldiers are vigilant!".format(ctarget))
   # elif ctarget.ctargetting[0] == "sneaking":
-  #   context.battle.yprint("  {}'s sneaking soldiers are vigilant!".format(ctarget))    
+  #   context.battle.yprint("  {}'s sneaking soldiers are vigilant!".format(ctarget))
   context.battle.place_event("arrow_strike",
                              context.copy(additional_opt={"vulnerable":vulnerable}),
                              "Q_RESOLVE")
@@ -276,34 +273,36 @@ def duel_accepted(context):
   csource = context.csource
   ctarget = context.ctarget
   actors = [csource, ctarget]
-  healths = [100, 100]
-  context.battle.yprint("{csource} and {ctarget} face off!".format(**context))
-  health_history = [(100, 100)]
+  healths = [20, 20]
+  context.battle.yprint("{csource} and {ctarget} face off!".format(**context.opt))
+  health_history = [(20, 20)]
   loser_history = [None]
+  damage_history = []
   while (healths[0] > 0 and healths[1] > 0):
-    first_win = random.random() < source.character.power/(target.character.power + source.character.power)
+    first_win = random.random() < csource.character.power/(ctarget.character.power + csource.character.power)
     if first_win:
       loser = 1
     else:
       loser = 0
-    loser.history.append(loser)
-    healths[0] -= random(10)
+    loser_history.append(loser)
+    damage = random.randint(1, 2)
+    healths[0] -= damage
+    damage_history.append(damage)
     health_history.append(tuple(healths))
-  context.battle.disp_duel(csource, ctarget, loser_history, health_history)
-  for i in [0,1]:
+  context.battle.disp_duel(csource, ctarget, loser_history, health_history, damage_history)
+  for i in [0, 1]:
     if healths[i] <= 0:
       context.battle.yprint("{ctarget} collapses; unit retreats!", context={"ctarget":actors[i]})
       Event("receive_damage", context.rebase({"damage":actors[i].size,
-                                            "ctarget":actors[i],
-                                            "dmgdata":"",
-                                            "dmglog":""})).activate()
+                                              "ctarget":actors[i],
+                                              "dmgdata":"",
+                                              "dmglog":""})).activate()
 
-    
 def duel_consider(context):
   csource = context.csource
   ctarget = context.ctarget
-  acceptances, duel_data = duel.duel_commit(context, (csource, ctarget))
-  yprint(str(duel_data), debug=True)
+  acceptances, duel_data = duel.duel_commit(context, csource, ctarget)
+  context.battle.yprint(str(duel_data), debug=True)
   if acceptances[0]:
     Event.make_speech(csource, context, duel.get_pre_duel_speech("challenge"))
     if acceptances[1]:

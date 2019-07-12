@@ -53,8 +53,9 @@ class Battle():
     self.yomi_winner = None
     self.yomis
     # setup stuff
-    for i in [0,1]:
+    for i in [0, 1]:
       self.armies[i].yomi_edge = None
+      self.armies[i].bet_morale_change = 0
       self.armies[i].formation = None
       self.armies[i].order = None
       self.armies[i].formation_bonus = 1.0
@@ -62,7 +63,7 @@ class Battle():
       for u in self.armies[i].units:
         u.move(self.hqs[u.army.armyid])
         u.ctargetting = None
-        u.last_turn_size = u.size        
+        u.last_turn_size = u.size
     assert all((p.is_empty() for p in self.dynamic_positions))
     self.dynamic_positions = []
 
@@ -83,8 +84,8 @@ class Battle():
     """
     self.queues[queue_name].appendleft(events.Event(event_type, context))
 
-  def yprint(self, text, context={}, debug=False):
-    self.battlescreen.yprint(text, context, debug)
+  def yprint(self, text, templates={}, debug=False):
+    self.battlescreen.yprint(text, templates, debug)
 
   def _run_status_handlers(self, func_key):
     for i in [0, 1]:
@@ -119,7 +120,7 @@ class Battle():
       orders[i] = self.armies[i].intelligence.get_formation(self,  i)
       self.armies[i].formation = orders[i]
     return tuple(orders)
-  
+
   def get_orders(self):
     orders = [None, None]
     for i in [0,1]:
@@ -140,7 +141,7 @@ class Battle():
       formation = self.formations[i]
       cost = rps.formation_info(formation, "morale_cost")[order]
       if cost:
-        orderlist.append((0, "order_change",  contexts.Context(self, opt={"ctarget_army":self.armies[i], "morale_change":-cost})))
+        orderlist.append((0, "order_change",  contexts.Context(self, opt={"ctarget_army":self.armies[i], "morale_bet":cost})))
       if self.yomi_winner == i:
         orderlist.append((0, "order_yomi_win",  contexts.Context(self, opt={"ctarget_army":self.armies[i]})))
       for u in self.armies[i].present_units():

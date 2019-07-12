@@ -34,7 +34,7 @@ def disp_skill_activation(skill_str, success=None):
   return "<" + colors.color_bool(success) + " ".join(skill_str.upper().split("_")) + "$[7$]>"
 
 def disp_order_short(order):
-  return rps.STRATEGIC_ORDERS[order]["short"]
+  return rps.order_info(order, "short")
 
 def disp_unit(unit):
   return "$[{}$]{}$[7$]".format(unit.color, unit.name)
@@ -96,20 +96,25 @@ def disp_bar_day_tracker(max_pos, base, last_turn, cur):
 def disp_hrule():
   return("="*80)
 
-CONVERT_CONTEXT_DISPS = {
+CONVERT_TEMPLATES_DISPS = {
   "ctarget":disp_unit,
   "csource":disp_unit,
   "ctarget_army":disp_army,
+  "csource_army":disp_army,
   "order":disp_order_short
 }
 
 
-def convert_context(context):
-  newcontext = {}
-  for key in context:
-    func = CONVERT_CONTEXT_DISPS[key]
-    newcontext[key] = func(context[key])
-  return newcontext
+def convert_templates(templates):
+  newtemplates = {}
+  for key in templates:
+    if key in CONVERT_TEMPLATES_DISPS:
+      func = CONVERT_TEMPLATES_DISPS[key]
+      newtemplates[key] = func(templates[key])
+    else:
+      # could just be a string
+      newtemplates[key] = templates[key]
+  return newtemplates
 
 ######
 # IO #
@@ -279,6 +284,20 @@ class BattleScreen():
       dmg_str = disp_damage_calc(*dmglog)
       self.yprint(dmg_str, debug=True)
 
+  def disp_yomi_win(self, csource_army, ctarget_army, ycount, bet):
+    if ycount > 1:
+      combostr1 = "$[2,1$]+{} morale$[7$] from combo".format(ycount)
+    else:
+      combostr1 = "$[2,1$]+1 morale$[7$]"
+    if bet > 1:
+      combostr2 = "$[1$]-{} morale$[7$] from order change".format(bet)
+    else:
+      combostr2 = "$[1$]-1 morale$[7$]"
+    self.yprint("{} ({}) outread {} ({})!".format(disp_army(csource_army),
+                                                  combostr1,
+                                                  disp_army(ctarget_army),
+                                                  combostr2))
+
   def _disp_unit_newheader(self, unit, side):
     healthbar = disp_bar_day_tracker(battle_constants.ARMY_SIZE_MAX, unit.size_base, unit.last_turn_size, unit.size)
     charstr = "{} {} Hp:{} Sp:{}".format(healthbar, disp_unit(unit), disp_unit_size(unit), unit.speed)
@@ -331,7 +350,7 @@ class BattleScreen():
     if other_str == "":
       other_str = colors.color_bool(success) + successtr + Colors.ENDC
     self.yprint(disp_skill_activation(skill_str, success) + " " + other_str)
-    
+
   def pause_and_display(self, pause_str=None):
     _ = self.blit_all_battle(pause_str=pause_str)
 
@@ -343,13 +362,13 @@ class BattleScreen():
       self.pause_and_display(pause_str=PAUSE_STRS["MORE_STR"])
     logging.info(text)
 
-  def yprint(self, text, context=None, debug=False):
+  def yprint(self, text, templates=None, debug=False):
     # the converting means to convert, based on the template, which converting function to use.
     # {ctarget} will always be converted to Unit for example
-    
-    if context:
-      converted_context = convert_context(context)
-      converted_text = text.format(**converted_context)
+
+    if templates:
+      converted_templates = convert_templates(templates)
+      converted_text = text.format(**converted_templates)
     else:
       converted_text = text
     logging.debug(converted_text) # always log this
@@ -357,10 +376,3 @@ class BattleScreen():
       return
     # so we get here if either SHOW_DEBUG or debug=False, which means we send it to the buffer
     self.print_line(converted_text)
-	  
-# import pygcurse
-# win = pygcurse.PygcurseWindow(40, 25, 'Fall of the Dragon')
-# print = win.pygprint
-# input = win.input
-# win.setscreencolors('lime', 'black', clear=True)
-

@@ -87,10 +87,10 @@ def compute_physical_damage(csource, ctarget, multiplier=1):
   d_str = ctarget.physical_defense()
   dicecount = int(csource.size*multiplier)
   # this is the data needed to create a log of the damage later; for timing purposes this needs
-  raw_damage, hitprob  = roll_dice(s_str, d_str, dicecount)
+  raw_damage, hitprob = roll_dice(s_str, d_str, dicecount)
   dmglog = tuple((s_str, d_str, dicecount, hitprob, raw_damage))
   # we pass this on instead of printing it immediately, both for MVC purposes and because
-  # it's weird for the user to see damage computed first before seeing damage done on screen  
+  # it's weird for the user to see damage computed first before seeing damage done on screen
   return raw_damage, dmglog
 
 def compute_arrow_damage(csource, ctarget, multiplier=1):
@@ -414,7 +414,7 @@ EVENTS_MISC = {
 #   EVENTS_RECEIVE[ev]["panic_blocked"] = True
 # No common rules here...
 
-def make_speech(context): 
+def make_speech(context):
   ctarget = context.ctarget
   speech_str = context.speech
   context.battle.make_speech(ctarget, speech_str)
@@ -443,10 +443,11 @@ def receive_status(context):
 
 def order_change(context):
   ctarget_army = context.ctarget_army
-  morale_change = context.morale_change
-  context.battle.yprint("It was a feint. {} suddenly {}.".format(
-    textutils.disp_army(ctarget_army),
-    rps.order_info(ctarget_army.get_order(), "verb")))
+  morale_bet = context.morale_bet
+  context.battle.yprint("It was a feint. {ctarget_army} suddenly " +
+                        rps.order_info(ctarget_army.get_order(), "verb") + ".",
+                        templates={"ctarget_army":ctarget_army})
+  ctarget_army.bet_morale_change = morale_bet
   # Event("change_morale", context).activate() this cost is pretty high
 
 def change_morale(context):
@@ -458,22 +459,16 @@ def change_morale(context):
   ctarget_army.morale = newmorale
 
 def order_yomi_win(context):
-  ctarget_army = context.ctarget_army
-  ycount = ctarget_army.get_yomi_count() 
-  if ycount > 1:
-    combostr = " {} read chain!".format(ycount)
-  else:
-    combostr = ""
-  context.battle.yprint("{} outread the opponent!".format(
-    textutils.disp_army(ctarget_army)) + combostr)
+  csource_army = context.ctarget_army
+  ctarget_army = context.battle.armies[1-csource_army.armyid]
+  ycount = csource_army.get_yomi_count()
+  bet = ctarget_army.bet_morale_change + 1
+  context.battlescreen.disp_yomi_win(csource_army, ctarget_army, ycount, bet)
   Event("change_morale", context.copy(additional_opt={"morale_change":ycount})).activate()
   Event("change_morale", context.rebase(opt={
     "ctarget_army":context.battle.armies[1-ctarget_army.armyid],
-    "morale_change":-1})).activate()
+    "morale_change":-bet})).activate()
 
-  
-  # context.battle.battlescreen.disp_morale_change()
-  
 ################################
 # targetted Events from Skills #
 ################################

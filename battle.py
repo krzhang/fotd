@@ -117,14 +117,14 @@ class Battle():
   def get_formations(self):
     orders = [None, None]
     for i in [0,1]:
-      orders[i] = self.armies[i].intelligence.get_formation(self,  i)
+      orders[i] = self.armies[i].intelligence.get_formation(self, i)
       self.armies[i].formation = orders[i]
     return tuple(orders)
 
   def get_orders(self):
     orders = [None, None]
     for i in [0,1]:
-      orders[i] = self.armies[i].intelligence.get_order(self,  i)
+      orders[i] = self.armies[i].intelligence.get_order(self, i)
       self.armies[i].order = orders[i]
     return tuple(orders)
 

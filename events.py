@@ -192,7 +192,7 @@ def engage(context):
     context.battle.yprint("{} already engaged {}, but they already engaged".format(csource, ctarget), debug=True)
     return
   if ctarget.is_defended():
-    readytext = "$[2$]defended!$[7$]"
+    readytext = "$[2]$defended!$[7]$"
   else:
     readytext = textutils.disp_unit_ctargetting(ctarget)
   context.battle.yprint("{} ({}) engages {} ({})".format(csource,
@@ -519,7 +519,7 @@ def lure_tactic(context, base_chance, improved_chance, success_callback):
         # this means we came from a lure
         lurer = random.choice(lure_candidates)
         context.battle.make_skill_narration("lure", "", True)
-        context.battle.yprint(lurer.speech(skills.skill_info("lure", "on_success_speech")))
+        Event.make_speech(lurer, context, skills.skill_info("lure", "on_success_speech"))
         lure_success_text = skills.skill_info("lure_tactic", "on_success")
         context.battle.make_skill_narration("lure", lure_success_text.format(**{"lurer":lurer, "ctarget":targ}), True)
       else:
@@ -557,7 +557,7 @@ def target_skill_tactic(context, cskill, cchance, success_callback):
     narrator_str, narrate_text = random.choice(skills.skill_info(cskill, "on_fail_speech"))
     Event.make_speech(context.opt[narrator_str], context, narrate_text)
   context.battle.make_skill_narration(cskill, "", success)
-  return success  
+  return success
 
 def _fire_tactic_success(context):
   Event.gain_status("burned", context, context.ctarget)

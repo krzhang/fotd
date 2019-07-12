@@ -7,10 +7,10 @@ BEATS = {'A':{'A':0, 'D':-1, 'I':1},
 
 FORMATIONS = {
   'O': {
-    "desc": "$[1$]offensive formation$[7$]",
+    "desc": "$[1]$offensive formation$[7]$",
     "status": "form_offensive",
     "adj": "offensive",
-    "short": "$[1$]O$[7$]",
+    "short": "$[1]$O$[7]$",
     "physical_offense": 1.0,
     "physical_defense": 1.0,
     "arrow_offense": 1.0,
@@ -19,9 +19,9 @@ FORMATIONS = {
   },
   "D": {
     "adj": "defensive",
-    "desc":"$[4$]defensive formation$[7$]",
+    "desc":"$[4]$defensive formation$[7]$",
     "status": "form_defensive",
-    "short": "$[4$]D$[7$]",
+    "short": "$[4]$D$[7]$",
     "physical_offense": 0.8,
     "physical_defense": 1.2,
     "arrow_offense": 0.8,
@@ -33,19 +33,19 @@ FORMATIONS = {
 STRATEGIC_ORDERS = {
   "A": {
     "event": "attack_order",
-    "short": "$[1$]A$[7$]",
+    "short": "$[1]$A$[7]$",
     "noun": "attack",
     "verb": "marches",
     },
   "D": {
     "event": "defense_order",
-    "short": "$[4$]D$[7$]",
+    "short": "$[4]$D$[7]$",
     "noun": "defense",
     "verb": "fortifies",
   },
   "I": {
     "event": "indirect_order",
-    "short": "$[1,3$]I$[7$]",
+    "short": "$[1,3]$I$[7]$",
     "noun": "skullduggery",
     "verb": "scatters",
    }

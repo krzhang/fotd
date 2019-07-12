@@ -99,6 +99,7 @@ STR_TO_CR = {
   "${7}":Colors.ENDC,
   "${2,1}":Colors.GREEN + Style.BRIGHT,
   "${1,3}":Back.RED + Fore.WHITE,
+  "${7,1}":Fore.WHITE + Style.BRIGHT
 }
   
 def str_to_colorama(my_str):

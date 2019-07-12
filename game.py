@@ -167,7 +167,6 @@ def link_data_funcs():
 link_data_funcs()
 
 def test(debug=False, resize=False, two_players=False, AI="INT_AI_NORMAL"):
-  
   if two_players:
     second_intelligence = "INT_PLAYER"
   else:
@@ -181,8 +180,9 @@ def test(debug=False, resize=False, two_players=False, AI="INT_AI_NORMAL"):
   # graphics.Screen.wrapper(graphics.battle_screen, catch_interrupt = True, arguments=[bat])
   while(True):
     bat.take_turn()
-    if any(bat.losing_status()):
+    losers = bat.losing_status()
+    if any(losers):
       sys.exit(0)
-      
+
 if __name__ == "__main__":
   test(resize=True)

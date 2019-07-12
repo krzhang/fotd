@@ -25,23 +25,23 @@ def disp_cha_fullname(chara):
   return str(chara) + chara.str_title()
 
 def disp_army(army):
-  return "$[{}$]{}$[7$]".format(army.color, army.name)
+  return "$[{}]${}$[7]$".format(army.color, army.name)
 
 def disp_form_short(formation):
   return rps.formation_info(formation, "short")
 
 def disp_skill_activation(skill_str, success=None):
-  return "<" + colors.color_bool(success) + " ".join(skill_str.upper().split("_")) + "$[7$]>"
+  return "<" + colors.color_bool(success) + " ".join(skill_str.upper().split("_")) + "$[7]$>"
 
 def disp_order_short(order):
   return rps.order_info(order, "short")
 
 def disp_unit(unit):
-  return "$[{}$]{}$[7$]".format(unit.color, unit.name)
+  return "$[{}]${}$[7]$".format(unit.color, unit.name)
 
 def disp_unit_size(unit):
-  csize = colors.color_size(unit.size, unit.size_base) + str(unit.size) + "$[7$]"
-  return "{}/{}".format(str(csize), str(unit.size_base)) 
+  csize = colors.color_size(unit.size, unit.size_base) + str(unit.size) + "$[7]$"
+  return "{}/{}".format(str(csize), str(unit.size_base))
 
 def disp_unit_ctargetting(unit):
   """ ex: 'sneaking towards' """
@@ -49,10 +49,10 @@ def disp_unit_ctargetting(unit):
     return "doing nothing"
   if unit.ctargetting[0] == "marching":
     return "marching -> " + disp_unit(unit.ctargetting[1])
-  elif unit.ctargetting[0] == "defending":
+  if unit.ctargetting[0] == "defending":
     return "staying put"
-  elif unit.ctargetting[0] == "sneaking":
-    return "sneaking -> " + disp_unit(unit.ctargetting[1])
+  assert unit.ctargetting[0] == "sneaking"
+  return "sneaking -> " + disp_unit(unit.ctargetting[1])
 
 def disp_unit_status_noskills(unit):
   """ string for the unit's statuses that do NOT include skills"""
@@ -121,12 +121,12 @@ def convert_templates(templates):
 
 PAUSE_STRS = {
   "MORE_STR": Colors.INVERT + "MORE... [hit a key]" + Colors.ENDC,
-  "FORMATION_STR": Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.BLUE + Back.BLACK +  "FORMATION" + Fore.BLACK + Back.WHITE + " for army {}$[7$] " + "({}):".format("/".join([rps.formation_info(i, "short") for i in ("O", "D")])) + Colors.ENDC,
-  "ORDER_STR": Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.CYAN +  Back.BLACK + "ORDERS" + Fore.BLACK + Back.WHITE + " for army {} $[7$] " + "({}):".format("$[7$]/".join([rps.order_info(i,"short") for i in ("A", "D", "I")])) + Colors.ENDC
+  "FORMATION_STR": Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.BLUE + Back.BLACK +  "FORMATION" + Fore.BLACK + Back.WHITE + " for army {}$[7]$ " + "({}):".format("/".join([rps.formation_info(i, "short") for i in ("O", "D")])) + Colors.ENDC,
+  "ORDER_STR": Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.CYAN +  Back.BLACK + "ORDERS" + Fore.BLACK + Back.WHITE + " for army {} $[7]$ " + "({}):".format("$[7]$/".join([rps.order_info(i,"short") for i in ("A", "D", "I")])) + Colors.ENDC
 }
 
 class BattleScreen():
-  
+
   def __init__(self, battle):
     self.console_buf = []
     self.max_screen_len = 24
@@ -134,7 +134,7 @@ class BattleScreen():
     self.max_armies_len = 18
     self.max_console_len = 3
     self.max_footer_len = 1
-    self.battle = battle 
+    self.battle = battle
     # self.screen = None # needs one
 
   def _colored_strats(self, orders):
@@ -149,7 +149,7 @@ class BattleScreen():
       else:
         ocolors.append("")
     return tuple([ocolors[i] + orders[i] + Colors.ENDC for i in [0,1]])
-    
+
   def _day_status_str(self):
     """ what to put on top"""
     return "Day {}: {}".format(self.battle.date, self.battle.weather)
@@ -168,6 +168,12 @@ class BattleScreen():
       strat1 = disp_order_short(strat1)      
     else:
       strat0 = strat1 = "?"
+    if self.battle.yomi_winner == -1:
+      winner_text = "VS"
+    elif self.battle.yomi_winner == 0:
+      winner_text = "$[7,1]$>>$[7]$"
+    else:
+      winner_text = "$[7,1]$<<$[7]$"
     return "      {} ({}) {} -> {} VS {} <- {} ({}) {}".format(
       disp_bar_morale(10, self.battle.armies[0].morale, self.battle.armies[0].last_turn_morale),
       disp_army(self.battle.armies[0]),
@@ -219,14 +225,14 @@ class BattleScreen():
       return(disp_hrule())
 
   def _prerender(self, line):
-    """ 
+    """
     converts a my-type color string to something on the screen
 
-    1) I start with strings of the type ah$[3$]hhh$[7$], 
+    1) I start with strings of the type ah$[3]$hhh$[7]$, 
     2) which should become ah${3}hhh${7}, (this can be used by asciimatics)
     3) which in the final output should be converted to colorama (or some other 
     """
-    return line.replace('$[', '${').replace('$]', '}')
+    return line.replace('$[', '${').replace(']$', '}')
 
   def _render(self, line):
     """
@@ -285,13 +291,13 @@ class BattleScreen():
 
   def disp_yomi_win(self, csource_army, ctarget_army, ycount, bet):
     if ycount > 1:
-      combostr1 = "$[2,1$]+{} morale$[7$] from combo".format(ycount)
+      combostr1 = "$[2,1]$+{} morale$[7]$ from combo".format(ycount)
     else:
-      combostr1 = "$[2,1$]+1 morale$[7$]"
+      combostr1 = "$[2,1]$+1 morale$[7]$"
     if bet > 1:
-      combostr2 = "$[1$]-{} morale$[7$] from order change".format(bet)
+      combostr2 = "$[1]$-{} morale$[7]$ from order change".format(bet)
     else:
-      combostr2 = "$[1$]-1 morale$[7$]"
+      combostr2 = "$[1]$-1 morale$[7]$"
     self.yprint("{} ({}) outread {} ({})!".format(disp_army(csource_army),
                                                   combostr1,
                                                   disp_army(ctarget_army),
@@ -338,7 +344,7 @@ class BattleScreen():
 
   def make_speech(self, unit, speech):
     """ What to display when a unit says something """
-    self.yprint("{}: '$[2$]{}$[7$]'".format(disp_unit(unit), speech))
+    self.yprint("{}: '$[2]${}$[7]$'".format(disp_unit(unit), speech))
 
   def make_skill_narration(self, skill_str, other_str, success=None):
     """ What to display when we want to make a narration involving a skill """

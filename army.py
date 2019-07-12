@@ -109,7 +109,7 @@ class Army(object):
       u.army = self
       u.set_color(color)
     self.intelligence_type = intelligence_type
-    self.intelligence = intelligence.INTELLIGENCE_FROM_TYPE[intelligence_type]
+    self.intelligence = intelligence.INTELLIGENCE_FROM_TYPE[intelligence_type]()
     self.morale = morale
     self.last_turn_morale = morale
     # things to be linked later

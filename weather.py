@@ -4,14 +4,14 @@ WEATHER = {
   "sunny": {
     "transitions": {
     },
-    "viz": "$[2$]sunny$[7$]"
+    "viz": "$[2]$sunny$[7]$"
   },
   "hot": {
-    "viz": "$[1$]HOT$[7$]"    
+    "viz": "$[1]$HOT$[7]$"    
   },
   "raining": {
     "blocks": [],
-    "viz": "$[4$]raining$[7$]"
+    "viz": "$[4]$raining$[7]$"
   }
 }
 

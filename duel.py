@@ -31,7 +31,7 @@ def duel_commit(context, source, target):
     dueldata[i] = (winning_chance_estimate, gains_estimate, losses_estimate, ratio)
   return tuple(acceptances), tuple(dueldata)
 
-PRE_DUEL_SPEECHES = {
+DUEL_SPEECHES = {
   "challenge": [
     "Is there no one to fight {csource}?",
     "Come {ctarget}, it is a good day for a fight.",
@@ -40,14 +40,19 @@ PRE_DUEL_SPEECHES = {
   "accept": [
     "Ahaha, you asked for it!",
     "I can beat you with my left hand, {csource}.",
-    "I am surprised you dare to challenge me...",             
+    "I am surprised you dare to challenge me...",
+    "{csource}! Exactly who I am waiting for!",
   ],
   "deny": [
     "A good general does not rely on physical strength alone.",
     "Maybe another day, {csource}.",
     "Don't bring playground antics to the battlefield.",
-  ],  
+  ],
+  "defeats": [
+    "I bested {ctarget}."
+    "I have a hundred problems;{ctarget} was not one of them."
+  ]
 }
 
 def get_pre_duel_speech(speechtype):
-  return random.choice(PRE_DUEL_SPEECHES[speechtype])
+  return random.choice(DUEL_SPEECHES[speechtype])

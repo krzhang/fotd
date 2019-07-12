@@ -362,7 +362,7 @@ class BattleScreen():
 
   def _get_input(self, pause_str, armyid, accepted_inputs):
     # this is to make it easier to see the 3 options
-    # self.pause_and_display(pause_str=PAUSE_STRS["MORE_STR"])
+    self.pause_and_display(pause_str=PAUSE_STRS["MORE_STR"])
     while True:
       pause_str = pause_str
       self.disp_order_options(armyid)

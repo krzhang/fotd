@@ -174,13 +174,16 @@ def test(debug=False, resize=False, two_players=False, AI="INT_AI_NORMAL"):
   army0 = army_mysticsoft(0, 5, "INT_PLAYER")
   army1 = army_unknown(1, 6, second_intelligence)
   if resize:
-    print ("\x1b[8;24;80t")
+    print("\x1b[8;24;80t")
     # print ("\x1b[8;{};80t".format(textutils.BATTLE_SCREEN.max_screen_len))
   bat = battle.Battle(army0, army1, debug_mode=debug)
   # graphics.Screen.wrapper(graphics.battle_screen, catch_interrupt = True, arguments=[bat])
   while(True):
     bat.take_turn()
     losers = bat.losing_status()
+    for l in [0,1]:
+      if losers[l]:
+        print("{} is destroyed!".format(textutils.disp_army(l)))
     if any(losers):
       sys.exit(0)
 

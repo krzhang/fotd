@@ -1,10 +1,11 @@
 import random
 
 DUEL_BASE_CHANCE = 0.25
+DUEL_MAX_HEALTH = 20
 
 def _winning_chance_estimate(context, source, target):
-  s_str = source.character.power
-  t_str = target.character.power
+  s_str = source.character.power * source.character.power
+  t_str = target.character.power * target.character.power
   s_str *= random.uniform(1.0, 1.2) # ego boost
   return s_str/(t_str + s_str)
 
@@ -19,9 +20,9 @@ def duel_commit(context, source, target):
     winning_chance_estimate = _winning_chance_estimate(context, actor, opponent)
     desperation_multiplier = 1.0
     if actor.army.morale <= 2 or actor.size <= 5:
-      desperation_multiplier *= 2.0
-    if i == 1: # on defense
       desperation_multiplier *= 1.5
+    if i == 1: # on defense; maybe an honor/bravery check later
+      pass
     gains_estimate = (5 + opponent.size)*desperation_multiplier
     losses_estimate = (5 + actor.size)
     evwin = winning_chance_estimate*gains_estimate

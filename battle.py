@@ -40,7 +40,7 @@ class Battle():
     self.formations = None
     self.orders = None
     self.yomis = None
-    self.yomi_winner = None
+    self.yomi_winner = -1
     self.yomi_list = []
     self.init_day()
 
@@ -50,7 +50,7 @@ class Battle():
     self.weather = weather.random_weather()
     self.formations = None
     self.orders = None
-    self.yomi_winner = None
+    self.yomi_winner = -1
     self.yomis
     # setup stuff
     for i in [0, 1]:
@@ -60,7 +60,8 @@ class Battle():
       self.armies[i].order = None
       self.armies[i].formation_bonus = 1.0
       self.armies[i].last_turn_morale = self.armies[i].morale
-      for u in self.armies[i].units:
+      self.armies[i].hand = []
+      for u in self.armies[i].present_units:
         u.move(self.hqs[u.army.armyid])
         u.ctargetting = None
         u.last_turn_size = u.size
@@ -141,9 +142,9 @@ class Battle():
       formation = self.formations[i]
       cost = rps.formation_info(formation, "morale_cost")[order]
       if cost:
-        orderlist.append((0, "order_change",  contexts.Context(self, opt={"ctarget_army":self.armies[i], "morale_bet":cost})))
+        orderlist.append((0, "order_change", contexts.Context(self, opt={"ctarget_army":self.armies[i], "morale_bet":cost})))
       if self.yomi_winner == i:
-        orderlist.append((0, "order_yomi_win",  contexts.Context(self, opt={"ctarget_army":self.armies[i]})))
+        orderlist.append((0, "order_yomi_win", contexts.Context(self, opt={"ctarget_army":self.armies[i]})))
       for u in self.armies[i].present_units():
         u.attacked = []
         u.attacked_by = []

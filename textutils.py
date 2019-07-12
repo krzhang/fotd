@@ -174,11 +174,12 @@ class BattleScreen():
       winner_text = "$[7,1]$>>$[7]$"
     else:
       winner_text = "$[7,1]$<<$[7]$"
-    return "      {} ({}) {} -> {} VS {} <- {} ({}) {}".format(
+    return "      {} ({}) {} -> {} {} {} <- {} ({}) {}".format(
       disp_bar_morale(10, self.battle.armies[0].morale, self.battle.armies[0].last_turn_morale),
       disp_army(self.battle.armies[0]),
       form0,
       strat0,
+      winner_text,
       strat1,
       form1,
       disp_army(self.battle.armies[1]),

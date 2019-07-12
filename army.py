@@ -1,7 +1,5 @@
-import skills
 import status
 import intelligence
-import colors
 from textutils import disp_unit
 import rps
 
@@ -13,6 +11,7 @@ class Unit(object):
     self.size = size
     self.speed = speed
     self.army = None
+    self.color = None
     self.is_commander = None
     self.unit_status = [] # not to be confused with character-status
     self.targetting = None
@@ -20,7 +19,7 @@ class Unit(object):
     self.attacked_by = []
     self.position = None
     self.last_turn_size = None
-    
+
   def __eq__(self, other):
     return hasattr(self, "character") and hasattr(other, "character") and self.character == other.character
 
@@ -33,10 +32,10 @@ class Unit(object):
 
   def __str__(self):
     return str(self.character)
-  
+
   def has_unit_status(self, stat_str):
     return stat_str in [s.stat_str for s in self.unit_status]
-  
+
   def add_unit_status(self, stat_str):
     """ as strings. DON'T USE WITH SKILLS """
     if not self.has_unit_status(stat_str):
@@ -44,14 +43,20 @@ class Unit(object):
 
   def get_order(self):
     return self.army.order
-  
+
   def move(self, newpos):
     if self.position:
       # could come here from None
       self.position.remove_unit(self)
     newpos.add_unit(self)
     self.position = newpos
-      
+
+  def leave_battle(self):
+    if self.position:
+      # could come here from None
+      self.position.remove_unit(self)
+    self.position = None
+
   def remove_unit_status(self, statstr):
     #import pdb; pdb.set_trace()
     #self.unit_status = [s for s in self.unit_status if s.stat_str != statstr]

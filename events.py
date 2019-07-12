@@ -239,10 +239,10 @@ def indirect_raid(context):
   # tactic 1: raid
   vulnerable = False
   if ctarget.ctargetting[0] == "defending":
-    context.battle.yprint("  {} is caught unawares by the indirect approach!".format(ctarget))
+    context.battle.yprint("  {} is caught unawares by the indirect approach!".format(ctarget), debug=True)
     vulnerable = True
   elif ctarget.ctargetting[0] == "marching":
-    context.battle.yprint("  {}'s marching soldiers are vigilant!".format(ctarget))
+    context.battle.yprint("  {}'s marching soldiers are vigilant!".format(ctarget), debug=True)
   context.battle.place_event("arrow_strike",
                              context.copy(additional_opt={"vulnerable":vulnerable}),
                              "Q_RESOLVE")
@@ -429,6 +429,8 @@ def receive_damage(context):
   context.battle.battlescreen.disp_damage(battle_constants.ARMY_SIZE_MAX,
                                           ctarget.size, damage, dmgdata, dmglog)
   ctarget.size -= damage
+  if ctarget.size <= 0:
+    ctarget.leave_battle()
 
 def receive_status(context):
   ctarget = context.ctarget
@@ -519,7 +521,7 @@ def lure_tactic(context, base_chance, improved_chance, success_callback):
         # this means we came from a lure
         lurer = random.choice(lure_candidates)
         context.battle.make_skill_narration("lure", "", True)
-        Event.make_speech(lurer, context, skills.skill_info("lure", "on_success_speech"))
+        Event.make_speech(lurer, context, skills.get_speech("lure", "on_success_speech"))
         lure_success_text = skills.skill_info("lure_tactic", "on_success")
         context.battle.make_skill_narration("lure", lure_success_text.format(**{"lurer":lurer, "ctarget":targ}), True)
       else:
@@ -543,10 +545,10 @@ def target_skill_tactic(context, cskill, cchance, success_callback):
   ctarget = context.ctarget
   success = random.random() < cchance # can replace with harder functions later
   # TODO cchance = calc_chance(target, skill) or something
-  cskill_on_prep = random.choice(skills.skill_info(cskill, "on_roll")).format(**context.opt)
+  cskill_on_prep = skills.get_speech(cskill, "on_roll").format(**context.opt)
   context.battle.make_skill_narration(cskill, cskill_on_prep)
   if success:
-    narrator_str, narrate_text = random.choice(skills.skill_info(cskill, "on_success_speech"))
+    narrator_str, narrate_text = skills.get_speech(cskill, "on_success_speech")
     Event.make_speech(context.opt[narrator_str], context, narrate_text)
     success_callback(context)
     lure_tactic(context,
@@ -554,7 +556,7 @@ def target_skill_tactic(context, cskill, cchance, success_callback):
                 0.6, # improved entanglement chance
                 success_callback)
   else:
-    narrator_str, narrate_text = random.choice(skills.skill_info(cskill, "on_fail_speech"))
+    narrator_str, narrate_text = skills.get_speech(cskill, "on_fail_speech")
     Event.make_speech(context.opt[narrator_str], context, narrate_text)
   context.battle.make_skill_narration(cskill, "", success)
   return success
@@ -576,7 +578,7 @@ def jeer(context):
   Event.make_speech(csource, context, ins[0])
   if success:
     Event.make_speech(ctarget, context, "Why you...")
-    Event.gain_status("berserk", context, ctarget)
+    Event.gain_status("provoked", context, ctarget)
     # TODO: AOE
   else:
     Event.make_speech(ctarget, context, ins[1])

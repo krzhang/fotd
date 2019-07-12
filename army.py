@@ -30,6 +30,10 @@ class Unit(object):
     self.color = color
     self.character.color = color
 
+  @property
+  def skills(self):
+    return self.character.skills
+
   def __str__(self):
     return str(self.character)
 

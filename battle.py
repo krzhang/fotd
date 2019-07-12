@@ -6,6 +6,7 @@ import textutils
 import contexts
 import events
 import rps
+import skills
 import battle_constants
 import positions
 import weather
@@ -51,7 +52,7 @@ class Battle():
     self.formations = None
     self.orders = None
     self.yomi_winner = -1
-    self.yomis
+    self.yomis = None
     # setup stuff
     for i in [0, 1]:
       self.armies[i].yomi_edge = None
@@ -61,19 +62,41 @@ class Battle():
       self.armies[i].formation_bonus = 1.0
       self.armies[i].last_turn_morale = self.armies[i].morale
       self.armies[i].hand = []
-      for u in self.armies[i].present_units:
+      self.armies[i].deck = []
+      self.armies[i].stacks = {'A':[], 'D':[], 'I':[]}
+      for u in self.armies[i].present_units():
         u.move(self.hqs[u.army.armyid])
         u.ctargetting = None
         u.last_turn_size = u.size
+        for sk in u.skills:
+          sc = skills.get_skillcard(sk)
+          if sc:
+            self.armies[i].deck.append((u, sc))
+        # now the deck has all the possible skillcards
     assert all((p.is_empty() for p in self.dynamic_positions))
     self.dynamic_positions = []
 
+  def _draw_cards(self, armyid):
+    """
+    draw hands from the deck of skillcards. Done twice: before the first formation call and once
+
+    """
+    army = self.armies[armyid]
+    for unit, card_type in army.deck:
+      for key in skills.skillcard_info(card_type, "bulb"):
+        proc_chance = skills.skillcard_info(card_type, "bulb")[key]
+        if ((random.random() < proc_chance) and
+            (card_type not in army.stacks[key]) and
+            (self.weather.text not in skills.skillcard_info(card_type, "illegal_weather"))):
+          self.battlescreen.disp_bulb(unit, card_type, key)
+          army.stacks[key].append((unit, card_type))
+    
   # observer pattern?
   def make_speech(self, unit, speech):
-    self.battlescreen.make_speech(unit, speech)
+    self.battlescreen.disp_speech(unit, speech)
 
   def make_skill_narration(self, skill_str, other_str, success=None):
-    self.battlescreen.make_skill_narration(skill_str, other_str, success)
+    self.battlescreen.disp_skill_narration(skill_str, other_str, success)
 
   def make_duel(self, csource, ctarget, loser_history, health_history, damage_history):
     self.battlescreen.disp_duel(csource, ctarget, loser_history, health_history, damage_history)
@@ -109,7 +132,7 @@ class Battle():
       if any((not self.armies[i].is_present()) for i in [0, 1]):
         # TODO: replace with arbitary leave condition
         return
-      
+
   def make_position(self, ctarget):
     newpos = positions.Position(self, ctarget) # meeting in the field
     self.dynamic_positions.append(newpos)
@@ -117,14 +140,16 @@ class Battle():
 
   def get_formations(self):
     orders = [None, None]
-    for i in [0,1]:
+    for i in [0, 1]:
+      self._draw_cards(i)
       orders[i] = self.armies[i].intelligence.get_formation(self, i)
       self.armies[i].formation = orders[i]
     return tuple(orders)
 
   def get_orders(self):
     orders = [None, None]
-    for i in [0,1]:
+    for i in [0, 1]:
+      self._draw_cards(i)
       orders[i] = self.armies[i].intelligence.get_order(self, i)
       self.armies[i].order = orders[i]
     return tuple(orders)
@@ -158,7 +183,7 @@ class Battle():
     orderlist.sort(key=lambda x: x[0])
     for o in orderlist:
       self.place_event(o[1], o[2], "Q_ORDER")
-  
+
   def take_turn(self):
     self.formations = self.get_formations()
     for i in [0,1]:
@@ -192,4 +217,3 @@ class Battle():
         self.yprint("{} collapses due to catastrophic morale.".format(
           textutils.disp_army(self.armies[i])))
     return tuple(losing)
-    

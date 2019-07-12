@@ -28,12 +28,12 @@ def skillcard_info(skill_str, key):
     return SKILLCARDS[skill_str][key]
   return None
 
-def get_skillcard(skill_str):
-  return skill_info(skill_str, "skillcard")
+def get_skillcard(skill):
+  return skill_info(skill.skill_str, "skillcard")
 
-def get_speech(skill_str, key):
-  """Give a random speech related to a situation."""
-  return random.choice(skill_info(skill_str, key))
+def get_speech(skillcard, key):
+  """Give a random speech from a skillcard."""
+  return random.choice(skillcard_info(skill_str, key))
 
 SKILLS = {
   "chaos_arrow": {
@@ -110,7 +110,7 @@ SKILLCARDS = {
     "short": 'fire',
     "on_bulb": {
       'D': "When they attack, these traps should burn them up.",
-      'I': "If they turtle, they are an easy target for fire with today's weather.",
+      'I': "If they turtle, they are an easy target for fire today.",
     },
     "on_roll": ["{csource} prepares embers and tinder..."],
     "on_success_speech": [("csource", "It's going to get pretty hot!"),
@@ -125,7 +125,7 @@ SKILLCARDS = {
     "short": 'jeer',
     "on_bulb": {
       'A': "Let me at them in the field; I have a few new insults.",
-      'D': "If we keep teasing them when defended, they may be lured to overexert.",
+      'D': "If we keep teasing them, they may be lured to overexert.",
       'I': "We can go harass them and lure them to fight.",
     },
     "on_roll": ["{csource} prepares some of their best insults..."],
@@ -140,7 +140,7 @@ SKILLCARDS = {
     "short": 'panic',
     "on_bulb": {
       'A': "If we attack, I can fill their units with fear.",
-      'D': "When they are defending, we can spread rumors and lies.",
+      'I': "When they are defending, we can spread rumors and lies.",
     },
     "on_roll": ["{csource} sows seeds of fear and doubt in {ctarget}'s unit..."],
     "on_success_speech": [("csource", "{ctarget} will be out of commission for a while..."),
@@ -154,7 +154,7 @@ SKILLCARDS = {
     "power": 8,
     "short": 'flood',
     "on_bulb": {
-      'D': "This spot is downstream from a barely-dammed river. If they attack...",
+      'D': "If they attack near this barely-dammed river...",
     },
     "on_roll": ["{csource} manipulates the dams..."],
     "on_success_speech": [("csource", "Water is crashing through their ships."),

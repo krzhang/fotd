@@ -5,12 +5,16 @@ import logging
 import battle_constants
 from utils import read_single_keypress
 import colors
-from colors import Colors, Fore, Back, Style
+from colors import ctext, Colors, Fore, Back, Style
 import rps
+import skills # move later!
 
 #########################################
 # Display (convert to string) Functions #
 #########################################
+
+def disp_clear():
+  os.system('cls' if os.name == 'nt' else 'clear')
 
 def disp_damage_calc(s_str, d_str, dicecount, hitprob, raw_damage):
   return "[Strength: ({:4.3f} vs. {:4.3f}); {} dice with chance {} each; Final: {}]".format(
@@ -243,7 +247,7 @@ class BattleScreen():
 
   def blit_all_battle(self, pause_str=None):
     # blits status
-    self.disp_clear()
+    disp_clear()
     st = self._disp_statline() # 2 lines
     ar = self._disp_armies() # 18 lines
     co = self._disp_console() # 3 lines
@@ -257,6 +261,12 @@ class BattleScreen():
     # screen.play([Scene(effects, -1)])
     self.console_buf = []
     return read_single_keypress()[0]
+
+  def disp_bulb(self, unit, skillcard, order):
+    """
+    someone just thought of a tactic.
+    """
+    self.disp_speech(unit, "<$[4]$!$[5]$!$[6]$!$[7]$> " + skills.skillcard_info(skillcard, "on_bulb")[order])
 
   def disp_duel(self, csource, ctarget, loser_history, health_history, damage_history):
     for i, healths in enumerate(health_history[1:]):
@@ -290,23 +300,33 @@ class BattleScreen():
       dmg_str = disp_damage_calc(*dmglog)
       self.yprint(dmg_str, debug=True)
 
-  def disp_yomi_win(self, csource_army, ctarget_army, ycount, bet):
-    if ycount > 1:
-      combostr1 = "$[2,1]$+{} morale$[7]$ from combo".format(ycount)
-    else:
-      combostr1 = "$[2,1]$+1 morale$[7]$"
-    if bet > 1:
-      combostr2 = "$[1]$-{} morale$[7]$ from order change".format(bet)
-    else:
-      combostr2 = "$[1]$-1 morale$[7]$"
-    self.yprint("{} ({}) outread {} ({})!".format(disp_army(csource_army),
-                                                  combostr1,
-                                                  disp_army(ctarget_army),
-                                                  combostr2))
+  def disp_order_options(self, armyid):
+    army = self.battle.armies[armyid]
+    for order in ['A', 'D', 'I']:
+      stack = army.stacks[order]
+      self.yprint("{} ({}) has readied: {}".format(
+        order,
+        rps.order_info(order, "noun"),
+        " ".join([disp_skill_activation(sk, True) for un, sk in stack])))
 
+    
+  def disp_speech(self, unit, speech):
+    """ What to display when a unit says something """
+    self.yprint("{}: '$[2]${}$[7]$'".format(disp_unit(unit), speech))
+
+  def disp_skill_narration(self, skill_str, other_str, success=None):
+    """ What to display when we want to make a narration involving a skill """
+    if success:
+      successtr = "SUCCESS!"
+    else:
+      successtr = "FAIL!"
+    if other_str == "":
+      other_str = colors.color_bool(success) + successtr + Colors.ENDC
+    self.yprint(disp_skill_activation(skill_str, success) + " " + other_str)
+    
   def _disp_unit_newheader(self, unit, side):
     healthbar = disp_bar_day_tracker(battle_constants.ARMY_SIZE_MAX, unit.size_base, unit.last_turn_size, unit.size)
-    charstr = "{} {} Hp:{} Sp:{}".format(healthbar, disp_unit(unit), disp_unit_size(unit), unit.speed)
+    charstr = "{} {} Hp:{}".format(healthbar, disp_unit(unit), disp_unit_size(unit))
     if side == 0:
       return charstr
     else:
@@ -326,36 +346,35 @@ class BattleScreen():
     else:
       return " "*0 + charstr
 
-  def disp_clear(self):
-    os.system('cls' if os.name == 'nt' else 'clear')
+  def disp_yomi_win(self, csource_army, ctarget_army, ycount, bet):
+    if ycount > 1:
+      combostr1 = "$[2,1]$+{} morale$[7]$ from combo".format(ycount)
+    else:
+      combostr1 = "$[2,1]$+1 morale$[7]$"
+    if bet > 1:
+      combostr2 = "$[1]$-{} morale$[7]$ from order change".format(bet)
+    else:
+      combostr2 = "$[1]$-1 morale$[7]$"
+    self.yprint("{} ({}) outread {} ({})!".format(disp_army(csource_army),
+                                                  combostr1,
+                                                  disp_army(ctarget_army),
+                                                  combostr2))
 
-  def _get_input(self, pause_str, accepted_inputs):
-    # return input(prompt)
-    while(True):
+  def _get_input(self, pause_str, armyid, accepted_inputs):
+    # this is to make it easier to see the 3 options
+    # self.pause_and_display(pause_str=PAUSE_STRS["MORE_STR"])
+    while True:
       pause_str = pause_str
+      self.disp_order_options(armyid)
       inp = self.blit_all_battle(pause_str=pause_str)
       if inp.upper() in accepted_inputs:
         return inp.upper()
 
   def input_battle_formation(self, armyid):
-    return self._get_input(PAUSE_STRS['FORMATION_STR'].format(armyid), ['O','D'])
+    return self._get_input(PAUSE_STRS['FORMATION_STR'].format(armyid), armyid, ['O', 'D'])
 
   def input_battle_order(self, armyid):
-    return self._get_input(PAUSE_STRS['ORDER_STR'].format(armyid), ['A','D', 'I'])
-
-  def make_speech(self, unit, speech):
-    """ What to display when a unit says something """
-    self.yprint("{}: '$[2]${}$[7]$'".format(disp_unit(unit), speech))
-
-  def make_skill_narration(self, skill_str, other_str, success=None):
-    """ What to display when we want to make a narration involving a skill """
-    if success:
-      successtr = "SUCCESS!"
-    else:
-      successtr = "FAIL!"
-    if other_str == "":
-      other_str = colors.color_bool(success) + successtr + Colors.ENDC
-    self.yprint(disp_skill_activation(skill_str, success) + " " + other_str)
+    return self._get_input(PAUSE_STRS['ORDER_STR'].format(armyid), armyid, ['A', 'D', 'I'])
 
   def pause_and_display(self, pause_str=None):
     _ = self.blit_all_battle(pause_str=pause_str)

@@ -155,7 +155,7 @@ def berserked_order(context):
     csource, status.Status("berserk"), ctarget))
   context.ctarget.ctargetting = ("marching", ctarget)
   newcontext = context.rebase({"csource":csource, "ctarget":ctarget})
-  context.battle.place_event("engage", newcontext, "Q_MANUEVER")
+  context.battle.place_event("march", newcontext, "Q_MANUEVER")
 
 def provoked_order(context):
   csource = context.ctarget
@@ -166,7 +166,7 @@ def provoked_order(context):
     csource, status.Status("provoked"), ctarget))
   context.ctarget.ctargetting = ("marching", ctarget)
   newcontext = context.rebase({"csource":csource, "ctarget":ctarget})
-  context.battle.place_event("engage", newcontext, "Q_MANUEVER")
+  context.battle.place_event("march", newcontext, "Q_MANUEVER")
 
 EVENTS_ORDERS = {
   "attack_order": {},
@@ -185,7 +185,7 @@ for ev in EVENTS_ORDERS:
 # Generic Battlefield Events #
 ################
 
-def engage(context):
+def march(context):
   csource = context.csource
   ctarget = context.ctarget
   if ctarget in csource.attacked_by:
@@ -195,11 +195,15 @@ def engage(context):
     readytext = "$[2]$defended!$[7]$"
   else:
     readytext = textutils.disp_unit_ctargetting(ctarget)
-  context.battle.yprint("{} ({}) engages {} ({})".format(csource,
-                                                         textutils.disp_unit_ctargetting(csource),
-                                                         ctarget,
-                                                         readytext))
-  context.battle.place_event("duel_consider", context, "Q_RESOLVE")
+  context.battle.yprint("{} ({}) marches into {} ({})".format(csource,
+                                                      textutils.disp_unit_ctargetting(csource),
+                                                      ctarget,
+                                                      readytext))
+  if ctarget.is_defended():
+    Event("engage", context.rebase_switch()).activate()
+  else:
+    Event("engage", context).activate()
+  
   converging = bool(ctarget.ctargetting[1] == csource) # if other ctarget is coming towards you
   if ctarget.is_defended():
     assert ctarget.position == context.battle.hqs[ctarget.army.armyid] # meeting at hq
@@ -246,6 +250,19 @@ def indirect_raid(context):
   context.battle.place_event("arrow_strike",
                              context.copy(additional_opt={"vulnerable":vulnerable}),
                              "Q_RESOLVE")
+
+def engage(context):
+  """
+  What happens when they meet face to face, but before the attacks. All the resolved tactics
+  fire off. Tactics only fire when they have yomi advantage.
+  """
+  csource = context.csource
+  ctarget = context.ctarget
+  army = csource.army
+  stacks = army.stacks
+  if army.armyid == context.battle.yomi_winner:
+    for unit, skillcard in army.stacks[army.order]:
+      context.battle.place_event(skillcard, context, "Q_RESOLVE")
   # fire
   if (random.random() < 0.4 and
       csource.has_unit_status("fire_tactic") and
@@ -260,6 +277,7 @@ def indirect_raid(context):
   waterprob = 0.80
   if random.random() < waterprob and csource.has_unit_status("water_tactic") and context.battle.is_raining():
     context.battle.place_event("water_tactic", context, "Q_RESOLVE")
+  context.battle.place_event("duel_consider", context, "Q_RESOLVE")
 
 #################
 # RESOLVE PHASE #
@@ -361,7 +379,7 @@ EVENTS_GENERIC_CTARGETTED = {
   "arrow_strike": {},
   "duel_consider": {},
   "duel_accepted": {},
-  "engage": {},
+  "march": {},
   "indirect_raid": {},
   "physical_clash": {},
   "physical_strike": {}
@@ -491,6 +509,8 @@ def counter_arrow_strike(context):
         context.rebase({"csource":csource, "ctarget":ctarget})).activate()
   return True
 
+# Tactics
+
 def lure_tactic(context, base_chance, improved_chance, success_callback):
   """
   a bit harder since we dont know who the lurer actually is
@@ -531,7 +551,7 @@ def lure_tactic(context, base_chance, improved_chance, success_callback):
   for targ in tuple(additional_activations):
     success_callback(context.rebase({"ctarget":targ}))
 
-def target_skill_tactic(context, cskill, cchance, success_callback):
+def target_skill_tactic(context, skillcard, cchance, success_callback):
   """
   For a class of tactics with a source, a target, a skill, and corresponding roll. This event
   happens the moment the conditions activate, so we are rolling for success.
@@ -541,14 +561,12 @@ def target_skill_tactic(context, cskill, cchance, success_callback):
     ctarget,
     success_callback
   """
-  csource = context.csource
-  ctarget = context.ctarget
   success = random.random() < cchance # can replace with harder functions later
   # TODO cchance = calc_chance(target, skill) or something
-  cskill_on_prep = skills.get_speech(cskill, "on_roll").format(**context.opt)
-  context.battle.make_skill_narration(cskill, cskill_on_prep)
+  skillcard_on_prep = skills.get_speech(skillcard, "on_roll").format(**context.opt)
+  context.battle.make_skill_narration(skillcard, skillcard_on_prep)
   if success:
-    narrator_str, narrate_text = skills.get_speech(cskill, "on_success_speech")
+    narrator_str, narrate_text = skills.get_speech(skillcard, "on_success_speech")
     Event.make_speech(context.opt[narrator_str], context, narrate_text)
     success_callback(context)
     lure_tactic(context,
@@ -556,9 +574,9 @@ def target_skill_tactic(context, cskill, cchance, success_callback):
                 0.6, # improved entanglement chance
                 success_callback)
   else:
-    narrator_str, narrate_text = skills.get_speech(cskill, "on_fail_speech")
+    narrator_str, narrate_text = skills.get_speech(skillcard, "on_fail_speech")
     Event.make_speech(context.opt[narrator_str], context, narrate_text)
-  context.battle.make_skill_narration(cskill, "", success)
+  context.battle.make_skill_narration(skillcard, "", success)
   return success
 
 def _fire_tactic_success(context):
@@ -591,15 +609,15 @@ def _panic_tactic_success(context):
 def panic_tactic(context):
   return target_skill_tactic(context, "panic_tactic", 0.5, _panic_tactic_success)
 
-def _water_tactic_success(context):
-  damdice = battle.battle_constants.WATER_TACTIC_DAMDICE
+def _flood_tactic_success(context):
+  damdice = context.battle.battle_constants.WATER_TACTIC_DAMDICE
   damage = random.choice(range(damdice))
   dmgdata = (context.csource, context.ctarget, "floods", damage)
   Event("receive_damage", context.copy(
     additional_opt={"damage":damage, "dmgdata":dmgdata, "dmglog":""})).activate()
   
-def water_tactic(context):
-  return target_skill_tactic(context, "water_tactic", 0.5, _water_tactic_success)
+def flood_tactic(context):
+  return target_skill_tactic(context, "flood_tactic", 0.5, _flood_tactic_success)
   
 EVENTS_SKILLS = {
   "counter_arrow_strike": {
@@ -616,7 +634,7 @@ EVENTS_SKILLS = {
   "panic_tactic": {
     "can_aoe": True
     },
-  "water_tactic": {
+  "flood_tactic": {
     "can_aoe": True
     }
 }

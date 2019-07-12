@@ -101,7 +101,10 @@ STR_TO_CR = {
   "${1,3}":Back.RED + Fore.WHITE,
   "${7,1}":Fore.WHITE + Style.BRIGHT
 }
-  
+
+def ctext(text, colornumstr):
+  return("$[{}]$".format(colornumstr) + text + "$[7]$")
+
 def str_to_colorama(my_str):
   new_str = my_str
   for k in STR_TO_CR:

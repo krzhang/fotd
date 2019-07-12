@@ -281,14 +281,15 @@ def duel_accepted(context):
     else:
       loser = 0
     loser_history.append(loser)
-    damage = random.randint(1, 2)
+    damage = random.randint(1, 3)
     healths[loser] -= damage
     damage_history.append(damage)
     health_history.append(tuple(healths))
   context.battle.make_duel(csource, ctarget, loser_history, health_history, damage_history)
   for i in [0, 1]:
     if healths[i] <= 0:
-      context.battle.yprint("{ctarget} collapses; unit retreats!", context={"ctarget":actors[i]})
+      context.battle.yprint("{ctarget} collapses; unit retreats!",
+                            templates={"ctarget":actors[i]})
       Event("receive_damage", context.rebase({"damage":actors[i].size,
                                               "ctarget":actors[i],
                                               "dmgdata":"",
@@ -442,6 +443,10 @@ def receive_status(context):
 # for armies
 
 def order_change(context):
+  """
+  When an order changes, if it happens to lose the Yomi, then the cost of the morale is 
+  'bet' and will be removed if the opponent out-Yomi's you.
+  """
   ctarget_army = context.ctarget_army
   morale_bet = context.morale_bet
   context.battle.yprint("It was a feint. {ctarget_army} suddenly " +
@@ -463,11 +468,14 @@ def order_yomi_win(context):
   ctarget_army = context.battle.armies[1-csource_army.armyid]
   ycount = csource_army.get_yomi_count()
   bet = ctarget_army.bet_morale_change + 1
-  context.battlescreen.disp_yomi_win(csource_army, ctarget_army, ycount, bet)
-  Event("change_morale", context.copy(additional_opt={"morale_change":ycount})).activate()
   Event("change_morale", context.rebase(opt={
-    "ctarget_army":context.battle.armies[1-ctarget_army.armyid],
+    "ctarget_army":csource_army, # winning army
+    "morale_change":ycount})).activate()
+  Event("change_morale", context.rebase(opt={
+    "ctarget_army":ctarget_army, # losing army
     "morale_change":-bet})).activate()
+  # must put after to show the difference
+  context.battle.battlescreen.disp_yomi_win(csource_army, ctarget_army, ycount, bet)
 
 ################################
 # targetted Events from Skills #

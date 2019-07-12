@@ -104,7 +104,6 @@ CONVERT_TEMPLATES_DISPS = {
   "order":disp_order_short
 }
 
-
 def convert_templates(templates):
   newtemplates = {}
   for key in templates:
@@ -234,7 +233,7 @@ class BattleScreen():
     converts a line of my-type of string (see prerender) to step 2, which is colorama-printable
     """
     return colors.str_to_colorama(self._prerender(line))
-            
+
   def blit_all_battle(self, pause_str=None):
     # blits status
     self.disp_clear()
@@ -264,7 +263,7 @@ class BattleScreen():
                                              bars[0],
                                              bars[1],
                                              disp_unit(ctarget)))
-  
+
   def disp_damage(self, max_pos, oldsize, damage, dmgdata, dmglog):
     newsize = oldsize - damage
     hpbar = disp_bar_single_hit(battle_constants.ARMY_SIZE_MAX, oldsize, newsize)

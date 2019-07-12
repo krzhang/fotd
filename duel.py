@@ -14,22 +14,23 @@ def duel_commit(context, source, target):
   actors = [source, target]
   acceptances = [None, None]
   dueldata = [None, None]
-  for i in [0, 1] and random.random() < DUEL_BASE_CHANCE:
-    actor = actors[i]
-    opponent = actors[1-i]
-    winning_chance_estimate = _winning_chance_estimate(context, actor, opponent)
-    desperation_multiplier = 1.0
-    if actor.army.morale <= 2 or actor.size <= 5:
-      desperation_multiplier *= 1.5
-    if i == 1: # on defense; maybe an honor/bravery check later
-      pass
-    gains_estimate = (5 + opponent.size)*desperation_multiplier
-    losses_estimate = (5 + actor.size)
-    evwin = winning_chance_estimate*gains_estimate
-    evloss = (1-winning_chance_estimate)*losses_estimate
-    ratio = evwin/(evwin + evloss)
-    acceptances[i] = bool(random.random() < ratio)
-    dueldata[i] = (winning_chance_estimate, gains_estimate, losses_estimate, ratio)
+  if random.random() < DUEL_BASE_CHANCE:
+    for i in [0, 1]:
+      actor = actors[i]
+      opponent = actors[1-i]
+      winning_chance_estimate = _winning_chance_estimate(context, actor, opponent)
+      desperation_multiplier = 1.0
+      if actor.army.morale <= 2 or actor.size <= 5:
+        desperation_multiplier *= 1.5
+      if i == 1: # on defense; maybe an honor/bravery check later
+        pass
+      gains_estimate = (5 + opponent.size)*desperation_multiplier
+      losses_estimate = (5 + actor.size)
+      evwin = winning_chance_estimate*gains_estimate
+      evloss = (1-winning_chance_estimate)*losses_estimate
+      ratio = evwin/(evwin + evloss)
+      acceptances[i] = bool(random.random() < ratio)
+      dueldata[i] = (winning_chance_estimate, gains_estimate, losses_estimate, ratio)
   return tuple(acceptances), tuple(dueldata)
 
 DUEL_SPEECHES = {

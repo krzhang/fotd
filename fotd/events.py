@@ -17,35 +17,37 @@ EVENTS = {}
 
 class Event():
 
-  def __init__(self, event_type, context):
-    self.event_type = event_type
+  def __init__(self, event_name, context):
+    self.event_name = event_name
     self.context = context
 
   def activate(self):
-    edict = EVENTS[self.event_type]
+    edict = EVENTS[self.event_name]
     # death handler (should later be "availability" for retreats, etc.)
     # most events require actors who are alive
-    if not info(self.event_type, "allow_non_present_actors"):
-      if any([not getattr(self.context, foo).is_present() for foo in edict["actors"]]):
+    if not info(self.event_name, "allow_non_present_actors"):
+      if any([not getattr(self.context, foo).is_present() for foo in edict["actors"]]): #pylint:disable=blacklisted-name
         return
     # berserk handler on orders
-    if self.event_type in ["attack_order", "defense_order", "indirect_order"]:
+    if self.event_name in ["attack_order", "defense_order", "indirect_order"]:
       ctarget = self.context.ctarget
       if ctarget.has_unit_status("berserk"):
         Event("berserked_order", self.context).activate()
         return
     # panic handler
-    if info(self.event_type, "panic_blocked"):
+    if info(self.event_name, "panic_blocked"):
       potential_panicker = getattr(self.context, edict["primary_actor"])
       if potential_panicker.has_unit_status("panicked"):
         self.context.battle.yprint("  %s is %s! No action" % (potential_panicker, status.Status("panicked")))
         return
     # time to activate this event on the queue; note the event has its own context, battle, etc.
-    info(self.event_type, "func")(self.context)
+    info(self.event_name, "func")(self.context)
 
   @classmethod
   def gain_status(cls, stat_str, context, ctarget):
-    """ Basically, nothing should call add_unit_status except for this, so all the handlers are tehre."""
+    """
+    Basically, nothing should call add_unit_status except for this, so all the handlers are there.
+    """
     Event("receive_status", context=context.rebase({"ctarget":ctarget,
                                                     "status":stat_str,
                                                     "stat_viz":str(status.Status(stat_str))})).activate()
@@ -75,7 +77,7 @@ def roll_dice(s_str, d_str, dicecount):
     return 0
   hitprob = float(s_str) / (d_str + s_str)
   raw_damage = 0
-  for i in range(dicecount):
+  for _ in range(dicecount):
     roll = random.random()
     if roll < hitprob:
       raw_damage += 1
@@ -288,7 +290,6 @@ def duel_accepted(context):
   ctarget = context.ctarget
   actors = [csource, ctarget]
   healths = [20, 20]
-  context.battle.yprint("{csource} and {ctarget} face off!".format(**context.opt))
   health_history = [(20, 20)]
   loser_history = [None]
   damage_history = []
@@ -303,11 +304,10 @@ def duel_accepted(context):
     healths[loser] -= damage
     damage_history.append(damage)
     health_history.append(tuple(healths))
-  context.battle.make_duel(csource, ctarget, loser_history, health_history, damage_history)
+  context.battle.battlescreen.disp_duel(csource, ctarget, loser_history, health_history, damage_history)
   for i in [0, 1]:
     if healths[i] <= 0:
-      context.battle.yprint("{ctarget} collapses; unit retreats!",
-                            templates={"ctarget":actors[i]})
+      context.battle.yprint("{ctarget} collapses; unit retreats!", templates={"ctarget":actors[i]}, debug=True)
       Event("receive_damage", context.rebase({"damage":actors[i].size,
                                               "ctarget":actors[i],
                                               "dmgdata":"",
@@ -325,7 +325,7 @@ def duel_consider(context):
       Event("duel_accepted", context).activate()
     else:
       Event.make_speech(ctarget, context, duel.get_pre_duel_speech("deny"))
-      
+
 def arrow_strike(context):
   csource = context.csource
   ctarget = context.ctarget

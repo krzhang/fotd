@@ -269,6 +269,8 @@ class BattleScreen():
     self.disp_speech(unit, "<$[4]$!$[5]$!$[6]$!$[7]$> " + skills.skillcard_info(skillcard, "on_bulb")[order])
 
   def disp_duel(self, csource, ctarget, loser_history, health_history, damage_history):
+    self.yprint("{csource} and {ctarget} face off!".format(**{"csource":csource,
+                                                              "ctarget":ctarget}))
     for i, healths in enumerate(health_history[1:]):
       bars = [None, None]
       for j in [0, 1]:

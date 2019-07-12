@@ -350,7 +350,6 @@ def physical_strike(context):
   ctarget = context.ctarget
   damage, damlog = compute_physical_damage(csource, ctarget, multiplier=1)
   dmgdata = (csource, ctarget, "hits", damage)
-  # ctarget.add_unit_status("received_physical_attack")
   ctarget.attacked_by.append(csource)
   csource.attacked.append(ctarget)
   Event("receive_damage", context.rebase({"damage":damage,
@@ -430,7 +429,7 @@ def receive_damage(context):
   context.battle.battlescreen.disp_damage(battle_constants.ARMY_SIZE_MAX,
                                           ctarget.size, damage, dmgdata, dmglog)
   ctarget.size -= damage
-  
+
 def receive_status(context):
   ctarget = context.ctarget
   stat_str = context.status
@@ -438,13 +437,13 @@ def receive_status(context):
     # sometimes can be quiet
     disp = status.STATUSES_BATTLE[stat_str]["on_receive"].format(**context.opt)
     context.battle.yprint("  " + disp)
-  context.ctarget.add_unit_status(stat_str)
+  ctarget.add_unit_status(stat_str)
 
 # for armies
 
 def order_change(context):
   """
-  When an order changes, if it happens to lose the Yomi, then the cost of the morale is 
+  When an order changes, if it happens to lose the Yomi, then the cost of the morale is
   'bet' and will be removed if the opponent out-Yomi's you.
   """
   ctarget_army = context.ctarget_army
@@ -525,7 +524,7 @@ def lure_tactic(context, base_chance, improved_chance, success_callback):
         context.battle.make_skill_narration("lure", lure_success_text.format(**{"lurer":lurer, "ctarget":targ}), True)
       else:
         # still a success, but it is not because of the lure
-        context.battle.yprint("{ctarget} was also entangled into the tactic!".format(**{"ctarget":target}))
+        context.battle.yprint("{ctarget} was also entangled into the tactic!".format(**{"ctarget":targ}))
       additional_activations.append(targ)
   for targ in tuple(additional_activations):
     success_callback(context.rebase({"ctarget":targ}))
@@ -546,7 +545,6 @@ def target_skill_tactic(context, cskill, cchance, success_callback):
   # TODO cchance = calc_chance(target, skill) or something
   cskill_on_prep = random.choice(skills.skill_info(cskill, "on_roll")).format(**context.opt)
   context.battle.make_skill_narration(cskill, cskill_on_prep)
-  # import pdb;pdb.set_trace()
   if success:
     narrator_str, narrate_text = random.choice(skills.skill_info(cskill, "on_success_speech"))
     Event.make_speech(context.opt[narrator_str], context, narrate_text)

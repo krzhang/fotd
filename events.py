@@ -495,7 +495,7 @@ def lure_tactic(context, base_chance, improved_chance, success_callback):
   ctarget = context.ctarget
   base_lure_chance = base_chance
   improved_lure_chance = improved_chance
-  additional_activations = []                
+  additional_activations = []
   possible_aoe = tuple([u for u in context.ctarget.position.units[ctarget.army.armyid] if u != ctarget])
   possible_lure_candidates = tuple(context.battle.armies[csource.army.armyid].present_units())
   # eventually make it just the people who are in position
@@ -527,9 +527,9 @@ def target_skill_tactic(context, cskill, cchance, success_callback):
   For a class of tactics with a source, a target, a skill, and corresponding roll. This event
   happens the moment the conditions activate, so we are rolling for success.
 
-  Context needs: 
-    csource, 
-    ctarget, 
+  Context needs:
+    csource,
+    ctarget,
     success_callback
   """
   csource = context.csource
@@ -689,7 +689,6 @@ def provoked_eot(context):
     else:
       context.battle.yprint("{}'s unit is still {}.".format(ctarget, status.Status("provoked")))
 
-      
 ##########
 # Skills #
 ##########
@@ -702,8 +701,7 @@ def trymode_status_bot(context):
   if success:
     # import pdb; pdb.set_trace()
     Event.make_speech(ctarget, context, "Did you really think I took you seriously before?")
-    Event.gain_status("trymode_activated", context, ctarget) 
+    Event.gain_status("trymode_activated", context, ctarget)
   else:
-    Event.make_speech(ctarget, context, "I have not tried yet, and I still do not need to.")
+    Event.make_speech(ctarget, context, "Nope, still not trying.")
   context.battle.make_skill_narration("trymode", "", success)
-

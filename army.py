@@ -64,10 +64,10 @@ class Unit(object):
     if self.has_unit_status("burned"):
       val /= 1.5
     return val
-  
+
   def physical_offense(self):
     val = rps.formation_info(self.army.formation, "physical_offense")
-    val *= float(self.size)/3.5
+    val *= float(self.size)/4.0
     val *= self._generic_multiplier()
     return float(val)
 
@@ -78,7 +78,7 @@ class Unit(object):
       val *= 1.5
     val *= self._generic_multiplier()
     return float(val)
-  
+
   def arrow_offense(self):
     val = rps.formation_info(self.army.formation, "arrow_offense")
     val *= 2.0
@@ -90,10 +90,10 @@ class Unit(object):
     val *= 18.0
     val *= self._generic_multiplier()
     return val
-  
+
   def is_defended(self):
     return self.has_unit_status("defended")
-  
+
   def is_present(self):
     return self.size > 0 and self.character.health > 0
 

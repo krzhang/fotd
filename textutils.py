@@ -85,7 +85,7 @@ def disp_bar_single_hit(max_pos, oldhp, newhp):
   """Total: length; base: max; cur: current. """
   return disp_bar_custom([Colors.OKGREEN, Colors.RED, Colors.ENDC],
                          ['#', '#', ' '],
-                         [newhp, oldhp-newhp, max_pos-oldhp ])
+                         [newhp, oldhp-newhp, max_pos-oldhp])
   # return  Colors.OKGREEN + '#'*cur + Colors.RED + '#'*(base-cur) + Colors.ENDC + '.'*(total-base)
 
 def disp_bar_day_tracker(max_pos, base, last_turn, cur):
@@ -94,7 +94,7 @@ def disp_bar_day_tracker(max_pos, base, last_turn, cur):
                          [cur, last_turn-cur, base-last_turn, max_pos-base])
 
 def disp_hrule():
-  return("="*80)
+  return "="*80
 
 CONVERT_TEMPLATES_DISPS = {
   "ctarget":disp_unit,

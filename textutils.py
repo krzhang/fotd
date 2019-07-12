@@ -247,7 +247,7 @@ class BattleScreen():
     self.console_buf = []
     return read_single_keypress()[0]
 
-  def disp_duel(csource, ctarget, loser_history, health_history, damage_history):
+  def disp_duel(self, csource, ctarget, loser_history, health_history, damage_history):
     for i, healths in enumerate(health_history[1:]):
       bars = [None, None]
       for j in [0, 1]:
@@ -255,13 +255,16 @@ class BattleScreen():
         bars[j] = disp_bar_custom([Colors.CYAN + Style.DIM, Colors.RED, Colors.ENDC],
                                   ['=', '*', '.'],
                                   [healths[j], last_health - healths[j], 20 - last_health])
-      self.yprint("   {} {} vs {} {}".format(disp_unit(csource)))
+      self.yprint("   {} {} vs {} {}".format(disp_unit(csource),
+                                             bars[0],
+                                             bars[1],
+                                             disp_unit(ctarget)))
   
   def disp_damage(self, max_pos, oldsize, damage, dmgdata, dmglog):
     newsize = oldsize - damage
     hpbar = disp_bar_single_hit(battle_constants.ARMY_SIZE_MAX, oldsize, newsize)
     if not dmgdata:
-      ndmgstr += " "
+      ndmgstr = " "
     elif dmgdata[0]: # this means there is a source; janky
       ndmgstr = "{} {} {} ".format(disp_unit(dmgdata[0]), dmgdata[2], disp_unit(dmgdata[1]))
     else:
@@ -275,7 +278,7 @@ class BattleScreen():
     if dmglog:
       dmg_str = disp_damage_calc(*dmglog)
       self.yprint(dmg_str, debug=True)
-    
+
   def _disp_unit_newheader(self, unit, side):
     healthbar = disp_bar_day_tracker(battle_constants.ARMY_SIZE_MAX, unit.size_base, unit.last_turn_size, unit.size)
     charstr = "{} {} Hp:{} Sp:{}".format(healthbar, disp_unit(unit), disp_unit_size(unit), unit.speed)
@@ -297,7 +300,7 @@ class BattleScreen():
       return charstr
     else:
       return " "*0 + charstr
-    
+
   def disp_clear(self):
     os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -307,8 +310,8 @@ class BattleScreen():
       pause_str = pause_str
       inp = self.blit_all_battle(pause_str=pause_str)
       if inp.upper() in accepted_inputs:
-        return inp.upper()          
-        
+        return inp.upper()
+
   def input_battle_formation(self, armyid):
     return self._get_input(PAUSE_STRS['FORMATION_STR'].format(armyid), ['O','D'])
 
@@ -340,16 +343,20 @@ class BattleScreen():
       self.pause_and_display(pause_str=PAUSE_STRS["MORE_STR"])
     logging.info(text)
 
-  def yprint(self, text, context={}, debug=False):
+  def yprint(self, text, context=None, debug=False):
     # the converting means to convert, based on the template, which converting function to use.
     # {ctarget} will always be converted to Unit for example
-    converted_context = convert_context(context)
-    converted_text = text.format(**converted_context)
-    logging.debug(text) # always log this
+    
+    if context:
+      converted_context = convert_context(context)
+      converted_text = text.format(**converted_context)
+    else:
+      converted_text = text
+    logging.debug(converted_text) # always log this
     if debug and not self.battle.debug_mode:
       return
     # so we get here if either SHOW_DEBUG or debug=False, which means we send it to the buffer
-    self.print_line(text)
+    self.print_line(converted_text)
 	  
 # import pygcurse
 # win = pygcurse.PygcurseWindow(40, 25, 'Fall of the Dragon')

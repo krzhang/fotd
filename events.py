@@ -114,7 +114,7 @@ def attack_order(context):
   myarmyid = ctarget.army.armyid
   enemy = context.battle.armies[1-myarmyid]
   enemyunits = enemy.present_units()
-  if len(enemyunits) == 0:
+  if not enemyunits:
     context.battle.yprint("No unit to attack!")
     return
   cnewsource = context.ctarget # new event
@@ -136,7 +136,7 @@ def indirect_order(context):
   myarmyid = csource.army.armyid
   enemy = context.battle.armies[1-myarmyid]
   enemyunits = enemy.present_units()
-  if enemyunits:
+  if not enemyunits:
     context.battle.yprint("No unit to target!")
     return
   cnewsource = context.ctarget # new event
@@ -243,10 +243,6 @@ def indirect_raid(context):
     vulnerable = True
   elif ctarget.ctargetting[0] == "marching":
     context.battle.yprint("  {}'s marching soldiers are vigilant!".format(ctarget))
-  # elif ctarget.ctargetting[0] == "marching":
-  #   context.battle.yprint("  {}'s marching soldiers are vigilant!".format(ctarget))
-  # elif ctarget.ctargetting[0] == "sneaking":
-  #   context.battle.yprint("  {}'s sneaking soldiers are vigilant!".format(ctarget))
   context.battle.place_event("arrow_strike",
                              context.copy(additional_opt={"vulnerable":vulnerable}),
                              "Q_RESOLVE")
@@ -286,10 +282,10 @@ def duel_accepted(context):
       loser = 0
     loser_history.append(loser)
     damage = random.randint(1, 2)
-    healths[0] -= damage
+    healths[loser] -= damage
     damage_history.append(damage)
     health_history.append(tuple(healths))
-  context.battle.disp_duel(csource, ctarget, loser_history, health_history, damage_history)
+  context.battle.make_duel(csource, ctarget, loser_history, health_history, damage_history)
   for i in [0, 1]:
     if healths[i] <= 0:
       context.battle.yprint("{ctarget} collapses; unit retreats!", context={"ctarget":actors[i]})

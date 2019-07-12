@@ -5,8 +5,6 @@ import textutils
 import contexts
 import events
 import rps
-import skills
-import status
 import battle_constants
 import positions
 import weather
@@ -66,15 +64,19 @@ class Battle():
         u.last_turn_size = u.size        
     assert all((p.is_empty() for p in self.dynamic_positions))
     self.dynamic_positions = []
-        
+
+  # observer pattern?
   def make_speech(self, unit, speech):
     self.battlescreen.make_speech(unit, speech)
 
   def make_skill_narration(self, skill_str, other_str, success=None):
     self.battlescreen.make_skill_narration(skill_str, other_str, success)
 
+  def make_duel(self, csource, ctarget, loser_history, health_history, damage_history):
+    self.battlescreen.disp_duel(csource, ctarget, loser_history, health_history, damage_history)
+
   def place_event(self, event_type, context, queue_name):
-    """ 
+    """
     used when we want to make a new event on a queue of our choice 
     we pop from right, so we should place left.
     """

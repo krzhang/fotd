@@ -1,5 +1,7 @@
 import random
 
+DUEL_BASE_CHANCE = 0.25
+
 def _winning_chance_estimate(context, source, target):
   s_str = source.character.power
   t_str = target.character.power
@@ -11,7 +13,7 @@ def duel_commit(context, source, target):
   actors = [source, target]
   acceptances = [None, None]
   dueldata = [None, None]
-  for i in [0, 1]:
+  for i in [0, 1] and random.random() < DUEL_BASE_CHANCE:
     actor = actors[i]
     opponent = actors[1-i]
     winning_chance_estimate = _winning_chance_estimate(context, actor, opponent)
@@ -27,7 +29,7 @@ def duel_commit(context, source, target):
     ratio = evwin/(evwin + evloss)
     acceptances[i] = bool(random.random() < ratio)
     dueldata[i] = (winning_chance_estimate, gains_estimate, losses_estimate, ratio)
-  return acceptances, dueldata
+  return tuple(acceptances), tuple(dueldata)
 
 PRE_DUEL_SPEECHES = {
   "challenge": [

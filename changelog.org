@@ -1,0 +1,8 @@
+TODOS
+- bulbing system
+- refactor view
+- duels visualization
+- strategic layer
+
+<2019-07-12 Fri> Started changelog
+- skeletons of most battle systems in place

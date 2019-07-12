@@ -25,7 +25,7 @@ class Battle():
           # skillstring
           # u.unit_status.append(status.Status.FromSkillName(s.skill_str))
       a.commander.add_unit_status("is_commander")
-    self.hqs = [positions.Position(self, self.armies[i].commander, i) for i in [0,1]]
+    self.hqs = [positions.Position(self, self.armies[i].commander, i) for i in [0, 1]]
     self.dynamic_positions = []
     self.morale_diff = 0
     # 5 queues
@@ -200,7 +200,7 @@ class Battle():
     self._run_queue('Q_MANUEVER')
     self.yprint("All Units in Position;",debug=True)
     self.yprint("Fighting Resolves",debug=True)
-    self._run_queue('Q_RESOLVE')    
+    self._run_queue('Q_RESOLVE')
     self._run_status_handlers("eot") # should be queue later
     self.battlescreen.pause_and_display() # could have undisplayed stuff
     self.init_day()

@@ -46,10 +46,21 @@ def disp_cha_fullname(chara):
   return str(chara) + chara.str_title()
 
 def disp_skill(skill_str, success=None):
+  """
+  to display a skill
+  """
   return "<" + colors.color_bool(success) + skills.skill_info(skill_str, "short") + "$[7]$>"
 
-def disp_skill_activation(skill_str, success=None):
-  return "<" + colors.color_bool(success) + " ".join(skill_str.upper().split("_")) + "$[7]$>"
+def disp_text_activation(any_str, success=None, upper=True):
+  """
+  to display an ``activated'' string (skill, skillcard, whatever) to give a decorated 
+  context.
+  """
+  if upper:
+    newstr = any_str.upper()
+  else:
+    newstr = any_str
+  return "<" + colors.color_bool(success) + " ".join(newstr.split("_")) + "$[7]$>"
 
 def disp_unit(unit):
   return disp_chara(unit.character)
@@ -367,18 +378,22 @@ class BattleScreen(View):
     """ What to display when a unit says something """
     self.disp_chara_speech(unit.character, speech)
 
-  def disp_skill_narration(self, skill_str, other_str, success=None):
+  def disp_activated_narration(self, activated_text, other_str, success=None):
     """ 
     What to display when we want to make a narration involving a skill / skillcard
     (really any string)
     """
+    if activated_text:
+      preamble = disp_text_activation(activated_text, success) + " "
+    else:
+      preamble = ""
     if success:
       successtr = "SUCCESS!"
     else:
       successtr = "FAIL!"
-    if other_str == "":
-      other_str = colors.color_bool(success) + successtr + Colors.ENDC
-    self.yprint(disp_skill_activation(skill_str, success) + " " + other_str)
+    if not other_str:
+      other_str = disp_text_activation(successtr, success)
+    self.yprint(preamble + other_str)
 
   def _disp_unit_newheader(self, unit, side):
     healthbar = disp_bar_day_tracker(battle_constants.ARMY_SIZE_MAX, unit.size_base, unit.last_turn_size, unit.size)

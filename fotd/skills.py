@@ -69,8 +69,6 @@ SKILLS = {
   "lure_skill": {
     "ai_eval": (0, 0, 1),
     "short": 'lure',
-    "on_success": "{lurer} $[2]$lures$[7]$ {ctarget} into the tactic!",
-    "on_success_speech": [("lurer", "Here, kitty kitty kitty...")],
   },
   "jeer": {
     "ai_eval": (0, 0, 2),
@@ -110,11 +108,11 @@ SKILLCARDS = {
       'D': "When they attack, these traps should burn them up.",
       'I': "If they turtle, they are an easy target for fire today.",
     },
-    "on_roll": ["{csource} prepares embers and tinder..."],
-    "on_success_speech": [("csource", "It's going to get pretty hot!"),
-                          ("ctarget", "Oh no! My soldiers are engulfed in flames!")],
-    "on_fail_speech": [("csource", "{ctarget} did not fall for my tricks."),
-                       ("ctarget", "No need to play with fire, {csource}!")],
+    # "on_roll": ["{csource} prepares embers and tinder..."],
+    # "on_success_speech": [("csource", "It's going to get pretty hot!"),
+    #                       ("ctarget", "Oh no! My soldiers are engulfed in flames!")],
+    # "on_fail_speech": [("csource", "{ctarget} did not fall for my tricks."),
+    #                    ("ctarget", "No need to play with fire, {csource}!")],
   },
   "jeer_tactic": {
     "bulb": {'A':0.2, 'D':0.2, 'I':0.2},
@@ -126,10 +124,10 @@ SKILLCARDS = {
       'D': "If we keep teasing them, they may be lured to overexert.",
       'I': "We can go harass them and lure them to fight.",
     },
-    "on_roll": ["{csource} prepares some of their best insults..."],
-    "on_success_speech":  [("csource", "{ctarget}'s soldiers are fuming to fight."),
-                           ("ctarget", "Why you...")],
-    "on_fail_speech": [], # has its own routine
+    # "on_roll": ["{csource} prepares some of their best insults..."],
+    # "on_success_speech":  [("csource", "{ctarget}'s soldiers are fuming to fight."),
+    #                        ("ctarget", "Why you...")],
+    # "on_fail_speech": [], # has its own routine
   },
   "panic_tactic": {
     "bulb": {'A':0.25, 'D':0, 'I':0.25},
@@ -140,11 +138,11 @@ SKILLCARDS = {
       'A': "If we attack, I can fill their units with fear.",
       'I': "When they are defending, we can spread rumors and lies.",
     },
-    "on_roll": ["{csource} sows seeds of fear and doubt in {ctarget}'s unit..."],
-    "on_success_speech": [("csource", "{ctarget} will be out of commission for a while..."),
-                          ("ctarget", "The soldiers are incredibly scared of everything.")],
-    "on_fail_speech": [("csource", "{ctarget}'s unit was not shaken."),
-                       ("ctarget", "Keep calm, don't let {csource} get to you.")],
+    # "on_roll": ["{csource} sows seeds of fear and doubt in {ctarget}'s unit..."],
+    # "on_success_speech": [("csource", "{ctarget} will be out of commission for a while..."),
+    #                       ("ctarget", "The soldiers are incredibly scared of everything.")],
+    # "on_fail_speech": [("csource", "{ctarget}'s unit was not shaken."),
+    #                    ("ctarget", "Keep calm, don't let {csource} get to you.")],
   },
   "flood_tactic": {
     "bulb": {'A':0, 'D':0.6, 'I':0},
@@ -154,10 +152,10 @@ SKILLCARDS = {
     "on_bulb": {
       'D': "If they attack near this barely-dammed river...",
     },
-    "on_roll": ["{csource} manipulates the dams..."],
-    "on_success_speech": [("csource", "Water is crashing through their ships."),
-                          ("csource", "The Gods of nature are unforgiving.")],
-    "on_fail_speech": [("csource", "{ctarget} narrowly avoided being swept away."),
-                       ("ctarget", "No need to play with fire, {csource}!")],
+    # "on_roll": ["{csource} manipulates the dams..."],
+    # "on_success_speech": [("csource", "Water is crashing through their ships."),
+    #                       ("csource", "The Gods of nature are unforgiving.")],
+    # "on_fail_speech": [("csource", "{ctarget} narrowly avoided being swept away."),
+    #                    ("ctarget", "No need to play with fire, {csource}!")],
   },
 }

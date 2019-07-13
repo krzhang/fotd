@@ -1,3 +1,5 @@
+import random
+
 INSULTS_PAIRS = [
 ("You fight like a Dairy Farmer!","How appropriate! You fight like a cow!"),
 ("I've spoken with apes more polite than you!","I'm glad to hear you attended your family reunion!"),
@@ -57,3 +59,6 @@ INSULTS_NOUNS = [
   "zombie",
   "furniture",
 ]
+
+def random_diss():
+  return "{} {}".format(random.choice(INSULTS_ADJ), random.choice(INSULTS_NOUNS))

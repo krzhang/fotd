@@ -545,7 +545,8 @@ def lure_tactic(context, base_chance, improved_chance, success_callback):
         bv.yprint("{ctarget} was also entangled into the tactic!".format(**{"ctarget":targ}))
       additional_activations.append(targ)
   for targ in tuple(additional_activations):
-    success_callback(context.rebase({"ctarget":targ}))
+    success_callback(context.rebase({"csource":csource,
+                                     "ctarget":targ}))
 
 def target_skill_tactic(context, skillcard, cchance, success_callback):
   """
@@ -687,7 +688,7 @@ def berserk_eot(context, bv, **kwargs):
     else:
       bv.yprint("{}'s unit is still {}.".format(ctarget, status.Status("berserk")))
 
-def panic_eot(context, bv, **kwargs):
+def panicked_eot(context, bv, **kwargs):
   ctarget = context.ctarget
   if ctarget.has_unit_status("panicked"): # could have dried up or something
     if random.random() < 0.5:

@@ -29,126 +29,83 @@ import sys
 
 SKILLS_IMPLEMENTED = ["counter_arrow",
                       "chu_ko_nu",
-                      "panic_tactic",
-                      "fire_tactic",
+                      "panic_skill",
+                      "fire_skill",
                       "jeer",
                       "lure",
                       "trymode",
-                      "water_tactic"]
+                      "water_skill"]
 
 def test_char(name, style, power, intel, pol, cha, cool, brave, skills):
   return Character(name, style, power, intel, pol, cha, cool, brave,
                    [s for s in skills if s in SKILLS_IMPLEMENTED])
 
-Yan = test_char("Zhang Yan", "$[3$]Yellow$[7$] Lightning",
-  71, 80, 74, 60, 5, 4,  ["pincer_specialist", "perfect_defense", "water_tactic", "empty_castle_tactic", "drop_rocks", "counter_tactic", "lure"])
+# Jing.equip("FLAME_BLADE")
+# GuanYu.equip("BLACK_DRAGON")
+# GuanYu.equip("RED_HARE")
+# ZhangFei.equip("SNAKE_SPEAR")
+# CaoCao.equip("SWORD_OF_HEAVEN") # +10
+# CaoCao.equip("SWORD_OF_LIGHT") # +10
+# CaoCao.equip("MENG_DE_MANUAL") # +3 Skill:reversal
+# CaoCao.equip("SHADOW_RUNNER")
+# ZhugeLiang.equip("24_WAR_MANUALS") # int+8 skill:invent
+# ZhugeLiang.equip("SLEEVE_DARTS")
 
-Jing = test_char("Jing Chan", "Purge",
-  55, 70, 90, 85, 4, 5, ["trymode", "counter_arrow", "fire_tactic", "chu_ko_nu"]) #items  
-Jing.equip("FLAME_BLADE")
-
-Yoyo = test_char("You Zhou", "Caffeinator",
-  31, 90, 63, 21, 4, 2,["cheer", "attack_supplies", "dash", "fire_tactic", "panic_tactic", "chaos"]) 
-
-Han = test_char("Han Xu", "Finalmente",
-  90, 85, 12, 24, 2, 6,  ["sneak_attack", "dash", "jeer", "chaos_arrow", "headhunter"])
-
-LiuBei = test_char("Liu Bei", "",
-  70, 81, 89, 100, 4, 5,["cheer", "recruit_specialist"]) #items  
-
-GuanYu = test_char("Guan Yu", "War God",
-  98, 80, 53, 92, 6, 7, ["water_tactic", "study", "valor", "jeer"])
-GuanYu.equip("BLACK_DRAGON")
-GuanYu.equip("RED_HARE")
-
-ZhangFei = test_char("Zhang Fei", "",
-  99, 18, 13, 22, 1, 7, ["panic_tactic", "charge", "jeer"])
-ZhangFei.equip("SNAKE_SPEAR")
-
-HuangZhong = test_char("Huang Zhong", "",
-  90, 51, 42, 64, 4, 7, ["counter_arrow", "chaos_arrow", "fire_arrow"])
-
-Jeanne = test_char("Jeanne D'Arc", "The $[1$]Rose$[7$] of Versailles",
-  85, 85, 85, 85, 4, 5, ["lure", "spy", "invent", "trade", "charge", "zeal", "critic", "wealth", "chaos"])
-
-Grant = test_char("Ulysses S. Grant", "",
-  91, 51, 28, 62, 4, 4, ["invent", "rally", "jeer", "drop_rocks", "perfect_defense"])
-
-Wyatt = test_char("Wyatt Earp", "",
-  97, 83, 57, 80, 5, 7, ["valor", "charge", "duel", "dash", "navy", "cheer", "jeer"])
-
-# need to fix stats
-CaoCao = test_char("Cao Cao", "The Usurper",
-  82, 93, 92, 97, 6, 5, ["attack_supplies", "sneak_attack", "spy", "reversal", "aid", "scout", "dash", "repair", "riot", "rumor", "flood", "rally", "jeer", "sap", "zeal"])
-CaoCao.equip("SWORD_OF_HEAVEN") # +10
-CaoCao.equip("SWORD_OF_LIGHT") # +10
-CaoCao.equip("MENG_DE_MANUAL") # +3 Skill:reversal
-CaoCao.equip("SHADOW_RUNNER")
-
-ZhugeLiang = test_char("Zhuge Liang", "The Sleeping Dragon",
-  78, 100, 98, 85, 7, 3,["chu_ko_nu", "fire_tactic", "change_weather", "empty_castle_tactic", "counter_tactic", "chaos", "chart", "flood", "wile", "rumor", "reversal"]) #items  
-ZhugeLiang.equip("24_WAR_MANUALS") # int+8 skill:invent
-ZhugeLiang.equip("SLEEVE_DARTS")
-
-Einstein = test_char("Albert Einstein", "Eureka",
-  4, 100, 83, 70, 5, 1,["plan", "rumor", "sage", "harass", "chu_ko_nu", "siege"]) #items  
-# moderation / analytic
-
-YuanShu = test_char("Yuan Shu", "The Usurper",
-                    65,65,16,44,4,4, ["fame", "connections", "debate", "siege", "weapons"])
-
-# idea: can have godlike skills that are given early game to particular generals
-# such as these
-
-LuBu = test_char("Lu Bu", "The Unmatched",
-     100, 38, 13, 40, 1,7, ["avatar"]) # do 4X damage, then do 1.5X damage ignoring defense
-
-ZhouYu= test_char("Zhou Yu", "The Dandy of Zhou",
-       71, 96, 97, 86, 2, 5, ["god_of_fire"])
-
-PangTong = test_char("Pang Tong", "The Young Phoenix",
-         34, 97, 78, 85, 4, 4, ["chain_tactics"])
-
-LuMeng = test_char("Lu Meng", "",
-       81,89,91,78,4,4,["attack_heart"]) # basically vampirism
-
-GuanYinPing = test_char("Guan Yinping", "",
-            82, 52, 56, 78, 2, 6, ["escape_route"]) # daughter of Guan Yu
+PC_ATTRS = [
+  ("Zhang Yan", "$[3$]Yellow$[7$] Lightning", 71, 80, 74, 60, 5, 4,
+   ["pincer_specialist", "perfect_defense", "water_skill", "empty_castle_skill", "drop_rocks", "counter_skill", "lure"]),
+  ("Jing Chan", "Purge", 55, 70, 90, 85, 4, 5,
+   ["trymode", "counter_arrow", "fire_skill", "chu_ko_nu"]),
+  ("You Zhou", "Caffeinator", 31, 90, 63, 21, 4, 2,
+   ["cheer", "attack_supplies", "dash", "fire_skill", "panic_skill", "chaos"]),
+  ("Han Xu", "Finalmente", 90, 85, 12, 24, 2, 6,
+   ["sneak_attack", "dash", "jeer", "chaos_arrow", "headhunter"])]
+OTHER_ATTRS = [
+  ("Liu Bei", "", 70, 81, 89, 100, 4, 5,
+   ["cheer", "recruit_specialist"]), 
+  ("Guan Yu", "War God", 98, 80, 53, 92, 6, 7,
+   ["water_skill", "study", "valor", "jeer"]),
+  ("Zhang Fei", "", 99, 18, 13, 22, 1, 7,
+   ["panic_skill", "charge", "jeer"]),
+  ("Huang Zhong", "", 90, 51, 42, 64, 4, 7,
+   ["counter_arrow", "chaos_arrow", "fire_arrow"]),
+  ("Jeanne D'Arc", "The $[1$]Rose$[7$] of Versailles", 85, 85, 85, 85, 4, 5,
+   ["lure", "spy", "invent", "trade", "charge", "zeal", "critic", "wealth", "chaos"]),
+  ("Ulysses S. Grant", "", 91, 51, 28, 62, 4, 4,
+   ["invent", "rally", "jeer", "drop_rocks", "perfect_defense"]),
+  ("Wyatt Earp", "", 97, 83, 57, 80, 5, 7,
+   ["valor", "charge", "duel", "dash", "navy", "cheer", "jeer"]),
+  # need to fix stats
+  ("Cao Cao", "The Usurper", 82, 93, 92, 97, 6, 5,
+   ["attack_supplies", "sneak_attack", "spy", "reversal", "aid", "scout", "dash", "repair", "riot", "rumor", "flood", "rally", "jeer", "sap", "zeal"]),
+  ("Zhuge Liang", "The Sleeping Dragon", 78, 100, 98, 85, 7, 3,
+   ["chu_ko_nu", "fire_skill", "change_weather", "empty_castle_skill", "counter_skill", "chaos", "chart", "flood", "wile", "rumor", "reversal"]), #items  
+  ("Albert Einstein", "Eureka", 4, 100, 83, 70, 5, 1,
+   ["plan", "rumor", "sage", "harass", "chu_ko_nu", "siege"]), # moderation / analytic
+  ("Yuan Shu", "The Usurper", 65,65,16,44,4,4,
+   ["fame", "connections", "debate", "siege", "weapons"]),
+  # idea: can have godlike skills that are given early game to particular generals
+  # such as these
+  ("Lu Bu", "The Unmatched", 100, 38, 13, 40, 1,7,
+   ["avatar_of_war_diety"]), # do 4X damage, then do 1.5X damage ignoring defense
+  ("Zhou Yu", "The Dandy of Zhou", 71, 96, 97, 86, 2, 5,
+   ["emperor_of_fire"]),
+  ("Pang Tong", "The Young Phoenix", 34, 97, 78, 85, 4, 4, ["chain_skill"]),
+  ("Lu Meng", "", 81,89,91,78,4,4,
+   ["attack_heart"]), # basically vampirism
+  ("Guan Yinping", "", 82, 52, 56, 78, 2, 6,
+   ["escape_route"])] # daughter of Guan Yu
 
 # add: CaoRen + stonewall/iron wall
 
-def army_mysticsoft(armyid, color, aitype):
-  return Army("Mysticsoft", [Unit(Yan, 20, 8),
-                             Unit(Jing, 16, 12),
-                             Unit(Yoyo, 12, 20),
-                             Unit(Han, 18, 8)],
-              armyid, color, aitype, 7)
+PC_UNITS = [Unit(test_char(*args), 20, 10) for args in PC_ATTRS]
+OTHER_UNITS = [Unit(test_char(*args), 20, 10) for args in OTHER_ATTRS]
 
-def army_shu(armyid, color, aitype):
-  return Army("Shu",[Unit(LiuBei, 20, 12),
-                     Unit(GuanYu, 14, 12),
-                     Unit(ZhangFei, 14, 4)],
-              armyid, color, aitype, 7)
+def army_mysticsoft(armyid, color, aitype):
+  return Army("Mysticsoft", PC_UNITS, armyid, color, aitype, 7)
 
 def army_unknown(armyid, color, aitype):
-  return Army("Enemy Unknown", random.sample(
-    [Unit(LiuBei, 20, 12),
-     Unit(GuanYu, 20, 12),
-     Unit(ZhangFei, 20, 4),
-     Unit(HuangZhong, 20, 10),
-     Unit(Jeanne, 20, 10),
-     Unit(Grant, 20, 10),
-     Unit(CaoCao, 20, 10),
-     Unit(ZhugeLiang, 20, 10),
-     Unit(Einstein, 20, 10),
-     Unit(YuanShu, 20, 10),
-     Unit(LuBu, 20, 10),
-     Unit(ZhouYu, 20, 10),
-     Unit(PangTong, 20, 10),
-     Unit(LuMeng, 20, 10),
-     Unit(GuanYinPing, 20, 10),
-     Unit(Wyatt, 20, 18)],                
-    4), armyid, color, aitype, 7)
+  return Army("Enemy Unknown", random.sample(OTHER_UNITS, 4), armyid, color, aitype, 7)
 
 def link_data_funcs():
   """ A round of processing after getting the text data, to create links to actual functions """

@@ -53,7 +53,7 @@ SKILLS = {
     "ai_eval": (0, 0, 1),
     "desc": "This officer is skilled at attacking the enemy's supplies and foiling their support, which disrupts the enemy logistics and morale."
   },
-  "panic_tactic": {
+  "panic_skill": {
     "ai_eval": (0, 0, 2),
     "short": 'panic',
     "skillcard": "panic_tactic",
@@ -61,7 +61,7 @@ SKILLS = {
   "cheer": {
     "ai_eval": (0, 1, 1)
   },
-  "fire_tactic": {
+  "fire_skill": {
     "ai_eval": (0, 0, 1),
     "short": 'fire',
     "skillcard": "fire_tactic",
@@ -93,7 +93,7 @@ SKILLS = {
     "ai_eval": (3, 0, 0),
     "short": 'trym'
   },
-  "water_tactic": {
+  "water_skill": {
     "ai_eval": (0, 0, 1),
     "short": 'water',
     "skillcard": "flood_tactic",

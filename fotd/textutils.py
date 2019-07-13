@@ -79,7 +79,27 @@ class View():
     """
     return colors.str_to_colorama(self._prerender(line))
 
+  def _flush(self):
+    pass
+  
+  def render_all(self):
+    pass
 
+  def _get_input(self, pause_str, accepted_inputs):
+    while True:
+      self.render_all(pause_str=pause_str)
+      inp = read_single_keypress()[0]
+      if inp.upper() in accepted_inputs:
+        return inp.upper()
+
+  def pause_and_display(self, pause_str=None):
+    if self.automated:
+      return
+    self.render_all(pause_str=pause_str)
+    _ = read_single_keypress()[0]
+    self._flush()
+
+  
 #########################
 # Battle-specific stuff #
 #########################
@@ -277,7 +297,7 @@ class BattleScreen(View):
     else:
       return(disp_hrule())
 
-  def blit_all_battle(self, pause_str=None):
+  def render_all(self, pause_str=None):
     # blits status
     if self.automated:
       return
@@ -291,8 +311,6 @@ class BattleScreen(View):
     for y, li in enumerate(st + ar + co):
       print(self._render(li))
     print(self._render(fo), end="", flush=True)
-    #  effects.append(Print(self.screen, StaticRenderer(images=self._render(l)), x=0, y=y, colour=7))
-    # screen.play([Scene(effects, -1)])
 
   def disp_bulb(self, sc):
     """
@@ -301,7 +319,9 @@ class BattleScreen(View):
     unit = sc.unit
     sc_str = sc.sc_str
     order = sc.order
-    self.disp_speech(unit, "<$[4]$!$[5]$!$[7]$> " + skills.skillcard_info(sc_str, "on_bulb")[order])
+    self.yprint("{}<$[4]$!{}!$[7]$> ".format(disp_unit(unit),
+                                             skills.skillcard_info(sc_str, "short")) +
+                skills.skillcard_info(sc_str, "on_bulb")[order])
 
   def disp_duel(self, csource, ctarget, loser_history, health_history, damage_history):
     self.yprint("{csource} and {ctarget} face off!".format(**{"csource":csource,
@@ -336,15 +356,6 @@ class BattleScreen(View):
     if dmglog:
       dmg_str = disp_damage_calc(*dmglog)
       self.yprint(dmg_str, debug=True)
-
-  # def disp_order_options(self, armyid):
-  #   army = self.battle.armies[armyid]
-  #   for order in ['A', 'D', 'I']:
-  #     stack = army.stacks[order]
-  #     self.yprint("{} ({}) has readied: {}".format(
-  #       order,
-  #       rps.order_info(order, "noun"),
-  #       " ".join([disp_skill_activation(sk, True) for un, sk in stack])))
 
   def disp_chara_speech(self, chara, speech):
     """
@@ -400,22 +411,14 @@ class BattleScreen(View):
                                                   disp_army(ctarget_army),
                                                   combostr2))
 
-  def _get_input(self, pause_str, armyid, accepted_inputs):
-    while True:
-      self.blit_all_battle(pause_str=pause_str)
-      inp = read_single_keypress()[0]
-      if inp.upper() in accepted_inputs:
-        return inp.upper()
-
+      
   def input_battle_formation(self, armyid):
-    return self._get_input(PAUSE_STRS['FORMATION_STR'].format(armyid), armyid, ['O', 'D'])
+    return self._get_input(PAUSE_STRS['FORMATION_STR'].format(armyid), ['O', 'D'])
 
   def input_battle_order(self, armyid):
-    return self._get_input(PAUSE_STRS['ORDER_STR'].format(armyid), armyid, ['A', 'D', 'I'])
+    return self._get_input(PAUSE_STRS['ORDER_STR'].format(armyid), ['A', 'D', 'I'])
 
-  def pause_and_display(self, pause_str=None):
-    self.blit_all_battle(pause_str=pause_str)
-    read_single_keypress()[0]
+  def _flush(self):
     self.console_buf = []
 
   def print_line(self, text):
@@ -429,7 +432,7 @@ class BattleScreen(View):
   def yprint(self, text, templates=None, debug=False):
     # the converting means to convert, based on the template, which converting function to use.
     # {ctarget} will always be converted to Unit for example
-    if self.automated:
+    if self.automated or text is None:
       return
     if templates:
       converted_templates = convert_templates(templates)

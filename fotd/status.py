@@ -37,8 +37,9 @@ def status_info(status_str, key):
 
 STATUSES_BATTLE = {
   "berserk": {
-    "eot":("berserk_eot", {}),
+    "eot":("remove_status_probabilistic", {"fizzle_prob":0.8}),
     "on_receive": "{ctarget}'s units fall into a confused rage and is now {stat_viz}!",
+    "on_remove": "{ctarget} regains control.",
     "viz":Colors.RED + "bErSeRk" + Colors.ENDC
   },
   "burned": {
@@ -46,20 +47,23 @@ STATUSES_BATTLE = {
     # this means "bot_func" will have a link to the actual function burn_bot
     "eot":("burned_eot", {}),
     "on_receive": "{ctarget} bursts into flames and is now {stat_viz}!",
+    "on_remove": "{ctarget} has put out the fire.",
+    "on_retain": "The fire burning {ctarget} rages on.",
     "viz":Colors.RED+'b'+Colors.YELLOW+'u'+Colors.RED+'r'+Colors.YELLOW+'n'+Colors.RED+'i'+Colors.YELLOW+'n'+Colors.RED+'g'+Colors.ENDC
   },
   "panicked": {
-    "eot":("panicked_eot", {}),
+    "eot":("remove_status_probabilistic", {"fizzle_prob":0.5}),
     "on_receive": "{ctarget}'s unit collapses into a chaotic {stat_viz} state",
-    "on_remove": None
+    "on_remove": "{ctarget} regains control.",
   },
   "provoked": {
-    "eot":("provoked_eot", {}),
+    "eot":("remove_status_probabilistic", {"fizzle_prob":0.25}),
     "on_receive": "{ctarget}'s units are {stat_viz}; they are angry and out of control!",
+    "on_remove": "{ctarget} regains control.",
     "viz":Colors.RED + "provoked" + Colors.ENDC
   },
   "defended": {
-    "eot":("generic_eot_fizzle", {}),
+    "eot":("remove_status_probabilistic", {"fizzle_prob":1.1}), # round up for floating error
     # "on_receive": "{target} is now {stat_viz} against standard tactics",    
     "on_remove": None
   },
@@ -72,7 +76,7 @@ STATUSES_BATTLE = {
     "on_remove": None
   },
   "received_physical_attack": {
-    "eot":("generic_eot_fizzle", {}),
+    "eot":("remove_status_probabilistic", {"fizzle_prob":1.1}),
     "on_remove": None
   }
 }

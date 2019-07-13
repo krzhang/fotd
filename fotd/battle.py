@@ -77,25 +77,12 @@ class Battle():
     assert all((p.is_empty() for p in self.dynamic_positions))
     self.dynamic_positions = []
 
-  # observer pattern?
-  # def make_speech(self, unit, speech):
-  #   self.battlescreen.disp_speech(unit, speech)
-
-  # def make_skill_narration(self, skill_str, other_str, success=None):
-  #   self.battlescreen.disp_skill_narration(skill_str, other_str, success)
-
-  # def make_duel(self, csource, ctarget, loser_history, health_history, damage_history):
-  #   self.battlescreen.disp_duel(csource, ctarget, loser_history, health_history, damage_history)
-
   def place_event(self, event_type, context, queue_name):
     """
     used when we want to make a new event on a queue of our choice 
     we pop from right, so we should place left.
     """
     self.queues[queue_name].appendleft(events.Event(event_type, context))
-
-  # def yprint(self, text, templates={}, debug=False):
-  #   self.battlescreen.yprint(text, templates, debug)
 
   def _run_status_handlers(self, func_key):
     for i in [0, 1]:
@@ -107,8 +94,8 @@ class Battle():
           func_list = status.status_info(ss, func_key)
           if func_list: # found a function (func_name, kwargs)
             event_name = func_list[0]
-            additional_opt = {"status":ss}
-            additional_opt.update(func_list[1])
+            additional_opt = {"stat_str":ss}
+            additional_opt.update(func_list[1]) # additional arguments
             events.Event(event_name, ctxt.copy(additional_opt=additional_opt)).activate()
 
   def is_raining(self):
@@ -151,8 +138,6 @@ class Battle():
     self.yomi_winner = rps.orders_to_winning_army(orders) # -1 if None
     self.yomis = (rps.beats(orders[0], orders[1]), rps.beats(orders[1], orders[0]))
     self.yomi_list.append(self.yomis)
-    self.battlescreen.yprint("Winner: {}".format(self.yomi_winner), debug=True)
-    self.battlescreen.yprint("Yomis: {}".format(self.yomis), debug=True)
     orderlist = []
     for i in [0, 1]:
       order = orders[i]

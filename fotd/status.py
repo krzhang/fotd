@@ -49,7 +49,7 @@ STATUSES_BATTLE = {
     "viz":Colors.RED+'b'+Colors.YELLOW+'u'+Colors.RED+'r'+Colors.YELLOW+'n'+Colors.RED+'i'+Colors.YELLOW+'n'+Colors.RED+'g'+Colors.ENDC
   },
   "panicked": {
-    "eot":("panic_eot", {}),
+    "eot":("panicked_eot", {}),
     "on_receive": "{ctarget}'s unit collapses into a chaotic {stat_viz} state",
     "on_remove": None
   },

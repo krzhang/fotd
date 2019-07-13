@@ -32,7 +32,7 @@ SKILLS_IMPLEMENTED = ["counter_arrow",
                       "panic_skill",
                       "fire_skill",
                       "jeer",
-                      "lure",
+                      "lure_skill",
                       "trymode",
                       "water_skill"]
 
@@ -51,7 +51,7 @@ def test_char(name, style, power, intel, pol, cha, cool, brave, skills):
 # ZhugeLiang.equip("24_WAR_MANUALS") # int+8 skill:invent
 # ZhugeLiang.equip("SLEEVE_DARTS")
 
-YAN_SKILLS = ["pincer_specialist", "perfect_defense", "water_skill", "empty_castle_skill", "drop_rocks", "counter_skill", "lure"]
+YAN_SKILLS = ["pincer_specialist", "perfect_defense", "water_skill", "empty_castle_skill", "drop_rocks", "counter_skill", "lure_skill"]
 JING_SKILLS = ["trymode", "counter_arrow", "fire_skill", "chu_ko_nu"]
 YOYO_SKILLS = ["cheer", "attack_supplies", "dash", "fire_skill", "panic_skill", "chaos"]
 HAN_SKILLS = ["sneak_attack", "dash", "jeer", "chaos_arrow", "headhunter"]
@@ -78,7 +78,7 @@ OTHER_ATTRS = [
   ("Huang Zhong", "", 90, 51, 42, 64, 4, 7,
    ["counter_arrow", "chaos_arrow", "fire_arrow"]),
   ("Jeanne D'Arc", "The $[1$]Rose$[7$] of Versailles", 85, 85, 85, 85, 4, 5,
-   ["lure", "spy", "invent", "trade", "charge", "zeal", "critic", "wealth", "chaos"]),
+   ["lure_skill", "spy", "invent", "trade", "charge", "zeal", "critic", "wealth", "chaos"]),
   ("Ulysses S. Grant", "", 91, 51, 28, 62, 4, 4,
    ["invent", "rally", "jeer", "drop_rocks", "perfect_defense"]),
   ("Wyatt Earp", "", 97, 83, 57, 80, 5, 7,
@@ -98,7 +98,7 @@ OTHER_ATTRS = [
    ["avatar_of_war_diety"]), # do 4X damage, then do 1.5X damage ignoring defense
   ("Zhou Yu", "The Dandy of Zhou", 71, 96, 97, 86, 2, 5,
    ["emperor_of_fire"]),
-  ("Pang Tong", "The Young Phoenix", 34, 97, 78, 85, 4, 4, ["chain_skill"]),
+  ("Pang Tong", "The Young Phoenix", 34, 97, 78, 85, 4, 4, ["lure_skill", "chain_skill"]),
   ("Lu Meng", "", 81,89,91,78,4,4,
    ["attack_heart"]), # basically vampirism
   ("Guan Yinping", "", 82, 52, 56, 78, 2, 6,
@@ -151,7 +151,7 @@ def play(armies, debug=False, resize=False,
     losers = bat.losing_status()
     for l in [0, 1]:
       if losers[l]:
-        bat.yprint("{} is destroyed!".format(textutils.disp_army(armies[l])))
+        bat.battlescreen.yprint("{} is destroyed!".format(textutils.disp_army(armies[l])))
     if any(losers):
       bat.battlescreen.pause_and_display(pause_str="The battle ends...")
       return 0
@@ -161,7 +161,7 @@ def test(debug=False, resize=False,
          second_intelligence="INT_AI_NORMAL"):
   armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence),
             army_bizarro(1, Colours.MAGENTA, second_intelligence)]
-  play(armies, debug, resize, first_intelligence, second_intelligence)
+  return play(armies, debug, resize, first_intelligence, second_intelligence)
    
 if __name__ == "__main__":
   test(resize=True)

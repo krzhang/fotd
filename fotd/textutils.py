@@ -258,6 +258,8 @@ class BattleScreen():
 
   def blit_all_battle(self, pause_str=None):
     # blits status
+    if self.automated:
+      return
     disp_clear()
     st = self._disp_statline() # 2 lines
     ar = self._disp_armies() # 18 lines

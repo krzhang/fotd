@@ -66,7 +66,7 @@ SKILLS = {
     "short": 'fire',
     "skillcard": "fire_tactic",
   },
-  "lure": {
+  "lure_skill": {
     "ai_eval": (0, 0, 1),
     "short": 'lure',
     "on_success": "{lurer} $[2]$lures$[7]$ {ctarget} into the tactic!",

@@ -25,8 +25,8 @@ class Event():
     edict = EVENTS[self.event_name]
     # death handler (should later be "availability" for retreats, etc.)
     # most events require actors who are alive
-    if "allow_non_present_actors" in edict and not edict["allow_non_present_actors"]:
-      if any([not getattr(self.context, foo).is_present() for foo in edict["actors"]]): #pylint:disable=blacklisted-name
+    if ("allow_non_present_actors" not in edict) or not edict["allow_non_present_actors"]:
+      if any([not self.context.opt[foo].is_present() for foo in edict["actors"]]): #pylint:disable=blacklisted-name
         return
     # berserk handler on orders
     if self.event_name in ["attack_order", "defense_order", "indirect_order"]:
@@ -524,7 +524,7 @@ def lure_tactic(context, base_chance, improved_chance, success_callback):
   possible_aoe = tuple([u for u in context.ctarget.position.units[ctarget.army.armyid] if u != ctarget])
   possible_lure_candidates = tuple(context.battle.armies[csource.army.armyid].present_units())
   # eventually make it just the people who are in position
-  lure_candidates = tuple(lc for lc in possible_lure_candidates if lc.has_unit_status("lure"))
+  lure_candidates = tuple(lc for lc in possible_lure_candidates if lc.has_unit_status("lure_skill"))
     # later: probably also add a check of panicked, etc.
   for targ in possible_aoe:
     roll = random.random()
@@ -536,10 +536,10 @@ def lure_tactic(context, base_chance, improved_chance, success_callback):
       if roll > base_lure_chance:
         # this means we came from a lure
         lurer = random.choice(lure_candidates)
-        bv.disp_skill_narration("lure", "", True)
-        Event.make_speech(lurer, context, skills.get_skill_speech("lure", "on_success_speech")[1])
-        lure_success_text = skills.skill_info("lure_tactic", "on_success")
-        bv.disp_skill_narration("lure", lure_success_text.format(**{"lurer":lurer, "ctarget":targ}), True)
+        bv.disp_skill_narration("lure_skill", "", True)
+        Event.make_speech(lurer, context, skills.get_skill_speech("lure_skill", "on_success_speech")[1])
+        lure_success_text = skills.skill_info("lure_skill", "on_success")
+        bv.disp_skill_narration("lure_skill", lure_success_text.format(**{"lurer":lurer, "ctarget":targ}), True)
       else:
         # still a success, but it is not because of the lure
         bv.yprint("{ctarget} was also entangled into the tactic!".format(**{"ctarget":targ}))

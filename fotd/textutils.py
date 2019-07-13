@@ -140,7 +140,7 @@ PAUSE_STRS = {
 
 class BattleScreen():
 
-  def __init__(self, battle):
+  def __init__(self, battle, armyid):
     self.console_buf = []
     self.max_screen_len = 24
     self.max_stat_len = 2
@@ -148,6 +148,7 @@ class BattleScreen():
     self.max_console_len = 3
     self.max_footer_len = 1
     self.battle = battle
+    self.armyid = armyid
 
   def _colored_strats(self, orders):
     orders = list(orders)
@@ -272,7 +273,7 @@ class BattleScreen():
 
   def disp_bulb(self, sc):
     """
-    someone just thought of a tactic.
+    someone just thought of a tactic (the visibility is already set)
     """
     unit = sc.unit
     sc_str = sc.sc_str
@@ -327,7 +328,10 @@ class BattleScreen():
     self.yprint("{}: '$[2]${}$[7]$'".format(disp_unit(unit), speech))
 
   def disp_skill_narration(self, skill_str, other_str, success=None):
-    """ What to display when we want to make a narration involving a skill """
+    """ 
+    What to display when we want to make a narration involving a skill / skillcard
+    (really any string)
+    """
     if success:
       successtr = "SUCCESS!"
     else:

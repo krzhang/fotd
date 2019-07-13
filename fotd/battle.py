@@ -16,7 +16,7 @@ import weather
 class Battle():
 
   def __init__(self, army1, army2, debug_mode=False):
-    self.battlescreen = textutils.BattleScreen(self)
+    self.battlescreen = textutils.BattleScreen(self, 0)
     self.armies = [army1, army2]
     for a in self.armies:
       a.battle = self
@@ -76,14 +76,14 @@ class Battle():
     self.dynamic_positions = []
 
   # observer pattern?
-  def make_speech(self, unit, speech):
-    self.battlescreen.disp_speech(unit, speech)
+  # def make_speech(self, unit, speech):
+  #   self.battlescreen.disp_speech(unit, speech)
 
-  def make_skill_narration(self, skill_str, other_str, success=None):
-    self.battlescreen.disp_skill_narration(skill_str, other_str, success)
+  # def make_skill_narration(self, skill_str, other_str, success=None):
+  #   self.battlescreen.disp_skill_narration(skill_str, other_str, success)
 
-  def make_duel(self, csource, ctarget, loser_history, health_history, damage_history):
-    self.battlescreen.disp_duel(csource, ctarget, loser_history, health_history, damage_history)
+  # def make_duel(self, csource, ctarget, loser_history, health_history, damage_history):
+  #   self.battlescreen.disp_duel(csource, ctarget, loser_history, health_history, damage_history)
 
   def place_event(self, event_type, context, queue_name):
     """

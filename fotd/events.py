@@ -334,12 +334,12 @@ def arrow_strike(context, bv, **kwargs):
         context.rebase({"damage":damage, "ctarget":ctarget, "dmgdata":dmgdata, "dmglog":dmglog})).activate()
   if csource.has_unit_status("fire_arrow"):
     if random.random() < 0.5 and not context.battle.is_raining():
-      context.battle.make_skill_narration("fire_arrow", "{}'s arrows are covered with fire!".format(csource), True)
+      bv.disp_skill_narration("fire_arrow", "{}'s arrows are covered with fire!".format(csource), True)
       Event.make_speech(csource, context, "Light'em up!")
       Event.gain_status("burned", context, ctarget)
   if csource.has_unit_status("chu_ko_nu"):
     if random.random() < 0.5:
-      context.battle.make_skill_narration("chu_ko_nu", "{}'s arrows continue to rain!".format(csource), True)
+      bv.disp_skill_narration("chu_ko_nu", "{}'s arrows continue to rain!".format(csource), True)
       if random.random() < 0.5 and csource.name == "Zhuge Liang":
         Event.make_speech(csource, context, "The name is a bit embarassing...")
       else:
@@ -432,7 +432,7 @@ EVENTS_MISC = {
 def make_speech(context, bv, **kwargs):
   ctarget = context.ctarget
   speech_str = context.speech
-  context.battle.make_speech(ctarget, speech_str)
+  bv.disp_speech(ctarget, speech_str)
 
 def receive_damage(context, bv, **kwargs):
   ctarget = context.ctarget
@@ -498,7 +498,7 @@ def order_yomi_win(context, bv, **kwargs):
 def counter_arrow_strike(context, bv, **kwargs):
   csource = context.csource
   ctarget = context.ctarget
-  context.battle.make_skill_narration("counter_arrow", "{} counters with their own volley".format(csource), True)
+  bv.disp_skill_narration("counter_arrow", "{} counters with their own volley".format(csource), True)
   Event.make_speech(csource, context, "Let's show them guys how to actually use arrows!")
   Event("arrow_strike",
         context.rebase({"csource":csource, "ctarget":ctarget})).activate()
@@ -515,6 +515,7 @@ def lure_tactic(context, base_chance, improved_chance, success_callback):
     ctarget
     success_callback
   """
+  bv = context.battle.battlescreen
   csource = context.csource
   ctarget = context.ctarget
   base_lure_chance = base_chance
@@ -535,10 +536,10 @@ def lure_tactic(context, base_chance, improved_chance, success_callback):
       if roll > base_lure_chance:
         # this means we came from a lure
         lurer = random.choice(lure_candidates)
-        context.battle.make_skill_narration("lure", "", True)
-        Event.make_speech(lurer, context, skills.get_speech("lure", "on_success_speech"))
+        bv.disp_skill_narration("lure", "", True)
+        Event.make_speech(lurer, context, skills.get_skill_speech("lure", "on_success_speech")[1])
         lure_success_text = skills.skill_info("lure_tactic", "on_success")
-        context.battle.make_skill_narration("lure", lure_success_text.format(**{"lurer":lurer, "ctarget":targ}), True)
+        bv.disp_skill_narration("lure", lure_success_text.format(**{"lurer":lurer, "ctarget":targ}), True)
       else:
         # still a success, but it is not because of the lure
         bv.yprint("{ctarget} was also entangled into the tactic!".format(**{"ctarget":targ}))
@@ -556,12 +557,13 @@ def target_skill_tactic(context, skillcard, cchance, success_callback):
     ctarget,
     success_callback
   """
+  bv = context.battle.battlescreen
   success = random.random() < cchance # can replace with harder functions later
   # TODO cchance = calc_chance(target, skill) or something
-  skillcard_on_prep = skills.get_speech(skillcard, "on_roll").format(**context.opt)
-  context.battle.make_skill_narration(skillcard, skillcard_on_prep)
+  skillcard_on_prep = skills.get_skillcard_speech(skillcard, "on_roll").format(**context.opt)
+  bv.disp_skill_narration(skillcard, skillcard_on_prep)
   if success:
-    narrator_str, narrate_text = skills.get_speech(skillcard, "on_success_speech")
+    narrator_str, narrate_text = skills.get_skillcard_speech(skillcard, "on_success_speech")
     Event.make_speech(context.opt[narrator_str], context, narrate_text)
     success_callback(context)
     lure_tactic(context,
@@ -569,23 +571,23 @@ def target_skill_tactic(context, skillcard, cchance, success_callback):
                 0.6, # improved entanglement chance
                 success_callback)
   else:
-    narrator_str, narrate_text = skills.get_speech(skillcard, "on_fail_speech")
+    narrator_str, narrate_text = skills.get_skillcard_speech(skillcard, "on_fail_speech")
     Event.make_speech(context.opt[narrator_str], context, narrate_text)
-  context.battle.make_skill_narration(skillcard, "", success)
+  bv.disp_skill_narration(skillcard, "", success)
   return success
 
-def _fire_tactic_success(context, bv, **kwargs):
+def _fire_tactic_success(context):
   Event.gain_status("burned", context, context.ctarget)
 
 def fire_tactic(context, bv, **kwargs):
   return target_skill_tactic(context, "fire_tactic", 0.5, _fire_tactic_success)
 
-def jeer(context, bv, **kwargs):
+def jeer_tactic(context, bv, **kwargs):
   csource = context.csource
   ctarget = context.ctarget
   # should interrupt this, but right now it should be fine
   success = random.random() < 0.3
-  context.battle.make_skill_narration("jeer",
+  bv.disp_skill_narration("jeer_tactic",
                   "{} prepares their best insults...".format(csource))
   ins = random.choice(insults.INSULTS)
   Event.make_speech(csource, context, ins[0])
@@ -595,17 +597,17 @@ def jeer(context, bv, **kwargs):
     # TODO: AOE
   else:
     Event.make_speech(ctarget, context, ins[1])
-  context.battle.make_skill_narration("jeer", "", success)
+  bv.disp_skill_narration("jeer_tactic", "", success)
   return success
 
-def _panic_tactic_success(context, bv, **kwargs):
+def _panic_tactic_success(context):
   Event.gain_status("panicked", context, context.ctarget)
 
 def panic_tactic(context, bv, **kwargs):
   return target_skill_tactic(context, "panic_tactic", 0.5, _panic_tactic_success)
 
-def _flood_tactic_success(context, bv, **kwargs):
-  damdice = context.battle.battle_constants.FLOOD_TACTICS_DAMDICE
+def _flood_tactic_success(context):
+  damdice = battle_constants.FLOOD_TACTICS_DAMDICE
   damage = random.choice(range(damdice))
   dmgdata = (context.csource, context.ctarget, "floods", damage)
   Event("receive_damage", context.copy(
@@ -621,7 +623,7 @@ EVENTS_SKILLS = {
   "fire_tactic": {
     "can_aoe": True
     },
-  "jeer": {
+  "jeer_tactic": {
     "can_aoe": True
     },
   "lure_tactic": {
@@ -711,14 +713,14 @@ def trymode_status_bot(context, bv, **kwargs):
   ctarget = context.ctarget
   trymodeprob = (ctarget.size_base-ctarget.size)/ctarget.size_base
   success = random.random() < trymodeprob
-  context.battle.make_skill_narration("trymode", "{} looks for an excuse to pretend to be powered up...".format(ctarget))
+  bv.disp_skill_narration("trymode", "{} looks for an excuse to pretend to be powered up...".format(ctarget))
   if success:
     # import pdb; pdb.set_trace()
     Event.make_speech(ctarget, context, "Did you really think I took you seriously before?")
     Event.gain_status("trymode_activated", context, ctarget)
   else:
     Event.make_speech(ctarget, context, "Nope, still not trying.")
-  context.battle.make_skill_narration("trymode", "", success)
+  bv.disp_skill_narration("trymode", "", success)
 
 EVENTS_STATUS = {
   "generic_eot_fizzle": {},

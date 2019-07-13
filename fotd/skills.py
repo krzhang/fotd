@@ -25,7 +25,11 @@ def skillcard_info(skill_str, key):
 def get_skillcard(skill):
   return skill_info(skill.skill_str, "skillcard")
 
-def get_speech(skillcard, key):
+def get_skill_speech(skillstr, key):
+  """Give a random speech from a skillcard."""
+  return random.choice(skill_info(skillstr, key))
+
+def get_skillcard_speech(skillcard, key):
   """Give a random speech from a skillcard."""
   return random.choice(skillcard_info(skillcard, key))
 

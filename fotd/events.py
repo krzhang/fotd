@@ -580,7 +580,7 @@ def panic_tactic(context, bv, narrator, **kwargs):
 def flood_tactic(context, bv, narrator, **kwargs):
   successes = roll_target_skill_tactic(context, bv, narrator, "flood_tactic", 0.5)
   for new_target in tuple(successes): # iterate over immutables!
-    new_context = context.rebase({"ctarget":new_target})
+    new_context = context.rebase({"csource":context.cscource, "ctarget":new_target})
     damdice = battle_constants.FLOOD_TACTIC_DAMDICE
     damage = random.choice(range(damdice))
     dmgdata = (new_context.csource, new_context.ctarget, "floods", damage)

@@ -56,17 +56,17 @@ JING_SKILLS = ["trymode", "counter_arrow", "fire_skill", "chu_ko_nu"]
 YOYO_SKILLS = ["cheer", "attack_supplies", "dash", "fire_skill", "panic_skill", "chaos"]
 HAN_SKILLS = ["sneak_attack", "dash", "jeer", "chaos_arrow", "headhunter"]
 
-PC_ATTRS = [
-  ("Zhang Yan", "$[3$]Yellow$[7$] Lightning", 71, 80, 74, 60, 5, 4, YAN_SKILLS),
+PC_ATTRS = [ # First Name Last Name, since we are from the future
+  ("Yan Zhang", "$[3$]Yellow$[7$] Lightning", 71, 80, 74, 60, 5, 4, YAN_SKILLS),
   ("Jing Chan", "Purge", 55, 70, 90, 85, 4, 5, JING_SKILLS),
-  ("Zhou You", "Caffeinator", 31, 90, 63, 21, 4, 2, YOYO_SKILLS),
+  ("You Zhou", "Caffeinator", 31, 90, 63, 21, 4, 2, YOYO_SKILLS),
   ("Han Xu", "Finalmente", 90, 85, 12, 24, 2, 6, HAN_SKILLS)]
 
 BIZARRO_ATTRS = [
   ("Ghanz Nagy", "$[4$]Blue$[7$] Thunder", 71, 80, 74, 60, 5, 4, YAN_SKILLS),
   ("Bling Chan", "Vomit", 55, 70, 90, 85, 4, 5, JING_SKILLS),
-  ("You Zhou", "Seal Clubber", 31, 90, 63, 21, 4, 2, YOYO_SKILLS),
-  ("Xu Han", "WNBA MVP", 90, 85, 12, 24, 2, 6, HAN_SKILLS)]
+  ("Yo Joe", "Seal Clubber", 31, 90, 63, 21, 4, 2, YOYO_SKILLS),
+  ("Xu Han", "WNBA", 90, 85, 12, 24, 2, 6, HAN_SKILLS)]
 
 OTHER_ATTRS = [
   ("Liu Bei", "", 70, 81, 89, 100, 4, 5,

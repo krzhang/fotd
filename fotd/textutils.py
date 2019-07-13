@@ -89,10 +89,10 @@ def disp_bar_custom(colors, chars, nums):
 def disp_bar_morale(max_morale, cur_morale, last_turn_morale):
   if last_turn_morale > cur_morale:
     return disp_bar_custom([Colors.BLUE + Style.DIM, Colors.RED, Colors.ENDC],
-                           ['o', 'o', '.'],
+                           ['+', '*', '.'],
                            [cur_morale, last_turn_morale-cur_morale, max_morale-last_turn_morale])
   return disp_bar_custom([Colors.BLUE + Style.DIM, Colors.OKGREEN, Colors.ENDC],
-                         ['o', 'o', '.'],
+                         ['+', '*', '.'],
                          [last_turn_morale, cur_morale-last_turn_morale, max_morale-cur_morale])
 
 def disp_bar_single_hit(max_pos, oldhp, newhp):

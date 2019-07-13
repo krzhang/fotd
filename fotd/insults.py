@@ -1,4 +1,4 @@
-INSULTS = [
+INSULTS_PAIRS = [
 ("You fight like a Dairy Farmer!","How appropriate! You fight like a cow!"),
 ("I've spoken with apes more polite than you!","I'm glad to hear you attended your family reunion!"),
 ("Soon you'll be wearing my sword like a shish kebab!","First you better stop waving it about like a feather duster."),
@@ -19,5 +19,41 @@ INSULTS = [
 ("Only once have I met such a coward!","He must have taught you everything you know."),
 ("There are no clever moves that can help you now.","Yes there are. You just never learned them."),
 ("Every enemy I've met I've annihilated!","With your breath, I'm sure they all suffocated."),
-("You're the ugliest monster ever created!","If you don't count all the ones you've dated.")]
+  ("You're the ugliest monster ever created!","If you don't count all the ones you've dated."),
+  ("I don't know whether you'll die upon the gallows, or of syphilis.", "That will depend on whether I embrace your principles, or your mistress.")]
 
+INSULTS_SINGLE = [
+  "You know nothing, {ctarget}.",
+  
+]
+
+INSULTS_ADJ = [
+  "rambunctious",
+  "spoony",
+  "incessant",
+  "blistering",
+  "preposterous",
+  "cowardly",
+  "idiotic",
+  "neophyte",
+  "sophmoric",
+  "soporific",
+  "wack",
+  "dopey",
+  "soporific",
+]
+
+INSULTS_NOUNS = [
+  "trogolodyte",
+  "barnacles",
+  "elephant",
+  "cow",
+  "cantaloupe",
+  "oaf",
+  "buffoon",
+  "sore",
+  "deadweight",
+  "wight",
+  "zombie",
+  "furniture",
+]

@@ -25,7 +25,7 @@ class Event():
     edict = EVENTS[self.event_name]
     # death handler (should later be "availability" for retreats, etc.)
     # most events require actors who are alive
-    if "allow_non_present_actors" in edict and edict["allow_non_present_actors"]:
+    if "allow_non_present_actors" in edict and not edict["allow_non_present_actors"]:
       if any([not getattr(self.context, foo).is_present() for foo in edict["actors"]]): #pylint:disable=blacklisted-name
         return
     # berserk handler on orders

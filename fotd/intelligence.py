@@ -48,9 +48,9 @@ class ArtificialIntelligence(Intelligence):
       priors += np.array([1-m, 1-m, 1-m])
       assert min(priors) > 0
     newpriors = normalize(priors)
-    battle.yprint("  AI predicts player (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*newpriors))
+    battle.battlescreen.yprint("  AI predicts player (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*newpriors))
     counters = np.array(list(newpriors[2:]) + list(newpriors[:2]))
-    battle.yprint("  AI counterpicks    (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters))
+    battle.battlescreen.yprint("  AI counterpicks    (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters))
     return np.random.choice(["A", "D", "I"], p=counters)
 
 class RockIntelligence(Intelligence):

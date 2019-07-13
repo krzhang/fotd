@@ -141,7 +141,7 @@ PAUSE_STRS = {
 
 class BattleScreen():
 
-  def __init__(self, battle, armyid):
+  def __init__(self, battle, armyid, automated=False):
     self.console_buf = []
     self.max_screen_len = 24
     self.max_stat_len = 2
@@ -149,6 +149,7 @@ class BattleScreen():
     self.max_console_len = 3
     self.max_footer_len = 1
     self.battle = battle
+    self.automated = automated
     self.armyid = armyid
 
   def _colored_strats(self, orders):
@@ -402,7 +403,8 @@ class BattleScreen():
   def yprint(self, text, templates=None, debug=False):
     # the converting means to convert, based on the template, which converting function to use.
     # {ctarget} will always be converted to Unit for example
-
+    if self.automated:
+      return
     if templates:
       converted_templates = convert_templates(templates)
       converted_text = text.format(**converted_templates)

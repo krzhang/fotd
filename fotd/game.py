@@ -125,27 +125,25 @@ def link_data_funcs():
 
 # link_data_funcs()
 
-def test(debug=False, resize=False, two_players=False, AI="INT_AI_NORMAL"):
-  if two_players:
-    second_intelligence = "INT_PLAYER"
-  else:
-    second_intelligence = AI
-  army0 = army_mysticsoft(0, Colours.CYAN, "INT_PLAYER")
-  army1 = army_unknown(1, Colours.MAGENTA, second_intelligence)
+def test(debug=False, resize=False, first_intelligence="INT_PLAYER",
+         second_intelligence="INT_AI_NORMAL"):
+  armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence),
+            army_unknown(1, Colours.MAGENTA, second_intelligence)]
   if resize:
     print("\x1b[8;24;80t")
     # print ("\x1b[8;{};80t".format(textutils.BATTLE_SCREEN.max_screen_len))
-  bat = battle.Battle(army0, army1, debug_mode=debug)
+  automated = (first_intelligence != 'INT_PLAYER') and (second_intelligence != 'INT_PLAYER')  
+  bat = battle.Battle(armies[0], armies[1], debug_mode=debug, automated=automated)
   # graphics.Screen.wrapper(graphics.battle_screen, catch_interrupt = True, arguments=[bat])
   while(True):
     bat.take_turn()
     losers = bat.losing_status()
     for l in [0,1]:
       if losers[l]:
-        bat.yprint("{} is destroyed!".format(textutils.disp_army(l)))
+        bat.yprint("{} is destroyed!".format(textutils.disp_army(armies[l])))
     if any(losers):
       bat.battlescreen.pause_and_display(pause_str="The battle ends...")
-      sys.exit(0)
+      return 0
 
 if __name__ == "__main__":
   test(resize=True)

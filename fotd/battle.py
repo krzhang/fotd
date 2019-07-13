@@ -15,8 +15,8 @@ import weather
 
 class Battle():
 
-  def __init__(self, army1, army2, debug_mode=False):
-    self.battlescreen = textutils.BattleScreen(self, 0)
+  def __init__(self, army1, army2, debug_mode=False, automated=False):
+    self.battlescreen = textutils.BattleScreen(self, 0, automated=automated)
     self.armies = [army1, army2]
     for a in self.armies:
       a.battle = self
@@ -92,8 +92,8 @@ class Battle():
     """
     self.queues[queue_name].appendleft(events.Event(event_type, context))
 
-  def yprint(self, text, templates={}, debug=False):
-    self.battlescreen.yprint(text, templates, debug)
+  # def yprint(self, text, templates={}, debug=False):
+  #   self.battlescreen.yprint(text, templates, debug)
 
   def _run_status_handlers(self, func_key):
     for i in [0, 1]:
@@ -149,8 +149,8 @@ class Battle():
     self.yomi_winner = rps.orders_to_winning_army(orders) # -1 if None
     self.yomis = (rps.beats(orders[0], orders[1]), rps.beats(orders[1], orders[0]))
     self.yomi_list.append(self.yomis)
-    self.yprint("Winner: {}".format(self.yomi_winner), debug=True)
-    self.yprint("Yomis: {}".format(self.yomis), debug=True)
+    self.battlescreen.yprint("Winner: {}".format(self.yomi_winner), debug=True)
+    self.battlescreen.yprint("Yomis: {}".format(self.yomis), debug=True)
     orderlist = []
     for i in [0, 1]:
       order = orders[i]
@@ -178,32 +178,28 @@ class Battle():
     self.formations = self.get_formations()
     for i in [0,1]:
       form = self.formations[i]
-      self.yprint("{} takes a {}.".format(self.armies[i],
+      self.battlescreen.yprint("{} takes a {}.".format(self.armies[i],
                                           rps.formation_info(form, "desc")))
     self.orders = self.get_orders()
     self._initiate_orders(self.orders)
     # preloading events
     self._run_status_handlers("bot") # should be queue later
-    self.yprint("Running Orders;", debug=True)
     self._run_queue('Q_ORDER')
-    self.yprint("Units Manuever;", debug=True)
     self._run_queue('Q_MANUEVER')
-    self.yprint("All Units in Position;",debug=True)
-    self.yprint("Fighting Resolves",debug=True)
     self._run_queue('Q_RESOLVE')
     self._run_status_handlers("eot") # should be queue later
-    self.battlescreen.pause_and_display() # could have undisplayed stuff
+    # self.battlescreen.pause_and_display() # could have undisplayed stuff
     self.init_day()
 
   def losing_status(self):
     losing = [False, False] # they can theoretically both lose
     for i in [0, 1]:
       if not self.armies[i].is_present():
-        self.yprint("{}'s units have all been defeated.".format(
+        self.battlescreen.yprint("{}'s units have all been defeated.".format(
           textutils.disp_army(self.armies[i])))
         losing[i] = True
       if self.armies[i].morale <= 0:
         losing[i] = True
-        self.yprint("{} collapses due to catastrophic morale.".format(
+        self.battlescreen.yprint("{} collapses due to catastrophic morale.".format(
           textutils.disp_army(self.armies[i])))
     return tuple(losing)

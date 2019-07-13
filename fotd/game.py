@@ -51,15 +51,23 @@ def test_char(name, style, power, intel, pol, cha, cool, brave, skills):
 # ZhugeLiang.equip("24_WAR_MANUALS") # int+8 skill:invent
 # ZhugeLiang.equip("SLEEVE_DARTS")
 
+YAN_SKILLS = ["pincer_specialist", "perfect_defense", "water_skill", "empty_castle_skill", "drop_rocks", "counter_skill", "lure"]
+JING_SKILLS = ["trymode", "counter_arrow", "fire_skill", "chu_ko_nu"]
+YOYO_SKILLS = ["cheer", "attack_supplies", "dash", "fire_skill", "panic_skill", "chaos"]
+HAN_SKILLS = ["sneak_attack", "dash", "jeer", "chaos_arrow", "headhunter"]
+
 PC_ATTRS = [
-  ("Zhang Yan", "$[3$]Yellow$[7$] Lightning", 71, 80, 74, 60, 5, 4,
-   ["pincer_specialist", "perfect_defense", "water_skill", "empty_castle_skill", "drop_rocks", "counter_skill", "lure"]),
-  ("Jing Chan", "Purge", 55, 70, 90, 85, 4, 5,
-   ["trymode", "counter_arrow", "fire_skill", "chu_ko_nu"]),
-  ("You Zhou", "Caffeinator", 31, 90, 63, 21, 4, 2,
-   ["cheer", "attack_supplies", "dash", "fire_skill", "panic_skill", "chaos"]),
-  ("Han Xu", "Finalmente", 90, 85, 12, 24, 2, 6,
-   ["sneak_attack", "dash", "jeer", "chaos_arrow", "headhunter"])]
+  ("Zhang Yan", "$[3$]Yellow$[7$] Lightning", 71, 80, 74, 60, 5, 4, YAN_SKILLS),
+  ("Jing Chan", "Purge", 55, 70, 90, 85, 4, 5, JING_SKILLS),
+  ("Zhou You", "Caffeinator", 31, 90, 63, 21, 4, 2, YOYO_SKILLS),
+  ("Han Xu", "Finalmente", 90, 85, 12, 24, 2, 6, HAN_SKILLS)]
+
+BIZARRO_ATTRS = [
+  ("Ghanz Nagy", "$[4$]Blue$[7$] Thunder", 71, 80, 74, 60, 5, 4, YAN_SKILLS),
+  ("Bling Chan", "Vomit", 55, 70, 90, 85, 4, 5, JING_SKILLS),
+  ("You Zhou", "Seal Clubber", 31, 90, 63, 21, 4, 2, YOYO_SKILLS),
+  ("Xu Han", "WNBA MVP", 90, 85, 12, 24, 2, 6, HAN_SKILLS)]
+
 OTHER_ATTRS = [
   ("Liu Bei", "", 70, 81, 89, 100, 4, 5,
    ["cheer", "recruit_specialist"]), 
@@ -99,10 +107,14 @@ OTHER_ATTRS = [
 # add: CaoRen + stonewall/iron wall
 
 PC_UNITS = [Unit(test_char(*args), 20, 10) for args in PC_ATTRS]
-OTHER_UNITS = [Unit(test_char(*args), 20, 10) for args in OTHER_ATTRS]
+BIZARRO_UNITS = [Unit(test_char(*args), 20, 10) for args in BIZARRO_ATTRS]
+OTHER_UNITS = [Unit(test_char(*args), 20, 10) for args in BIZARRO_ATTRS + OTHER_ATTRS]
 
 def army_mysticsoft(armyid, color, aitype):
   return Army("Mysticsoft", PC_UNITS, armyid, color, aitype, 7)
+
+def army_bizarro(armyid, color, aitype):
+  return Army("Mystic$oft", BIZARRO_UNITS, armyid, color, aitype, 7)
 
 def army_unknown(armyid, color, aitype):
   return Army("Enemy Unknown", random.sample(OTHER_UNITS, 4), armyid, color, aitype, 7)
@@ -125,10 +137,9 @@ def link_data_funcs():
 
 # link_data_funcs()
 
-def test(debug=False, resize=False, first_intelligence="INT_PLAYER",
+def play(armies, debug=False, resize=False,
+         first_intelligence="INT_PLAYER",
          second_intelligence="INT_AI_NORMAL"):
-  armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence),
-            army_unknown(1, Colours.MAGENTA, second_intelligence)]
   if resize:
     print("\x1b[8;24;80t")
     # print ("\x1b[8;{};80t".format(textutils.BATTLE_SCREEN.max_screen_len))
@@ -138,12 +149,19 @@ def test(debug=False, resize=False, first_intelligence="INT_PLAYER",
   while(True):
     bat.take_turn()
     losers = bat.losing_status()
-    for l in [0,1]:
+    for l in [0, 1]:
       if losers[l]:
         bat.yprint("{} is destroyed!".format(textutils.disp_army(armies[l])))
     if any(losers):
       bat.battlescreen.pause_and_display(pause_str="The battle ends...")
       return 0
 
+def test(debug=False, resize=False,
+         first_intelligence="INT_PLAYER",
+         second_intelligence="INT_AI_NORMAL"):
+  armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence),
+            army_bizarro(1, Colours.MAGENTA, second_intelligence)]
+  play(armies, debug, resize, first_intelligence, second_intelligence)
+   
 if __name__ == "__main__":
   test(resize=True)

@@ -38,7 +38,7 @@ class Event():
     if event_info(self.event_name, "panic_blocked"):
       potential_panicker = getattr(self.context, edict["primary_actor"])
       if potential_panicker.has_unit_status("panicked"):
-        self.context.battle.yprint("  %s is %s! No action" % (potential_panicker, status.Status("panicked")))
+        self.context.battle.battlescreen.yprint("  %s is %s! No action" % (potential_panicker, status.Status("panicked")))
         return
     # time to activate this event on the queue; note the event has its own context, battle, etc.
     results = run_event_func(self.event_name, self.context, self.context.battle.battlescreen)

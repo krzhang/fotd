@@ -6,6 +6,7 @@ import battle_constants
 from utils import read_single_keypress
 import colors
 from colors import ctext, Colors, Fore, Back, Style
+import narration
 import rps
 import skills # move later!
 

@@ -607,7 +607,7 @@ def panic_tactic(context, bv, **kwargs):
   return target_skill_tactic(context, "panic_tactic", 0.5, _panic_tactic_success)
 
 def _flood_tactic_success(context):
-  damdice = battle_constants.FLOOD_TACTICS_DAMDICE
+  damdice = battle_constants.FLOOD_TACTIC_DAMDICE
   damage = random.choice(range(damdice))
   dmgdata = (context.csource, context.ctarget, "floods", damage)
   Event("receive_damage", context.copy(

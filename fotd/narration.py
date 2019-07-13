@@ -15,8 +15,8 @@ WITHDRAWS = [
   "Win some, lose some."
 ]
 
-CAPTURES = [
-  "Wow, you got me.",
-  "Did not think I would be captured...",
-  "Win some, lose some."
+CAPTURES = [ "Wow. That really happened.",
+            "Did not think I would be captured...",
+            "Win some, lose some.",
+            "I wasn't trying, so does it count?"
 ]

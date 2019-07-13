@@ -6,3 +6,8 @@ TODOS
 <2019-07-12 Fri> Started changelog
 - skeletons of most battle systems in place
 - added bulbing
+
+<2019-07-12 Fri>
+- really separated the view in the events file; now all events have a battleview pointer
+- making bulbing more obvious:
+  - change the statlines so the bulbed tactics are directly visible there

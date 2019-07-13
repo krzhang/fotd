@@ -84,7 +84,7 @@ def run_event_func(event_name, context, battlescreen, **kwargs):
 # Utility functions #
 ################################a
 
-def roll_dice(s_str, d_str, dicecount):
+def _roll_dice(s_str, d_str, dicecount):
   if d_str + s_str < 0.00001: # to avoid dividing by 0
     return 0
   hitprob = float(s_str) / (d_str + s_str)
@@ -95,26 +95,26 @@ def roll_dice(s_str, d_str, dicecount):
       raw_damage += 1
   return raw_damage, hitprob
 
-def compute_physical_damage(csource, ctarget, multiplier=1):
+def _compute_physical_damage(csource, ctarget, multiplier=1):
   """ We already know who is hitting whom, just computing damage """
   s_str = csource.physical_offense()
   d_str = ctarget.physical_defense()
   dicecount = int(csource.size*multiplier)
   # this is the data needed to create a log of the damage later; for timing purposes this needs
-  raw_damage, hitprob = roll_dice(s_str, d_str, dicecount)
+  raw_damage, hitprob = _roll_dice(s_str, d_str, dicecount)
   dmglog = tuple((s_str, d_str, dicecount, hitprob, raw_damage))
   # we pass this on instead of printing it immediately, both for MVC purposes and because
   # it's weird for the user to see damage computed first before seeing damage done on screen
   return raw_damage, dmglog
 
-def compute_arrow_damage(csource, ctarget, multiplier=1):
+def _compute_arrow_damage(csource, ctarget, multiplier=1):
   """ We already know who is hitting whom, just computing damage """
   s_str = csource.arrow_offense()
   d_str = ctarget.arrow_defense()
   if ctarget.is_defended():
     d_str *= 1.5
   dicecount = int(csource.size*multiplier)
-  raw_damage, hitprob = roll_dice(s_str, d_str, dicecount)
+  raw_damage, hitprob = _roll_dice(s_str, d_str, dicecount)
   dmglog = tuple((s_str, d_str, dicecount, hitprob, raw_damage))
   return raw_damage, dmglog
 
@@ -129,12 +129,12 @@ def attack_order(context, bv, **kwargs):
   enemy = context.battle.armies[1-myarmyid]
   enemyunits = enemy.present_units()
   if not enemyunits:
-    context.battle.yprint("No unit to attack!")
+    bv.yprint("No unit to attack!")
     return
   cnewsource = context.ctarget # new event
   cnewtarget = random.choice(enemyunits)
   cnewsource.ctargetting = ("marching", cnewtarget)
-  context.battle.yprint("{}: marching -> {};".format(cnewsource, cnewtarget), debug=True)
+  bv.yprint("{}: marching -> {};".format(cnewsource, cnewtarget), debug=True)
   newcontext = context.rebase({"csource":cnewsource, "ctarget":cnewtarget})
   context.battle.place_event("march", newcontext, "Q_MANUEVER")
 
@@ -142,7 +142,7 @@ def defense_order(context, bv, **kwargs):
   ctarget = context.ctarget
   ctarget.ctargetting = ("defending", ctarget)
   ctarget.move(context.battle.hqs[ctarget.army.armyid])
-  context.battle.yprint("{}: staying put at {};".format(ctarget, context.ctarget.position), debug=True)
+  bv.yprint("{}: staying put at {};".format(ctarget, context.ctarget.position), debug=True)
   Event.gain_status("defended", context, ctarget)
 
 def indirect_order(context, bv, **kwargs):
@@ -151,12 +151,12 @@ def indirect_order(context, bv, **kwargs):
   enemy = context.battle.armies[1-myarmyid]
   enemyunits = enemy.present_units()
   if not enemyunits:
-    context.battle.yprint("No unit to target!")
+    bv.yprint("No unit to target!")
     return
   cnewsource = context.ctarget # new event
   cnewtarget = random.choice(enemyunits)
   cnewsource.ctargetting = ("sneaking", cnewtarget)
-  context.battle.yprint("{}: sneaking -> {}; planning strategery".format(cnewsource, cnewtarget), debug=True)
+  bv.yprint("{}: sneaking -> {}; planning strategery".format(cnewsource, cnewtarget), debug=True)
   newcontext = context.rebase({"csource":cnewsource, "ctarget":cnewtarget})
   context.battle.place_event("indirect_raid", newcontext, "Q_MANUEVER")
 
@@ -165,7 +165,7 @@ def berserked_order(context, bv, **kwargs):
   armyid = random.choice([0, 1])
   enemyunits = context.battle.armies[armyid].present_units()
   ctarget = random.choice(enemyunits)
-  context.battle.yprint("{}: random {} attack -> {}; ignoring original orders".format(
+  bv.yprint("{}: random {} attack -> {}; ignoring original orders".format(
     csource, status.Status("berserk"), ctarget))
   context.ctarget.ctargetting = ("marching", ctarget)
   newcontext = context.rebase({"csource":csource, "ctarget":ctarget})
@@ -176,7 +176,7 @@ def provoked_order(context, bv, **kwargs):
   armyid = context.ctarget.army.armyid
   enemyunits = context.battle.armies[armyid].present_units()
   ctarget = random.choice(enemyunits)
-  context.battle.yprint("{}: random {} attack -> {}; ignoring original orders".format(
+  bv.yprint("{}: random {} attack -> {}; ignoring original orders".format(
     csource, status.Status("provoked"), ctarget))
   context.ctarget.ctargetting = ("marching", ctarget)
   newcontext = context.rebase({"csource":csource, "ctarget":ctarget})
@@ -203,13 +203,13 @@ def march(context, bv, **kwargs):
   csource = context.csource
   ctarget = context.ctarget
   if ctarget in csource.attacked_by:
-    context.battle.yprint("{} already engaged {}, but they already engaged".format(csource, ctarget), debug=True)
+    bv.yprint("{} already engaged {}, but they already engaged".format(csource, ctarget), debug=True)
     return
   if ctarget.is_defended():
     readytext = "$[2]$defended!$[7]$"
   else:
     readytext = textutils.disp_unit_ctargetting(ctarget)
-  context.battle.yprint("{} ({}) marches into {} ({})".format(csource,
+  bv.yprint("{} ({}) marches into {} ({})".format(csource,
                                                       textutils.disp_unit_ctargetting(csource),
                                                       ctarget,
                                                       readytext))
@@ -222,10 +222,10 @@ def march(context, bv, **kwargs):
   if ctarget.is_defended():
     assert ctarget.position == context.battle.hqs[ctarget.army.armyid] # meeting at hq
     csource.move(ctarget.position)
-    context.battle.yprint("  %s able to launch defensive arrow volley" % ctarget, debug=True)
+    bv.yprint("  %s able to launch defensive arrow volley" % ctarget, debug=True)
     context.battle.place_event("arrow_strike", context.rebase_switch(), "Q_RESOLVE")
     if random.random() < 0.5:
-      context.battle.yprint("  %s able to launch offensive arrow volley" % csource, debug=True)
+      bv.yprint("  %s able to launch offensive arrow volley" % csource, debug=True)
       context.battle.place_event("arrow_strike", context, "Q_RESOLVE")
     context.battle.place_event("physical_clash", context.rebase_switch(), "Q_RESOLVE")
   else:
@@ -233,12 +233,12 @@ def march(context, bv, **kwargs):
     csource.move(newpos)
     ctarget.move(newpos)
     if random.random() < 0.5:
-      context.battle.yprint("  %s able to launch offensive arrow volley" % csource, debug=True)
+      bv.yprint("  %s able to launch offensive arrow volley" % csource, debug=True)
       context.battle.place_event("arrow_strike", context, "Q_RESOLVE")
     # defense doesn't have time to shoot arrows, unless they were coming in this direction
     if converging:
       if random.random() < 0.5:
-        context.battle.yprint("  %s able to launch defensive arrow volley" % ctarget, debug=True)
+        bv.yprint("  %s able to launch defensive arrow volley" % ctarget, debug=True)
         context.battle.place_event("arrow_strike", context.rebase_switch(), "Q_RESOLVE")
     # need logic for when 2 attackers rush into each other
     context.battle.place_event("physical_clash", context, "Q_RESOLVE")
@@ -247,9 +247,9 @@ def indirect_raid(context, bv, **kwargs):
   csource = context.csource
   ctarget = context.ctarget
   if csource.attacked_by:
-    context.battle.yprint("{}'s sneaking up on {} was interrupted by {}!".format(csource, ctarget, csource.attacked_by[0]))
+    bv.yprint("{}'s sneaking up on {} was interrupted by {}!".format(csource, ctarget, csource.attacked_by[0]))
     return
-  context.battle.yprint("{} ({}) sneaks up on {} ({})".format(csource,
+  bv.yprint("{} ({}) sneaks up on {} ({})".format(csource,
                                                          textutils.disp_unit_ctargetting(csource),
                                                          ctarget,
                                                          textutils.disp_unit_ctargetting(ctarget)))
@@ -257,10 +257,10 @@ def indirect_raid(context, bv, **kwargs):
   # tactic 1: raid
   vulnerable = False
   if ctarget.ctargetting[0] == "defending":
-    context.battle.yprint("  {} is caught unawares by the indirect approach!".format(ctarget), debug=True)
+    bv.yprint("  {} is caught unawares by the indirect approach!".format(ctarget), debug=True)
     vulnerable = True
   elif ctarget.ctargetting[0] == "marching":
-    context.battle.yprint("  {}'s marching soldiers are vigilant!".format(ctarget), debug=True)
+    bv.yprint("  {}'s marching soldiers are vigilant!".format(ctarget), debug=True)
   context.battle.place_event("arrow_strike",
                              context.copy(additional_opt={"vulnerable":vulnerable}),
                              "Q_RESOLVE")
@@ -304,10 +304,10 @@ def duel_accepted(context, bv, **kwargs):
     healths[loser] -= damage
     damage_history.append(damage)
     health_history.append(tuple(healths))
-  context.battle.battlescreen.disp_duel(csource, ctarget, loser_history, health_history, damage_history)
+  bv.disp_duel(csource, ctarget, loser_history, health_history, damage_history)
   for i in [0, 1]:
     if healths[i] <= 0:
-      context.battle.yprint("{ctarget} collapses; unit retreats!", templates={"ctarget":actors[i]}, debug=True)
+      bv.yprint("{ctarget} collapses; unit retreats!", templates={"ctarget":actors[i]}, debug=True)
       Event("receive_damage", context.rebase({"damage":actors[i].size,
                                               "ctarget":actors[i],
                                               "dmgdata":"",
@@ -317,7 +317,7 @@ def duel_consider(context, bv, **kwargs):
   csource = context.csource
   ctarget = context.ctarget
   acceptances, duel_data = duel.duel_commit(context, csource, ctarget)
-  context.battle.yprint(str(duel_data), debug=True)
+  bv.yprint(str(duel_data), debug=True)
   if acceptances[0]:
     Event.make_speech(csource, context, duel.get_pre_duel_speech("challenge"))
     if acceptances[1]:
@@ -332,7 +332,7 @@ def arrow_strike(context, bv, **kwargs):
   multiplier = 1
   if "vulnerable" in context.opt and context.vulnerable:
     multiplier = 2
-  damage, dmglog = compute_arrow_damage(csource, ctarget, multiplier=multiplier)
+  damage, dmglog = _compute_arrow_damage(csource, ctarget, multiplier=multiplier)
   dmgdata = (csource, ctarget, "shoots", damage)
   Event("receive_damage",
         context.rebase({"damage":damage, "ctarget":ctarget, "dmgdata":dmgdata, "dmglog":dmglog})).activate()
@@ -351,22 +351,22 @@ def arrow_strike(context, bv, **kwargs):
       Event("arrow_strike", context).activate()
   if ctarget.has_unit_status("counter_arrow"):
     if random.random() < 0.85:
-#      context.battle.yprint("  <counter arrow skill> %s can counter with their own volley of arrows" % ctarget)
+#      bv.yprint("  <counter arrow skill> %s can counter with their own volley of arrows" % ctarget)
       Event("counter_arrow_strike", context.rebase_switch()).activate()
 
 def physical_clash(context, bv, **kwargs):
   csource = context.csource
   ctarget = context.ctarget
-  context.battle.yprint("  {} clashes against {}!".format(csource, ctarget))
+  bv.yprint("  {} clashes against {}!".format(csource, ctarget))
   Event("physical_strike", context).activate()
-  # context.battle.yprint("  %s able to launch retaliation" % ctarget) can die in the middle
+  # bv.yprint("  %s able to launch retaliation" % ctarget) can die in the middle
   Event("physical_strike", context.rebase_switch()).activate()
   
 def physical_strike(context, bv, **kwargs):
   """ strike is the singular act of hitting """
   csource = context.csource
   ctarget = context.ctarget
-  damage, damlog = compute_physical_damage(csource, ctarget, multiplier=1)
+  damage, damlog = _compute_physical_damage(csource, ctarget, multiplier=1)
   dmgdata = (csource, ctarget, "hits", damage)
   ctarget.attacked_by.append(csource)
   csource.attacked.append(ctarget)
@@ -445,7 +445,7 @@ def receive_damage(context, bv, **kwargs):
   if damage >= ctarget.size:
     damage = ctarget.size
   dmglog = context.dmglog or None
-  context.battle.battlescreen.disp_damage(battle_constants.ARMY_SIZE_MAX,
+  bv.disp_damage(battle_constants.ARMY_SIZE_MAX,
                                           ctarget.size, damage, dmgdata, dmglog)
   ctarget.size -= damage
   if ctarget.size <= 0:
@@ -457,7 +457,7 @@ def receive_status(context, bv, **kwargs):
   if "on_receive" in status.STATUSES_BATTLE[stat_str]:
     # sometimes can be quiet
     disp = status.STATUSES_BATTLE[stat_str]["on_receive"].format(**context.opt)
-    context.battle.yprint("  " + disp)
+    bv.yprint("  " + disp)
   ctarget.add_unit_status(stat_str)
 
 # for armies
@@ -469,7 +469,7 @@ def order_change(context, bv, **kwargs):
   """
   ctarget_army = context.ctarget_army
   morale_bet = context.morale_bet
-  context.battle.yprint("It was a feint. {ctarget_army} suddenly " +
+  bv.yprint("It was a feint. {ctarget_army} suddenly " +
                         rps.order_info(ctarget_army.get_order(), "verb") + ".",
                         templates={"ctarget_army":ctarget_army})
   ctarget_army.bet_morale_change = morale_bet
@@ -488,14 +488,12 @@ def order_yomi_win(context, bv, **kwargs):
   ctarget_army = context.battle.armies[1-csource_army.armyid]
   ycount = csource_army.get_yomi_count()
   bet = ctarget_army.bet_morale_change + 1
-  Event("change_morale", context.rebase(opt={
-    "ctarget_army":csource_army, # winning army
-    "morale_change":ycount})).activate()
-  Event("change_morale", context.rebase(opt={
-    "ctarget_army":ctarget_army, # losing army
-    "morale_change":-bet})).activate()
+  Event("change_morale", context.rebase(opt={"ctarget_army":csource_army, # winning army
+                                             "morale_change":ycount})).activate()
+  Event("change_morale", context.rebase(opt={"ctarget_army":ctarget_army, # losing army
+                                             "morale_change":-bet})).activate()
   # must put after to show the difference
-  context.battle.battlescreen.disp_yomi_win(csource_army, ctarget_army, ycount, bet)
+  bv.disp_yomi_win(csource_army, ctarget_army, ycount, bet)
 
 ################################
 # targetted Events from Skills #
@@ -547,7 +545,7 @@ def lure_tactic(context, base_chance, improved_chance, success_callback):
         context.battle.make_skill_narration("lure", lure_success_text.format(**{"lurer":lurer, "ctarget":targ}), True)
       else:
         # still a success, but it is not because of the lure
-        context.battle.yprint("{ctarget} was also entangled into the tactic!".format(**{"ctarget":targ}))
+        bv.yprint("{ctarget} was also entangled into the tactic!".format(**{"ctarget":targ}))
       additional_activations.append(targ)
   for targ in tuple(additional_activations):
     success_callback(context.rebase({"ctarget":targ}))
@@ -654,13 +652,13 @@ def generic_eot_fizzle(context, bv, **kwargs):
   stat_str = context.status
   if status.status_info(stat_str, "on_remove"):
     # eventually, maybe do specialized stuff
-    context.battle.yprint("{} is no longer {}".format(context.ctarget, status.Status(stat_str)))
+    bv.yprint("{} is no longer {}".format(context.ctarget, status.Status(stat_str)))
   context.ctarget.remove_unit_status(stat_str)
   
 def burned_bot(context, bv, **kwargs):
   ctarget = context.ctarget
   if context.battle.is_raining():
-    context.battle.yprint("thanks to the rain, %s put out the fire." % ctarget)
+    bv.yprint("thanks to the rain, %s put out the fire." % ctarget)
     ctarget.remove_unit_status("burned")
   
 def burned_eot(context, bv, **kwargs):
@@ -669,7 +667,7 @@ def burned_eot(context, bv, **kwargs):
     # damage before putting out
     if context.battle.is_hot():
       damdice = 10
-      context.battle.yprint("It's an extra {} day; fire is much more dangerous.".format(context.battle.weather))
+      bv.yprint("It's an extra {} day; fire is much more dangerous.".format(context.battle.weather))
     else:
       damdice = 5
     damage = random.choice(range(damdice))
@@ -677,37 +675,37 @@ def burned_eot(context, bv, **kwargs):
     Event("receive_damage", context.copy(
       additional_opt={"damage":damage, "dmgdata":dmgdata, "dmglog":""})).activate()
     if random.random() < 0.5:
-      context.battle.yprint("{} has put out the fire.".format(ctarget))
+      bv.yprint("{} has put out the fire.".format(ctarget))
       ctarget.remove_unit_status("burned")
     else:
-      context.battle.yprint("The fire burning %s rages on." % ctarget)
+      bv.yprint("The fire burning %s rages on." % ctarget)
 
 def berserk_eot(context, bv, **kwargs):
   ctarget = context.ctarget
   if ctarget.has_unit_status("berserk"): # could have dried up or something
     if random.random() < 0.5:
-      context.battle.yprint("%s regains control." % ctarget)
+      bv.yprint("%s regains control." % ctarget)
       ctarget.remove_unit_status("berserk")
     else:
-      context.battle.yprint("{}'s unit is still {}.".format(ctarget, status.Status("berserk")))
+      bv.yprint("{}'s unit is still {}.".format(ctarget, status.Status("berserk")))
 
 def panic_eot(context, bv, **kwargs):
   ctarget = context.ctarget
   if ctarget.has_unit_status("panicked"): # could have dried up or something
     if random.random() < 0.5:
-      context.battle.yprint("%s regains control." % ctarget)
+      bv.yprint("%s regains control." % ctarget)
       ctarget.remove_unit_status("panicked")
     else:
-      context.battle.yprint("%s's unit is still panicking." % ctarget)
+      bv.yprint("%s's unit is still panicking." % ctarget)
 
 def provoked_eot(context, bv, **kwargs):
   ctarget = context.ctarget
   if ctarget.has_unit_status("provoked"): # could have dried up or something
     if random.random() < 0.5:
-      context.battle.yprint("%s regains control." % ctarget)
+      bv.yprint("%s regains control." % ctarget)
       ctarget.remove_unit_status("provoked")
     else:
-      context.battle.yprint("{}'s unit is still {}.".format(ctarget, status.Status("provoked")))
+      bv.yprint("{}'s unit is still {}.".format(ctarget, status.Status("provoked")))
 
 ##########
 # Skills #

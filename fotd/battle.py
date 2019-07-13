@@ -93,6 +93,7 @@ class Battle():
           ss = sta.stat_str
           func_list = status.status_info(ss, func_key)
           if func_list: # found a function (func_name, kwargs)
+            # convert arguments into context
             event_name = func_list[0]
             additional_opt = {"stat_str":ss}
             additional_opt.update(func_list[1]) # additional arguments

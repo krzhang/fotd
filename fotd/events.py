@@ -19,7 +19,7 @@ class Event():
     self.event_name = event_name
     self.context = context
 
-  def activate(self, **kwargs):
+  def activate(self):
     edict = EVENTS[self.event_name]
     # death handler (should later be "availability" for retreats, etc.)
     # most events require actors who are alive
@@ -42,8 +42,7 @@ class Event():
     results = run_event_func(self.event_name,
                              self.context,
                              self.context.battle.battlescreen,
-                             self.context.battle.narrator,
-                             **kwargs)
+                             self.context.battle.narrator)
 
   @classmethod
   def gain_status(cls, stat_str, context, ctarget):
@@ -76,12 +75,12 @@ def event_info(event_name, key):
     return edict[key]
   return None
 
-def run_event_func(event_name, context, battlescreen, narrator, **kwargs):
+def run_event_func(event_name, context, battlescreen, narrator):
   """
   runs one of the event functions in this section by name, giving a context 
   and a view (battlescreen)
   """
-  return globals()[event_name](context, battlescreen, narrator, **kwargs)
+  return globals()[event_name](context, battlescreen, narrator)
 
 ################################
 # Utility functions #
@@ -103,11 +102,9 @@ def _compute_physical_damage(csource, ctarget, multiplier=1):
   s_str = csource.physical_offense()
   d_str = ctarget.physical_defense()
   dicecount = int(csource.size*multiplier)
-  # this is the data needed to create a log of the damage later; for timing purposes this needs
   raw_damage, hitprob = _roll_dice(s_str, d_str, dicecount)
   dmglog = tuple((s_str, d_str, dicecount, hitprob, raw_damage))
-  # we pass this on instead of printing it immediately, both for MVC purposes and because
-  # it's weird for the user to see damage computed first before seeing damage done on screen
+  # we pass this on for MVC purposes
   return raw_damage, dmglog
 
 def _compute_arrow_damage(csource, ctarget, multiplier=1):
@@ -126,7 +123,7 @@ def _compute_arrow_damage(csource, ctarget, multiplier=1):
 ################
 # after these, there should be a ctarget
 
-def attack_order(context, bv, narrator, **kwargs):
+def attack_order(context, bv, narrator):
   ctarget = context.ctarget
   myarmyid = ctarget.army.armyid
   enemy = context.battle.armies[1-myarmyid]
@@ -141,14 +138,14 @@ def attack_order(context, bv, narrator, **kwargs):
   newcontext = context.rebase({"csource":cnewsource, "ctarget":cnewtarget})
   context.battle.place_event("march", newcontext, "Q_MANUEVER")
 
-def defense_order(context, bv, narrator, **kwargs):
+def defense_order(context, bv, narrator):
   ctarget = context.ctarget
   ctarget.ctargetting = ("defending", ctarget)
   ctarget.move(context.battle.hqs[ctarget.army.armyid])
   bv.yprint("{}: staying put at {};".format(ctarget, context.ctarget.position), debug=True)
   Event.gain_status("defended", context, ctarget)
 
-def indirect_order(context, bv, narrator, **kwargs):
+def indirect_order(context, bv, narrator):
   csource = context.ctarget
   myarmyid = csource.army.armyid
   enemy = context.battle.armies[1-myarmyid]
@@ -163,7 +160,7 @@ def indirect_order(context, bv, narrator, **kwargs):
   newcontext = context.rebase({"csource":cnewsource, "ctarget":cnewtarget})
   context.battle.place_event("indirect_raid", newcontext, "Q_MANUEVER")
 
-def berserked_order(context, bv, narrator, **kwargs):
+def berserked_order(context, bv, narrator):
   csource = context.ctarget
   armyid = random.choice([0, 1])
   enemyunits = context.battle.armies[armyid].present_units()
@@ -174,7 +171,7 @@ def berserked_order(context, bv, narrator, **kwargs):
   newcontext = context.rebase({"csource":csource, "ctarget":ctarget})
   context.battle.place_event("march", newcontext, "Q_MANUEVER")
 
-def provoked_order(context, bv, narrator, **kwargs):
+def provoked_order(context, bv, narrator):
   csource = context.ctarget
   armyid = context.ctarget.army.armyid
   enemyunits = context.battle.armies[armyid].present_units()
@@ -202,7 +199,7 @@ for ev in EVENTS_ORDERS:
 # Generic Battlefield Events #
 ################
 
-def march(context, bv, narrator, **kwargs):
+def march(context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
   if ctarget in csource.attacked_by:
@@ -246,7 +243,7 @@ def march(context, bv, narrator, **kwargs):
     # need logic for when 2 attackers rush into each other
     context.battle.place_event("physical_clash", context, "Q_RESOLVE")
 
-def indirect_raid(context, bv, narrator, **kwargs):
+def indirect_raid(context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
   if csource.attacked_by:
@@ -268,7 +265,7 @@ def indirect_raid(context, bv, narrator, **kwargs):
                              context.copy(additional_opt={"vulnerable":vulnerable}),
                              "Q_RESOLVE")
 
-def engage(context, bv, narrator, **kwargs):
+def engage(context, bv, narrator):
   """
   What happens when they meet face to face, but before the attacks. All the resolved tactics
   fire off. Tactics only fire when they have yomi advantage.
@@ -284,7 +281,7 @@ def engage(context, bv, narrator, **kwargs):
 # RESOLVE PHASE #
 #################
 
-def duel_accepted(context, bv, narrator, **kwargs):
+def duel_accepted(context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
   actors = [csource, ctarget]
@@ -312,7 +309,7 @@ def duel_accepted(context, bv, narrator, **kwargs):
                                               "dmgdata":"",
                                               "dmglog":""})).activate()
 
-def duel_consider(context, bv, narrator, **kwargs):
+def duel_consider(context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
   acceptances, duel_data = duel.duel_commit(context, csource, ctarget)
@@ -325,7 +322,7 @@ def duel_consider(context, bv, narrator, **kwargs):
     else:
       Event.make_speech(ctarget, context, duel.get_pre_duel_speech("deny"))
 
-def arrow_strike(context, bv, narrator, **kwargs):
+def arrow_strike(context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
   multiplier = 1
@@ -353,7 +350,7 @@ def arrow_strike(context, bv, narrator, **kwargs):
 #      bv.yprint("  <counter arrow skill> %s can counter with their own volley of arrows" % ctarget)
       Event("counter_arrow_strike", context.rebase_switch()).activate()
 
-def physical_clash(context, bv, narrator, **kwargs):
+def physical_clash(context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
   bv.yprint("  {} clashes against {}!".format(csource, ctarget))
@@ -361,7 +358,7 @@ def physical_clash(context, bv, narrator, **kwargs):
   # bv.yprint("  %s able to launch retaliation" % ctarget) can die in the middle
   Event("physical_strike", context.rebase_switch()).activate()
   
-def physical_strike(context, bv, narrator, **kwargs):
+def physical_strike(context, bv, narrator):
   """ strike is the singular act of hitting """
   csource = context.csource
   ctarget = context.ctarget
@@ -432,7 +429,7 @@ EVENTS_MISC = {
 #   EVENTS_RECEIVE[ev]["panic_blocked"] = True
 # No common rules here...
 
-def receive_damage(context, bv, narrator, **kwargs):
+def receive_damage(context, bv, narrator):
   ctarget = context.ctarget
   damage = context.damage
   dmgdata = context.dmgdata
@@ -445,13 +442,13 @@ def receive_damage(context, bv, narrator, **kwargs):
   if ctarget.size <= 0:
     ctarget.leave_battle()
 
-def receive_status(context, bv, narrator, **kwargs):
+def receive_status(context, bv, narrator):
   ctarget = context.ctarget
   stat_str = context.stat_str
   ctarget.add_unit_status(stat_str)
   narrator.narrate_status("on_receive", **context.opt)
 
-def order_change(context, bv, narrator, **kwargs):
+def order_change(context, bv, narrator):
   """
   When an order changes, if it happens to lose the Yomi, then the cost of the morale is
   'bet' and will be removed if the opponent out-Yomi's you.
@@ -464,7 +461,7 @@ def order_change(context, bv, narrator, **kwargs):
   ctarget_army.bet_morale_change = morale_bet
   # Event("change_morale", context).activate() this cost is pretty high
 
-def change_morale(context, bv, narrator, **kwargs):
+def change_morale(context, bv, narrator):
   ctarget_army = context.ctarget_army
   morale_change = context.morale_change
   newmorale = ctarget_army.morale + morale_change
@@ -472,7 +469,7 @@ def change_morale(context, bv, narrator, **kwargs):
   newmorale = max(newmorale, battle_constants.MORALE_MIN)
   ctarget_army.morale = newmorale
 
-def order_yomi_win(context, bv, narrator, **kwargs):
+def order_yomi_win(context, bv, narrator):
   csource_army = context.ctarget_army
   ctarget_army = context.battle.armies[1-csource_army.armyid]
   ycount = csource_army.get_yomi_count()
@@ -488,7 +485,7 @@ def order_yomi_win(context, bv, narrator, **kwargs):
 # targetted Events from Skills #
 ################################
 
-def counter_arrow_strike(context, bv, narrator, **kwargs):
+def counter_arrow_strike(context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
   bv.disp_activated_narration("counter_arrow", "{} counters with their own volley".format(csource), True)
@@ -535,7 +532,7 @@ def _resolve_entanglement(context, bv, narrator):
         additional_activations.append(new_target)
   return additional_activations
 
-def roll_target_skill_tactic(context, bv, narrator, roll_key, cchance):
+def _roll_target_skill_tactic(context, bv, narrator, roll_key, cchance):
   """
   We are about to roll something for success.
 
@@ -559,34 +556,38 @@ def roll_target_skill_tactic(context, bv, narrator, roll_key, cchance):
   bv.disp_activated_narration(roll_key, "", success)
   return successful_targets
 
-def fire_tactic(context, bv, narrator, **kwargs):
-  successes = roll_target_skill_tactic(context, bv, narrator, "fire_tactic", 0.5)
-  for new_target in tuple(successes): # iterate over immutables!
-    new_context = context.rebase({"ctarget":new_target})
-    Event.gain_status("burned", new_context, context.ctarget)
+def resolve_targetting_event(context, bv, narrator, roll_key, cchance, success_event):
+  successful_targets = _roll_target_skill_tactic(context, bv, narrator, roll_key, cchance)
+  for new_target in successful_targets:
+    new_context = context.copy(additional_opt={"ctarget":new_target})
+    # todo: can eventually get new kwords this way
+    Event(success_event, new_context).activate()
 
-def jeer_tactic(context, bv, narrator, **kwargs):
-  successes = roll_target_skill_tactic(context, bv, narrator, "jeer_tactic", 0.4)
-  for new_target in tuple(successes): # iterate over immutables!
-    new_context = context.rebase({"ctarget":new_target})
-    Event.gain_status("provoked", new_context, context.ctarget)
+def fire_tactic(context, bv, narrator):
+  def _fire_tactic_success(context, bv, narrator):
+    Event.gain_status("burned", context, context.ctarget)  
+  resolve_targetting_event(context, bv, narrator, "fire_tactic", 0.5, _fire_tactic_success)
 
-def panic_tactic(context, bv, narrator, **kwargs):
-  successes = roll_target_skill_tactic(context, bv, narrator, "panic_tactic", 0.5)
-  for new_target in tuple(successes): # iterate over immutables!
-    new_context = context.rebase({"ctarget":new_target})
-    Event.gain_status("panicked", new_context, context.ctarget)
+def jeer_tactic(context, bv, narrator):
+  def _jeer_tactic_success(context, bv, narrator):
+    Event.gain_status("provoked", context, context.ctarget)
+  resolve_targetting_event(context, bv, narrator, "jeer_tactic", 0.4, _jeer_tactic_success)
 
-def flood_tactic(context, bv, narrator, **kwargs):
-  successes = roll_target_skill_tactic(context, bv, narrator, "flood_tactic", 0.5)
-  for new_target in tuple(successes): # iterate over immutables!
-    new_context = context.rebase({"csource":context.cscource, "ctarget":new_target})
+def panic_tactic(context, bv, narrator):
+  def _panic_tactic_success(context, bv, narrator):
+    Event.gain_status("panicked", context, context.ctarget)
+  resolve_targetting_event(context, bv, narrator, "panic_tactic", 0.5, _panic_tactic_success)
+
+def flood_tactic(context, bv, narrator):
+  def _flood_tactic_success(context, bv, narrator):
+    new_context = context.rebase({"csource":context.cscource, "ctarget":context.target})
     damdice = battle_constants.FLOOD_TACTIC_DAMDICE
     damage = random.choice(range(damdice))
-    dmgdata = (new_context.csource, new_context.ctarget, "floods", damage)
-    Event("receive_damage", new_context.copy(
+    dmgdata = (context.csource, context.ctarget, "floods", damage)
+    Event("receive_damage", context.copy(
       additional_opt={"damage":damage, "dmgdata":dmgdata, "dmglog":""})).activate()
-
+  resolve_targetting_event(context, bv, narrator, "flood_tactic", 0.5, _flood_tactic_success)
+  
 EVENTS_SKILLS = {
   "counter_arrow_strike": {
     "can_aoe": False
@@ -617,11 +618,10 @@ for ev in EVENTS_SKILLS:
 # Status Beginning/end of turn Events #
 #######################################
 
-def remove_status_probabilistic(context, bv, narrator, **kwargs):
+def remove_status_probabilistic(context, bv, narrator):
   """
   context:
     status
-  kwargs:
     fizzle_prob
   """
   # a bit annoying that removal is not symmetric with gaining
@@ -635,13 +635,13 @@ def remove_status_probabilistic(context, bv, narrator, **kwargs):
   else:
     narrator.narrate_status("on_retain", **context.opt)
   
-def burned_bot(context, bv, narrator, **kwargs):
+def burned_bot(context, bv, narrator):
   ctarget = context.ctarget
   if context.battle.is_raining():
     bv.yprint("thanks to the rain, %s put out the fire." % ctarget)
     ctarget.remove_unit_status("burned")
     
-def burned_eot(context, bv, narrator, **kwargs):
+def burned_eot(context, bv, narrator):
   ctarget = context.ctarget
   if ctarget.has_unit_status("burned"): # could have dried up or something
     # damage before putting out
@@ -661,7 +661,7 @@ def burned_eot(context, bv, narrator, **kwargs):
 # Skills #
 ##########
 
-def trymode_status_bot(context, bv, narrator, **kwargs):
+def trymode_status_bot(context, bv, narrator):
   ctarget = context.ctarget
   trymodeprob = (ctarget.size_base-ctarget.size)/ctarget.size_base
   success = random.random() < trymodeprob

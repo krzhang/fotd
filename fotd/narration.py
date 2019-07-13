@@ -31,7 +31,7 @@ class BattleNarrator(Narrator):
     super().__init__(battleview)
     self.battle = battle
   
-  def unit_speech(self, unit, text, **kwargs):
+  def unit_speech(self, unit, text):
     self.chara_narrate(unit.character, text)
 
   # the lack of symmetry here annoys me
@@ -54,6 +54,14 @@ class BattleNarrator(Narrator):
       # use a default
       self.view.yprint(BattleNarrator.STATUS_DEFAULTS[key], templates=context)
 
+  def narrate_success(self, key, success, **context):
+    if success:
+      narrator_str, narrate_text = get_one(ROLLS[key], "on_success_speech")
+    else:
+      narrator_str, narrate_text = get_one(ROLLS[key], "on_fail_speech")
+    if narrator_str and narrator_str in context and narrate_text:
+      self.unit_speech(context[narrator_str], narrate_text)
+    
   def narrate_roll(self, key, success, **context):
     if "on_roll" in ROLLS[key] and ROLLS[key]["on_roll"]: # need both so you don't format None
       # normal situation
@@ -68,13 +76,8 @@ class BattleNarrator(Narrator):
       else:
         # no good comeback
         self.unit_speech(context["ctarget"], "Why, you {}!".format(insults.random_diss()))
-    if success:
-      narrator_str, narrate_text = get_one(ROLLS[key], "on_success_speech")
-    else:
-      narrator_str, narrate_text = get_one(ROLLS[key], "on_fail_speech")
-    if narrator_str and narrator_str in context and narrate_text:
-      self.unit_speech(context[narrator_str], narrate_text)
-
+    self.narrate_success(key, success, **context)
+    
 ENTRANCES = [
   "It's a good day for a battle.",
   "War... what is it good for?",

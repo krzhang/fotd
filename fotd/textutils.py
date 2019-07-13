@@ -14,13 +14,29 @@ import skills # move later!
 # Display (convert to string) Functions #
 #########################################
 
+def disp_army(army):
+  return "$[{}]${}$[7]$".format(army.color, army.name)
+
+def disp_bar_custom(colors, chars, nums):
+  """
+  all iterators, to make bars like this: '####$$$$----@@@@@@@@' etc.
+  k colors
+  k chars
+  k nums
+  the nums are meant to go from large to small, so max size first, etc.
+  """
+  makestr = ""
+  for i in zip(colors, chars, nums):
+    makestr += i[0]
+    makestr += i[1]*i[2]
+  return makestr
+
 def disp_clear():
   os.system('cls' if os.name == 'nt' else 'clear')
 
-def disp_damage_calc(s_str, d_str, dicecount, hitprob, raw_damage):
-  return "[Strength: ({:4.3f} vs. {:4.3f}); {} dice with chance {} each; Final: {}]".format(
-    s_str, d_str, dicecount, colors.color_prob(hitprob), colors.color_damage(raw_damage))
-
+def disp_chara(chara):
+  return "$[{}]${}$[7]$".format(chara.color, chara.name)
+  
 def disp_cha_title(chara):
   if chara.title:
     return " -={}=-".format(chara.title) # eventually move out
@@ -29,17 +45,53 @@ def disp_cha_title(chara):
 def disp_cha_fullname(chara):
   return str(chara) + chara.str_title()
 
-def disp_army(army):
-  return "$[{}]${}$[7]$".format(army.color, army.name)
-
-def disp_form_short(formation):
-  return rps.formation_info(formation, "short")
-
 def disp_skill(skill_str, success=None):
   return "<" + colors.color_bool(success) + skills.skill_info(skill_str, "short") + "$[7]$>"
 
 def disp_skill_activation(skill_str, success=None):
   return "<" + colors.color_bool(success) + " ".join(skill_str.upper().split("_")) + "$[7]$>"
+
+def disp_unit(unit):
+  return disp_chara(unit.character)
+
+def disp_unit_size(unit):
+  csize = colors.color_size(unit.size, unit.size_base) + str(unit.size) + "$[7]$"
+  return "{}/{}".format(str(csize), str(unit.size_base))
+
+class View():
+
+  def __init__(self, automated=False):
+    self.automated = automated
+
+  def _prerender(self, line):
+    """
+    converts a my-type color string to something on the screen
+
+    1) I start with strings of the type ah$[3]$hhh$[7]$, 
+    2) which should become ah${3}hhh${7}, (this can be used by asciimatics)
+    3) which in the final output should be converted to colorama (or some other 
+    """
+    return line.replace('$[', '${').replace(']$', '}')
+
+  def _render(self, line):
+    """
+    converts a line of my-type of string (see prerender) to step 2, which is colorama-printable
+    """
+    return colors.str_to_colorama(self._prerender(line))
+
+
+#########################
+# Battle-specific stuff #
+#########################
+
+def disp_damage_calc(s_str, d_str, dicecount, hitprob, raw_damage):
+  return "[Strength: ({:4.3f} vs. {:4.3f}); {} dice with chance {} each; Final: {}]".format(
+    s_str, d_str, dicecount, colors.color_prob(hitprob), colors.color_damage(raw_damage))
+
+
+def disp_form_short(formation):
+  return rps.formation_info(formation, "short")
+
 
 def disp_skillcard(skillcard):
   ss = skillcard.sc_str
@@ -50,12 +102,6 @@ def disp_skillcard(skillcard):
 def disp_order_short(order):
   return rps.order_info(order, "short")
 
-def disp_unit(unit):
-  return "$[{}]${}$[7]$".format(unit.color, unit.name)
-
-def disp_unit_size(unit):
-  csize = colors.color_size(unit.size, unit.size_base) + str(unit.size) + "$[7]$"
-  return "{}/{}".format(str(csize), str(unit.size_base))
 
 def disp_unit_ctargetting(unit):
   """ ex: 'sneaking towards' """
@@ -71,20 +117,6 @@ def disp_unit_ctargetting(unit):
 def disp_unit_status_noskills(unit):
   """ string for the unit's statuses that do NOT include skills"""
   return " ".join((str(s) for s in unit.unit_status if not s.is_skill()))
-
-def disp_bar_custom(colors, chars, nums):
-  """
-  all iterators, to make bars like this: '####$$$$----@@@@@@@@' etc.
-  k colors
-  k chars
-  k nums
-  the nums are meant to go from large to small, so max size first, etc.
-  """
-  makestr = ""
-  for i in zip(colors, chars, nums):
-    makestr += i[0]
-    makestr += i[1]*i[2]
-  return makestr
 
 def disp_bar_morale(max_morale, cur_morale, last_turn_morale):
   if last_turn_morale > cur_morale:
@@ -109,6 +141,10 @@ def disp_bar_day_tracker(max_pos, base, last_turn, cur):
 
 def disp_hrule():
   return "="*80
+
+############
+# Templates
+#############
 
 CONVERT_TEMPLATES_DISPS = {
   "ctarget":disp_unit,
@@ -139,9 +175,10 @@ PAUSE_STRS = {
   "ORDER_STR": Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.CYAN +  Back.BLACK + "ORDERS" + Fore.BLACK + Back.WHITE + " for army {} $[7]$ " + "({}):".format("$[7]$/".join([rps.order_info(i,"short") for i in ("A", "D", "I")])) + Colors.ENDC
 }
 
-class BattleScreen():
+class BattleScreen(View):
 
   def __init__(self, battle, armyid, automated=False):
+    super().__init__(automated=automated)
     self.console_buf = []
     self.max_screen_len = 24
     self.max_stat_len = 2
@@ -149,7 +186,7 @@ class BattleScreen():
     self.max_console_len = 3
     self.max_footer_len = 1
     self.battle = battle
-    self.automated = automated
+    self.debug_mode = self.battle.debug_mode
     self.armyid = armyid
 
   def _colored_strats(self, orders):
@@ -240,22 +277,6 @@ class BattleScreen():
     else:
       return(disp_hrule())
 
-  def _prerender(self, line):
-    """
-    converts a my-type color string to something on the screen
-
-    1) I start with strings of the type ah$[3]$hhh$[7]$, 
-    2) which should become ah${3}hhh${7}, (this can be used by asciimatics)
-    3) which in the final output should be converted to colorama (or some other 
-    """
-    return line.replace('$[', '${').replace(']$', '}')
-
-  def _render(self, line):
-    """
-    converts a line of my-type of string (see prerender) to step 2, which is colorama-printable
-    """
-    return colors.str_to_colorama(self._prerender(line))
-
   def blit_all_battle(self, pause_str=None):
     # blits status
     if self.automated:
@@ -272,8 +293,6 @@ class BattleScreen():
     print(self._render(fo), end="", flush=True)
     #  effects.append(Print(self.screen, StaticRenderer(images=self._render(l)), x=0, y=y, colour=7))
     # screen.play([Scene(effects, -1)])
-    self.console_buf = []
-    return read_single_keypress()[0]
 
   def disp_bulb(self, sc):
     """
@@ -327,9 +346,15 @@ class BattleScreen():
   #       rps.order_info(order, "noun"),
   #       " ".join([disp_skill_activation(sk, True) for un, sk in stack])))
 
+  def disp_chara_speech(self, chara, speech):
+    """
+    What to display when a character says something.
+    """
+    self.yprint("{}: '$[2]${}$[7]$'".format(disp_chara(chara), speech))
+  
   def disp_speech(self, unit, speech):
     """ What to display when a unit says something """
-    self.yprint("{}: '$[2]${}$[7]$'".format(disp_unit(unit), speech))
+    self.disp_chara_speech(unit.character, speech)
 
   def disp_skill_narration(self, skill_str, other_str, success=None):
     """ 
@@ -376,12 +401,9 @@ class BattleScreen():
                                                   combostr2))
 
   def _get_input(self, pause_str, armyid, accepted_inputs):
-    # this is to make it easier to see the 3 options
-    self.pause_and_display(pause_str=PAUSE_STRS["MORE_STR"])
     while True:
-      pause_str = pause_str
-      # self.disp_order_options(armyid)
-      inp = self.blit_all_battle(pause_str=pause_str)
+      self.blit_all_battle(pause_str=pause_str)
+      inp = read_single_keypress()[0]
       if inp.upper() in accepted_inputs:
         return inp.upper()
 
@@ -392,14 +414,16 @@ class BattleScreen():
     return self._get_input(PAUSE_STRS['ORDER_STR'].format(armyid), armyid, ['A', 'D', 'I'])
 
   def pause_and_display(self, pause_str=None):
-    _ = self.blit_all_battle(pause_str=pause_str)
+    self.blit_all_battle(pause_str=pause_str)
+    read_single_keypress()[0]
+    self.console_buf = []
 
   def print_line(self, text):
     assert len(self.console_buf) <= self.max_console_len
-    self.console_buf.append(text)
     if len(self.console_buf) == self.max_console_len:
-      # just filled
+      # about to fill
       self.pause_and_display(pause_str=PAUSE_STRS["MORE_STR"])
+    self.console_buf.append(text)
     logging.info(text)
 
   def yprint(self, text, templates=None, debug=False):
@@ -413,7 +437,7 @@ class BattleScreen():
     else:
       converted_text = text
     logging.debug(converted_text) # always log this
-    if debug and not self.battle.debug_mode:
+    if debug and not self.debug_mode:
       return
     # so we get here if either SHOW_DEBUG or debug=False, which means we send it to the buffer
     self.print_line(converted_text)

@@ -2,6 +2,7 @@
 from collections import deque
 import random
 
+from narration import BattleNarrator
 import textutils
 import contexts
 import events
@@ -16,7 +17,9 @@ import weather
 class Battle():
 
   def __init__(self, army1, army2, debug_mode=False, automated=False):
+    self.debug_mode = debug_mode
     self.battlescreen = textutils.BattleScreen(self, 0, automated=automated)
+    self.narrator = BattleNarrator(self, self.battlescreen)
     self.armies = [army1, army2]
     for a in self.armies:
       a.battle = self
@@ -38,7 +41,6 @@ class Battle():
       self.queues[qname] = deque()
     # other stuff
     self.order_history = []
-    self.debug_mode = debug_mode
     self.date = 0
     self.weather = None
     self.formations = None

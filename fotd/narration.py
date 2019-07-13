@@ -1,3 +1,25 @@
+class Narrator():
+  """
+  A kind of mid-level renderer for rendering narrations by characters.
+  """
+
+  def __init__(self, view):
+    self.view = view
+  
+  def chara_narrate(self, character, text):
+    self.view.disp_chara_speech(character, text)
+
+class BattleNarrator(Narrator):
+
+  def __init__(self, battle, battleview):
+    super().__init__(battleview)
+    self.battle = battle
+  
+  def unit_speech(self, unit, text, **kwargs):
+    self.chara_narrate(unit.character, text)
+
+
+  
 ENTRANCES = [
   "It's a good day for a battle.",
   "War... what is it good for?",
@@ -20,3 +42,4 @@ CAPTURES = [ "Wow. That really happened.",
             "Win some, lose some.",
             "I wasn't trying, so does it count?"
 ]
+

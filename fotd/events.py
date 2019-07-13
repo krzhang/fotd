@@ -55,8 +55,9 @@ class Event():
   @classmethod
   def make_speech(cls, unit, context, speech):
     newspeech = speech.format(**context.opt)
-    Event("make_speech", context=context.copy(additional_opt={"ctarget":unit,
-                                                              "speech":newspeech})).activate()
+    context.battle.narrator.unit_speech(unit, newspeech)
+    # Event("make_speech", context=context.copy(additional_opt={"ctarget":unit,
+    #                                                           "speech":newspeech})).activate()
 
   @classmethod
   def remove_status(cls, stat_str, context, ctarget):
@@ -428,11 +429,6 @@ EVENTS_MISC = {
 # for ev in EVENTS_RECEIVE:
 #   EVENTS_RECEIVE[ev]["panic_blocked"] = True
 # No common rules here...
-
-def make_speech(context, bv, **kwargs):
-  ctarget = context.ctarget
-  speech_str = context.speech
-  bv.disp_speech(ctarget, speech_str)
 
 def receive_damage(context, bv, **kwargs):
   ctarget = context.ctarget

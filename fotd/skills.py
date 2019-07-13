@@ -33,7 +33,7 @@ def get_skillcard(skill):
 
 def get_speech(skillcard, key):
   """Give a random speech from a skillcard."""
-  return random.choice(skillcard_info(skill_str, key))
+  return random.choice(skillcard_info(skillcard, key))
 
 SKILLS = {
   "chaos_arrow": {

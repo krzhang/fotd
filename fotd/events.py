@@ -25,7 +25,7 @@ class Event():
     edict = EVENTS[self.event_name]
     # death handler (should later be "availability" for retreats, etc.)
     # most events require actors who are alive
-    if not info(self.event_name, "allow_non_present_actors"):
+    if "allow_non_present_actors" in edict and edict["allow_non_present_actors"]:
       if any([not getattr(self.context, foo).is_present() for foo in edict["actors"]]): #pylint:disable=blacklisted-name
         return
     # berserk handler on orders
@@ -35,13 +35,13 @@ class Event():
         Event("berserked_order", self.context).activate()
         return
     # panic handler
-    if info(self.event_name, "panic_blocked"):
+    if event_info(self.event_name, "panic_blocked"):
       potential_panicker = getattr(self.context, edict["primary_actor"])
       if potential_panicker.has_unit_status("panicked"):
         self.context.battle.yprint("  %s is %s! No action" % (potential_panicker, status.Status("panicked")))
         return
     # time to activate this event on the queue; note the event has its own context, battle, etc.
-    info(self.event_name, "func")(self.context)
+    results = run_event_func(self.event_name, self.context, self.context.battle.battlescreen)
 
   @classmethod
   def gain_status(cls, stat_str, context, ctarget):
@@ -62,11 +62,23 @@ class Event():
   def remove_status(cls, stat_str, context, ctarget):
     pass
 
-def info(event_str, key):
+
+def event_dict(event_name):
+  return EVENTS[event_name]
+
+def event_info(event_name, key):
   """ Main auxilary function; gets a piece of info about an event type, and None otherwise."""
-  if key in EVENTS[event_str]:
-    return EVENTS[event_str][key]
+  edict = event_dict(event_name)
+  if key in edict:
+    return edict[key]
   return None
+
+def run_event_func(event_name, context, battlescreen, **kwargs):
+  """
+  runs one of the event functions in this section by name, giving a context 
+  and a view (battlescreen)
+  """
+  return globals()[event_name](context, context.battle.battlescreen, **kwargs)
 
 ################################
 # Utility functions #
@@ -111,7 +123,7 @@ def compute_arrow_damage(csource, ctarget, multiplier=1):
 ################
 # after these, there should be a ctarget
 
-def attack_order(context):
+def attack_order(context, bv, **kwargs):
   ctarget = context.ctarget
   myarmyid = ctarget.army.armyid
   enemy = context.battle.armies[1-myarmyid]
@@ -124,16 +136,16 @@ def attack_order(context):
   cnewsource.ctargetting = ("marching", cnewtarget)
   context.battle.yprint("{}: marching -> {};".format(cnewsource, cnewtarget), debug=True)
   newcontext = context.rebase({"csource":cnewsource, "ctarget":cnewtarget})
-  context.battle.place_event("engage", newcontext, "Q_MANUEVER")
+  context.battle.place_event("march", newcontext, "Q_MANUEVER")
 
-def defense_order(context):
+def defense_order(context, bv, **kwargs):
   ctarget = context.ctarget
   ctarget.ctargetting = ("defending", ctarget)
   ctarget.move(context.battle.hqs[ctarget.army.armyid])
   context.battle.yprint("{}: staying put at {};".format(ctarget, context.ctarget.position), debug=True)
   Event.gain_status("defended", context, ctarget)
 
-def indirect_order(context):
+def indirect_order(context, bv, **kwargs):
   csource = context.ctarget
   myarmyid = csource.army.armyid
   enemy = context.battle.armies[1-myarmyid]
@@ -148,7 +160,7 @@ def indirect_order(context):
   newcontext = context.rebase({"csource":cnewsource, "ctarget":cnewtarget})
   context.battle.place_event("indirect_raid", newcontext, "Q_MANUEVER")
 
-def berserked_order(context):
+def berserked_order(context, bv, **kwargs):
   csource = context.ctarget
   armyid = random.choice([0, 1])
   enemyunits = context.battle.armies[armyid].present_units()
@@ -159,7 +171,7 @@ def berserked_order(context):
   newcontext = context.rebase({"csource":csource, "ctarget":ctarget})
   context.battle.place_event("march", newcontext, "Q_MANUEVER")
 
-def provoked_order(context):
+def provoked_order(context, bv, **kwargs):
   csource = context.ctarget
   armyid = context.ctarget.army.armyid
   enemyunits = context.battle.armies[armyid].present_units()
@@ -187,7 +199,7 @@ for ev in EVENTS_ORDERS:
 # Generic Battlefield Events #
 ################
 
-def march(context):
+def march(context, bv, **kwargs):
   csource = context.csource
   ctarget = context.ctarget
   if ctarget in csource.attacked_by:
@@ -231,7 +243,7 @@ def march(context):
     # need logic for when 2 attackers rush into each other
     context.battle.place_event("physical_clash", context, "Q_RESOLVE")
 
-def indirect_raid(context):
+def indirect_raid(context, bv, **kwargs):
   csource = context.csource
   ctarget = context.ctarget
   if csource.attacked_by:
@@ -253,7 +265,7 @@ def indirect_raid(context):
                              context.copy(additional_opt={"vulnerable":vulnerable}),
                              "Q_RESOLVE")
 
-def engage(context):
+def engage(context, bv, **kwargs):
   """
   What happens when they meet face to face, but before the attacks. All the resolved tactics
   fire off. Tactics only fire when they have yomi advantage.
@@ -263,29 +275,17 @@ def engage(context):
   army = csource.army
   stacks = army.stacks
   if army.armyid == context.battle.yomi_winner:
+    # should probably do a weather check, even though one was laready done when tactics
+    # were thought up
     for unit, skillcard in army.stacks[army.order]:
       context.battle.place_event(skillcard, context, "Q_RESOLVE")
-  # fire
-  if (random.random() < 0.4 and
-      csource.has_unit_status("fire_tactic") and
-      not context.battle.is_raining()):
-    context.battle.place_event("fire_tactic", context, "Q_RESOLVE")
-  panicprob = 0.20
-  if random.random() < panicprob and csource.has_unit_status("panic_tactic"):
-    context.battle.place_event("panic_tactic", context, "Q_RESOLVE")
-  jeerprob = 0.60
-  if random.random() < jeerprob and csource.has_unit_status("jeer"):
-    context.battle.place_event("jeer", context, "Q_RESOLVE")
-  waterprob = 0.80
-  if random.random() < waterprob and csource.has_unit_status("water_tactic") and context.battle.is_raining():
-    context.battle.place_event("water_tactic", context, "Q_RESOLVE")
   context.battle.place_event("duel_consider", context, "Q_RESOLVE")
 
 #################
 # RESOLVE PHASE #
 #################
 
-def duel_accepted(context):
+def duel_accepted(context, bv, **kwargs):
   csource = context.csource
   ctarget = context.ctarget
   actors = [csource, ctarget]
@@ -313,7 +313,7 @@ def duel_accepted(context):
                                               "dmgdata":"",
                                               "dmglog":""})).activate()
 
-def duel_consider(context):
+def duel_consider(context, bv, **kwargs):
   csource = context.csource
   ctarget = context.ctarget
   acceptances, duel_data = duel.duel_commit(context, csource, ctarget)
@@ -326,7 +326,7 @@ def duel_consider(context):
     else:
       Event.make_speech(ctarget, context, duel.get_pre_duel_speech("deny"))
 
-def arrow_strike(context):
+def arrow_strike(context, bv, **kwargs):
   csource = context.csource
   ctarget = context.ctarget
   multiplier = 1
@@ -354,7 +354,7 @@ def arrow_strike(context):
 #      context.battle.yprint("  <counter arrow skill> %s can counter with their own volley of arrows" % ctarget)
       Event("counter_arrow_strike", context.rebase_switch()).activate()
 
-def physical_clash(context):
+def physical_clash(context, bv, **kwargs):
   csource = context.csource
   ctarget = context.ctarget
   context.battle.yprint("  {} clashes against {}!".format(csource, ctarget))
@@ -362,7 +362,7 @@ def physical_clash(context):
   # context.battle.yprint("  %s able to launch retaliation" % ctarget) can die in the middle
   Event("physical_strike", context.rebase_switch()).activate()
   
-def physical_strike(context):
+def physical_strike(context, bv, **kwargs):
   """ strike is the singular act of hitting """
   csource = context.csource
   ctarget = context.ctarget
@@ -379,6 +379,7 @@ EVENTS_GENERIC_CTARGETTED = {
   "arrow_strike": {},
   "duel_consider": {},
   "duel_accepted": {},
+  "engage": {},
   "march": {},
   "indirect_raid": {},
   "physical_clash": {},
@@ -432,12 +433,12 @@ EVENTS_MISC = {
 #   EVENTS_RECEIVE[ev]["panic_blocked"] = True
 # No common rules here...
 
-def make_speech(context):
+def make_speech(context, bv, **kwargs):
   ctarget = context.ctarget
   speech_str = context.speech
   context.battle.make_speech(ctarget, speech_str)
 
-def receive_damage(context):
+def receive_damage(context, bv, **kwargs):
   ctarget = context.ctarget
   damage = context.damage
   dmgdata = context.dmgdata
@@ -450,7 +451,7 @@ def receive_damage(context):
   if ctarget.size <= 0:
     ctarget.leave_battle()
 
-def receive_status(context):
+def receive_status(context, bv, **kwargs):
   ctarget = context.ctarget
   stat_str = context.status
   if "on_receive" in status.STATUSES_BATTLE[stat_str]:
@@ -461,7 +462,7 @@ def receive_status(context):
 
 # for armies
 
-def order_change(context):
+def order_change(context, bv, **kwargs):
   """
   When an order changes, if it happens to lose the Yomi, then the cost of the morale is
   'bet' and will be removed if the opponent out-Yomi's you.
@@ -474,7 +475,7 @@ def order_change(context):
   ctarget_army.bet_morale_change = morale_bet
   # Event("change_morale", context).activate() this cost is pretty high
 
-def change_morale(context):
+def change_morale(context, bv, **kwargs):
   ctarget_army = context.ctarget_army
   morale_change = context.morale_change
   newmorale = ctarget_army.morale + morale_change
@@ -482,7 +483,7 @@ def change_morale(context):
   newmorale = max(newmorale, battle_constants.MORALE_MIN)
   ctarget_army.morale = newmorale
 
-def order_yomi_win(context):
+def order_yomi_win(context, bv, **kwargs):
   csource_army = context.ctarget_army
   ctarget_army = context.battle.armies[1-csource_army.armyid]
   ycount = csource_army.get_yomi_count()
@@ -500,7 +501,7 @@ def order_yomi_win(context):
 # targetted Events from Skills #
 ################################
 
-def counter_arrow_strike(context):
+def counter_arrow_strike(context, bv, **kwargs):
   csource = context.csource
   ctarget = context.ctarget
   context.battle.make_skill_narration("counter_arrow", "{} counters with their own volley".format(csource), True)
@@ -579,13 +580,13 @@ def target_skill_tactic(context, skillcard, cchance, success_callback):
   context.battle.make_skill_narration(skillcard, "", success)
   return success
 
-def _fire_tactic_success(context):
+def _fire_tactic_success(context, bv, **kwargs):
   Event.gain_status("burned", context, context.ctarget)
 
-def fire_tactic(context):
+def fire_tactic(context, bv, **kwargs):
   return target_skill_tactic(context, "fire_tactic", 0.5, _fire_tactic_success)
 
-def jeer(context):
+def jeer(context, bv, **kwargs):
   csource = context.csource
   ctarget = context.ctarget
   # should interrupt this, but right now it should be fine
@@ -603,20 +604,20 @@ def jeer(context):
   context.battle.make_skill_narration("jeer", "", success)
   return success
 
-def _panic_tactic_success(context):
+def _panic_tactic_success(context, bv, **kwargs):
   Event.gain_status("panicked", context, context.ctarget)
 
-def panic_tactic(context):
+def panic_tactic(context, bv, **kwargs):
   return target_skill_tactic(context, "panic_tactic", 0.5, _panic_tactic_success)
 
-def _flood_tactic_success(context):
-  damdice = context.battle.battle_constants.WATER_TACTIC_DAMDICE
+def _flood_tactic_success(context, bv, **kwargs):
+  damdice = context.battle.battle_constants.FLOOD_TACTICS_DAMDICE
   damage = random.choice(range(damdice))
   dmgdata = (context.csource, context.ctarget, "floods", damage)
   Event("receive_damage", context.copy(
     additional_opt={"damage":damage, "dmgdata":dmgdata, "dmglog":""})).activate()
   
-def flood_tactic(context):
+def flood_tactic(context, bv, **kwargs):
   return target_skill_tactic(context, "flood_tactic", 0.5, _flood_tactic_success)
   
 EVENTS_SKILLS = {
@@ -644,32 +645,25 @@ for ev in EVENTS_SKILLS:
   EVENTS_SKILLS[ev]["actors"] = ["csource", "ctarget"]
   EVENTS_SKILLS[ev]["primary_actor"] = "csource"
 
-EVENTS = dict(list(EVENTS_ORDERS.items()) +
-              list(EVENTS_GENERIC_CTARGETTED.items()) +
-              list(EVENTS_MISC.items()) +
-              list(EVENTS_SKILLS.items()))
-
 #######################################
 # Status Beginning/end of turn Events #
 #######################################
 
-# Strictly speaking, these aren't events right now, since we just run them. This means we can activate but cannot defer
-
-def generic_eot_fizzle(context):
+def generic_eot_fizzle(context, bv, **kwargs):
   # a bit annoying that removal is not symmetric with gaining
   stat_str = context.status
-  if status.info(stat_str, "on_remove"):
+  if status.status_info(stat_str, "on_remove"):
     # eventually, maybe do specialized stuff
     context.battle.yprint("{} is no longer {}".format(context.ctarget, status.Status(stat_str)))
   context.ctarget.remove_unit_status(stat_str)
   
-def burned_bot(context):
+def burned_bot(context, bv, **kwargs):
   ctarget = context.ctarget
   if context.battle.is_raining():
     context.battle.yprint("thanks to the rain, %s put out the fire." % ctarget)
     ctarget.remove_unit_status("burned")
   
-def burned_eot(context):
+def burned_eot(context, bv, **kwargs):
   ctarget = context.ctarget
   if ctarget.has_unit_status("burned"): # could have dried up or something
     # damage before putting out
@@ -688,7 +682,7 @@ def burned_eot(context):
     else:
       context.battle.yprint("The fire burning %s rages on." % ctarget)
 
-def berserk_eot(context):
+def berserk_eot(context, bv, **kwargs):
   ctarget = context.ctarget
   if ctarget.has_unit_status("berserk"): # could have dried up or something
     if random.random() < 0.5:
@@ -697,7 +691,7 @@ def berserk_eot(context):
     else:
       context.battle.yprint("{}'s unit is still {}.".format(ctarget, status.Status("berserk")))
 
-def panic_eot(context):
+def panic_eot(context, bv, **kwargs):
   ctarget = context.ctarget
   if ctarget.has_unit_status("panicked"): # could have dried up or something
     if random.random() < 0.5:
@@ -706,7 +700,7 @@ def panic_eot(context):
     else:
       context.battle.yprint("%s's unit is still panicking." % ctarget)
 
-def provoked_eot(context):
+def provoked_eot(context, bv, **kwargs):
   ctarget = context.ctarget
   if ctarget.has_unit_status("provoked"): # could have dried up or something
     if random.random() < 0.5:
@@ -719,7 +713,7 @@ def provoked_eot(context):
 # Skills #
 ##########
 
-def trymode_status_bot(context):
+def trymode_status_bot(context, bv, **kwargs):
   ctarget = context.ctarget
   trymodeprob = (ctarget.size_base-ctarget.size)/ctarget.size_base
   success = random.random() < trymodeprob
@@ -731,3 +725,24 @@ def trymode_status_bot(context):
   else:
     Event.make_speech(ctarget, context, "Nope, still not trying.")
   context.battle.make_skill_narration("trymode", "", success)
+
+EVENTS_STATUS = {
+  "generic_eot_fizzle": {},
+  "burned_bot": {},
+  "burned_eot": {},
+  "berserk_eot": {},
+  "provoked_eot": {},
+  "panicked_eot": {},
+  "trymode_status_bot": {}
+}
+
+for ev in EVENTS_STATUS:
+  EVENTS_STATUS[ev]["panic_blocked"] = True
+  EVENTS_STATUS[ev]["actors"] = ["ctarget"]
+  EVENTS_STATUS[ev]["primary_actor"] = "ctarget"
+
+EVENTS = dict(list(EVENTS_ORDERS.items()) +
+              list(EVENTS_GENERIC_CTARGETTED.items()) +
+              list(EVENTS_MISC.items()) +
+              list(EVENTS_SKILLS.items()) +
+              list(EVENTS_STATUS.items()))

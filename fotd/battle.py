@@ -7,6 +7,7 @@ import contexts
 import events
 import rps
 import skills
+import status
 import battle_constants
 import positions
 import weather
@@ -117,7 +118,13 @@ class Battle():
       for unit in tuple(self.armies[i].units):
         for sta in tuple(unit.unit_status):
           ctxt = contexts.Context(self, opt={"ctarget":unit})
-          sta.run_status_func(func_key, ctxt)
+          ss = sta.stat_str
+          func_list = status.status_info(ss, func_key)
+          if func_list: # found a function (func_name, kwargs)
+            event_name = func_list[0]
+            additional_opt = {"status":ss}
+            additional_opt.update(func_list[1])
+            events.Event(event_name, ctxt.copy(additional_opt=additional_opt)).activate()
 
   def is_raining(self):
     return self.weather.text == "raining"

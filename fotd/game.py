@@ -163,8 +163,8 @@ def link_data_funcs():
     for func_type in ["eot", "bot"]:
       if func_type in STATUSES[st]:
         STATUSES[st][func_type+'_func'] = getattr(events, STATUSES[st][func_type][0])
-      
-link_data_funcs()
+
+# link_data_funcs()
 
 def test(debug=False, resize=False, two_players=False, AI="INT_AI_NORMAL"):
   if two_players:
@@ -183,8 +183,9 @@ def test(debug=False, resize=False, two_players=False, AI="INT_AI_NORMAL"):
     losers = bat.losing_status()
     for l in [0,1]:
       if losers[l]:
-        print("{} is destroyed!".format(textutils.disp_army(l)))
+        bat.yprint("{} is destroyed!".format(textutils.disp_army(l)))
     if any(losers):
+      bat.battlescreen.pause_and_display(pause_str="The battle ends...")
       sys.exit(0)
 
 if __name__ == "__main__":

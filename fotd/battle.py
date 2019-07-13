@@ -8,6 +8,7 @@ import events
 import rps
 import skills
 import status
+import tableau
 import battle_constants
 import positions
 import weather
@@ -15,9 +16,11 @@ import weather
 class Battle():
 
   def __init__(self, army1, army2, debug_mode=False):
+    self.battlescreen = textutils.BattleScreen(self)
     self.armies = [army1, army2]
     for a in self.armies:
       a.battle = self
+      a.tableau = tableau.Tableau(self, a)
       for u in a.units:
         for s in u.character.skills:
           u.add_unit_status(s.skill_str)
@@ -36,7 +39,6 @@ class Battle():
     # other stuff
     self.order_history = []
     self.debug_mode = debug_mode
-    self.battlescreen = textutils.BattleScreen(self)
     self.date = 0
     self.weather = None
     self.formations = None
@@ -47,6 +49,9 @@ class Battle():
     self.init_day()
 
   def init_day(self):
+    """
+    Cleans state, but also most importantly, makes it renderable.
+    """
     # common knowledge: later take out
     self.date += 1
     self.weather = weather.random_weather()
@@ -62,36 +67,14 @@ class Battle():
       self.armies[i].order = None
       self.armies[i].formation_bonus = 1.0
       self.armies[i].last_turn_morale = self.armies[i].morale
-      self.armies[i].hand = []
-      self.armies[i].deck = []
-      self.armies[i].stacks = {'A':[], 'D':[], 'I':[]}
+      self.armies[i].tableau.clear()
       for u in self.armies[i].present_units():
         u.move(self.hqs[u.army.armyid])
         u.ctargetting = None
         u.last_turn_size = u.size
-        for sk in u.skills:
-          sc = skills.get_skillcard(sk)
-          if sc:
-            self.armies[i].deck.append((u, sc))
-        # now the deck has all the possible skillcards
     assert all((p.is_empty() for p in self.dynamic_positions))
     self.dynamic_positions = []
 
-  def _draw_cards(self, armyid):
-    """
-    draw hands from the deck of skillcards. Done twice: before the first formation call and once
-
-    """
-    army = self.armies[armyid]
-    for unit, card_type in army.deck:
-      for key in skills.skillcard_info(card_type, "bulb"):
-        proc_chance = skills.skillcard_info(card_type, "bulb")[key]
-        if ((random.random() < proc_chance) and
-            (card_type not in army.stacks[key]) and
-            (self.weather.text not in skills.skillcard_info(card_type, "illegal_weather"))):
-          self.battlescreen.disp_bulb(unit, card_type, key)
-          army.stacks[key].append((unit, card_type))
-    
   # observer pattern?
   def make_speech(self, unit, speech):
     self.battlescreen.disp_speech(unit, speech)
@@ -148,7 +131,7 @@ class Battle():
   def get_formations(self):
     orders = [None, None]
     for i in [0, 1]:
-      self._draw_cards(i)
+      self.armies[i].tableau.draw_cards()
       orders[i] = self.armies[i].intelligence.get_formation(self, i)
       self.armies[i].formation = orders[i]
     return tuple(orders)
@@ -156,7 +139,7 @@ class Battle():
   def get_orders(self):
     orders = [None, None]
     for i in [0, 1]:
-      self._draw_cards(i)
+      self.armies[i].tableau.draw_cards()
       orders[i] = self.armies[i].intelligence.get_order(self, i)
       self.armies[i].order = orders[i]
     return tuple(orders)

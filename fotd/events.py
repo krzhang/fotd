@@ -273,12 +273,8 @@ def engage(context, bv, **kwargs):
   csource = context.csource
   ctarget = context.ctarget
   army = csource.army
-  stacks = army.stacks
-  if army.armyid == context.battle.yomi_winner:
-    # should probably do a weather check, even though one was laready done when tactics
-    # were thought up
-    for unit, skillcard in army.stacks[army.order]:
-      context.battle.place_event(skillcard, context, "Q_RESOLVE")
+  for sc in army.tableau.bulbed_by(csource):
+    context.battle.place_event(sc.sc_str, context, "Q_RESOLVE")
   context.battle.place_event("duel_consider", context, "Q_RESOLVE")
 
 #################

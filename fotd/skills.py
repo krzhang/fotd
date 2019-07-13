@@ -12,12 +12,6 @@ class Skill():
     # this allows us to e.g. remove
     return self.skill_str == other.skill_str
 
-  def __repr__(self):
-    return "<$[2]$" + self.skill_str + "$[7]$>"
-
-  def short(self):
-    return "<$[2]$" + skill_info(self.skill_str, "short") + "$[7]$>"
-
 def skill_info(skill_str, key):
   if key in SKILLS[skill_str]:
     return SKILLS[skill_str][key]

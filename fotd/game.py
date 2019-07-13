@@ -12,9 +12,11 @@ logger.addHandler(f)
 # handler.setLevel(logging.DEBUG)
 # logger.addHandler(handler)
 
-import textutils
+from colors import Colours
 from character import Character
 from army import Unit, Army
+
+import textutils
 import battle
 # import graphics_asciimatics
 import intelligence
@@ -171,8 +173,8 @@ def test(debug=False, resize=False, two_players=False, AI="INT_AI_NORMAL"):
     second_intelligence = "INT_PLAYER"
   else:
     second_intelligence = AI
-  army0 = army_mysticsoft(0, 5, "INT_PLAYER")
-  army1 = army_unknown(1, 6, second_intelligence)
+  army0 = army_mysticsoft(0, Colours.CYAN, "INT_PLAYER")
+  army1 = army_unknown(1, Colours.MAGENTA, second_intelligence)
   if resize:
     print("\x1b[8;24;80t")
     # print ("\x1b[8;{};80t".format(textutils.BATTLE_SCREEN.max_screen_len))

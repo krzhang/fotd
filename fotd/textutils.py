@@ -34,8 +34,17 @@ def disp_army(army):
 def disp_form_short(formation):
   return rps.formation_info(formation, "short")
 
+def disp_skill(skill_str, success=None):
+  return "<" + colors.color_bool(success) + skills.skill_info(skill_str, "short") + "$[7]$>"
+
 def disp_skill_activation(skill_str, success=None):
   return "<" + colors.color_bool(success) + " ".join(skill_str.upper().split("_")) + "$[7]$>"
+
+def disp_skillcard(skillcard):
+  ss = skillcard.sc_str
+  return "<{}{}:{}$[7]$>".format(rps.order_info(skillcard.order, "color"),
+                                 skillcard.order,
+                                 skills.skillcard_info(ss, "short"))
 
 def disp_order_short(order):
   return rps.order_info(order, "short")
@@ -139,7 +148,6 @@ class BattleScreen():
     self.max_console_len = 3
     self.max_footer_len = 1
     self.battle = battle
-    # self.screen = None # needs one
 
   def _colored_strats(self, orders):
     orders = list(orders)
@@ -202,7 +210,7 @@ class BattleScreen():
         if len(battle.armies[j].present_units()) > i:
           unit = battle.armies[j].present_units()[i]
           header = self._disp_unit_newheader(unit, j)
-          situ = self._disp_unit_newsitu(unit, j)
+          situ = self._disp_unit_skills(unit, j)
         else:
           header = ""
           situ = ""
@@ -262,11 +270,14 @@ class BattleScreen():
     self.console_buf = []
     return read_single_keypress()[0]
 
-  def disp_bulb(self, unit, skillcard, order):
+  def disp_bulb(self, sc):
     """
     someone just thought of a tactic.
     """
-    self.disp_speech(unit, "<$[4]$!$[5]$!$[6]$!$[7]$> " + skills.skillcard_info(skillcard, "on_bulb")[order])
+    unit = sc.unit
+    sc_str = sc.sc_str
+    order = sc.order
+    self.disp_speech(unit, "<$[4]$!$[5]$!$[7]$> " + skills.skillcard_info(sc_str, "on_bulb")[order])
 
   def disp_duel(self, csource, ctarget, loser_history, health_history, damage_history):
     self.yprint("{csource} and {ctarget} face off!".format(**{"csource":csource,
@@ -302,16 +313,15 @@ class BattleScreen():
       dmg_str = disp_damage_calc(*dmglog)
       self.yprint(dmg_str, debug=True)
 
-  def disp_order_options(self, armyid):
-    army = self.battle.armies[armyid]
-    for order in ['A', 'D', 'I']:
-      stack = army.stacks[order]
-      self.yprint("{} ({}) has readied: {}".format(
-        order,
-        rps.order_info(order, "noun"),
-        " ".join([disp_skill_activation(sk, True) for un, sk in stack])))
+  # def disp_order_options(self, armyid):
+  #   army = self.battle.armies[armyid]
+  #   for order in ['A', 'D', 'I']:
+  #     stack = army.stacks[order]
+  #     self.yprint("{} ({}) has readied: {}".format(
+  #       order,
+  #       rps.order_info(order, "noun"),
+  #       " ".join([disp_skill_activation(sk, True) for un, sk in stack])))
 
-    
   def disp_speech(self, unit, speech):
     """ What to display when a unit says something """
     self.yprint("{}: '$[2]${}$[7]$'".format(disp_unit(unit), speech))
@@ -325,28 +335,23 @@ class BattleScreen():
     if other_str == "":
       other_str = colors.color_bool(success) + successtr + Colors.ENDC
     self.yprint(disp_skill_activation(skill_str, success) + " " + other_str)
-    
+
   def _disp_unit_newheader(self, unit, side):
     healthbar = disp_bar_day_tracker(battle_constants.ARMY_SIZE_MAX, unit.size_base, unit.last_turn_size, unit.size)
-    charstr = "{} {} Hp:{}".format(healthbar, disp_unit(unit), disp_unit_size(unit))
-    if side == 0:
-      return charstr
-    else:
-      return " "*0 + charstr
-
-  def _disp_unit_newsitu(self, unit, side):
-    charstr = " "*21
     statuses = disp_unit_status_noskills(unit)
-    if statuses:
-      charstr += "(" + statuses + "|"
+    charstr = "{} {} Hp:{} {}".format(healthbar, disp_unit(unit), disp_unit_size(unit), statuses)
+    return charstr
+
+  def _disp_unit_skills(self, unit, side):
+    passive_skillstr = " ".join((disp_skill(s.skill_str, success=False) for s in unit.character.skills))
+    active_skills = unit.army.tableau.bulbed_by(unit)
+    if passive_skillstr:
+      sepstr = " | Prepped: "
     else:
-      charstr += "("
-    charstr += " ".join((s.short() for s in unit.character.skills)) + ")"
-    if side == 0:
-      # eventually may want to print differently based on which side they are on
-      return charstr
-    else:
-      return " "*0 + charstr
+      sepstr = "| Prepped: "
+    active_skillstr = sepstr + " ".join([disp_skillcard(sc) for sc in active_skills])
+    charstr = " "*2 + passive_skillstr + active_skillstr
+    return charstr
 
   def disp_yomi_win(self, csource_army, ctarget_army, ycount, bet):
     if ycount > 1:
@@ -367,7 +372,7 @@ class BattleScreen():
     self.pause_and_display(pause_str=PAUSE_STRS["MORE_STR"])
     while True:
       pause_str = pause_str
-      self.disp_order_options(armyid)
+      # self.disp_order_options(armyid)
       inp = self.blit_all_battle(pause_str=pause_str)
       if inp.upper() in accepted_inputs:
         return inp.upper()

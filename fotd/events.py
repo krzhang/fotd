@@ -164,12 +164,12 @@ def berserked_order(context, bv, narrator):
   csource = context.ctarget
   armyid = random.choice([0, 1])
   enemyunits = context.battle.armies[armyid].present_units()
-  ctarget = random.choice(enemyunits)
+  cnewtarget = random.choice(enemyunits)
   bv.yprint("{}: random {} attack -> {}; ignoring original orders".format(
-    csource, status.Status("berserk"), ctarget))
-  context.ctarget.ctargetting = ("marching", ctarget)
-  newcontext = context.rebase({"csource":csource, "ctarget":ctarget})
-  context.battle.place_event("march", newcontext, "Q_MANUEVER")
+    csource, status.Status("berserk"), cnewtarget))
+  csource.ctargetting = ("marching", cnewtarget)
+  newcontext = context.rebase({"csource":csource, "ctarget":cnewtarget})
+  context.battle.place_event("march", newcontext, "Q_ORDER") # order, not manuever!
 
 def provoked_order(context, bv, narrator):
   csource = context.ctarget
@@ -178,9 +178,9 @@ def provoked_order(context, bv, narrator):
   ctarget = random.choice(enemyunits)
   bv.yprint("{}: random {} attack -> {}; ignoring original orders".format(
     csource, status.Status("provoked"), ctarget))
-  context.ctarget.ctargetting = ("marching", ctarget)
+  csource.ctargetting = ("marching", ctarget)
   newcontext = context.rebase({"csource":csource, "ctarget":ctarget})
-  context.battle.place_event("march", newcontext, "Q_MANUEVER")
+  context.battle.place_event("march", newcontext, "Q_ORDER")
 
 EVENTS_ORDERS = {
   "attack_order": {},
@@ -584,7 +584,6 @@ def panic_tactic(context, bv, narrator):
   resolve_targetting_event(context, bv, narrator, "panic_tactic", 0.5, "_panic_tactic_success")
 
 def _flood_tactic_success(context, bv, narrator):
-  new_context = context.rebase({"csource":context.cscource, "ctarget":context.target})
   damdice = battle_constants.FLOOD_TACTIC_DAMDICE
   damage = random.choice(range(damdice))
   dmgdata = (context.csource, context.ctarget, "floods", damage)
@@ -612,7 +611,11 @@ EVENTS_SKILLS = {
     },
   "flood_tactic": {
     "can_aoe": True
-    }
+    },
+  "_fire_tactic_success": {},
+  "_panic_tactic_success": {},
+  "_jeer_tactic_success": {},
+  "_flood_tactic_success": {},
 }
 
 for ev in EVENTS_SKILLS:

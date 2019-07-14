@@ -212,8 +212,8 @@ class BattleScreen(View):
     super().__init__(automated=automated)
     self.console_buf = []
     self.max_screen_len = 24
-    self.max_stat_len = 2
-    self.max_armies_len = 18
+    self.max_armies_len = 17
+    self.max_stat_len = 3
     self.max_console_len = 3
     self.max_footer_len = 1
     self.battle = battle
@@ -268,11 +268,7 @@ class BattleScreen(View):
       disp_army(self.battle.armies[1]),
       disp_bar_morale(10, self.battle.armies[1].morale, self.battle.armies[1].last_turn_morale))
   
-  def _disp_statline(self):
-    statline = self._day_status_str()
-    return [statline, disp_hrule()]
-
-  def _disp_armies(self): # 18 lines
+  def _disp_armies(self): # 17 lines
     battle = self.battle
     armies_buf = []
       
@@ -287,12 +283,14 @@ class BattleScreen(View):
           situ = ""
         armies_buf.append(header)
         armies_buf.append(situ)
-      if j == 0:
-        # armies_buf.append(" "*39 + "VS" + " "*39)
-        armies_buf.append(self._vs_str())
     armies_buf.append(disp_hrule())
     return armies_buf
 
+  def _disp_statline(self): # 3 lines
+    vs_line = self._vs_str()
+    statline = self._day_status_str()
+    return [statline, vs_line, disp_hrule()]
+  
   def _disp_console(self):
     newbuf = []
     for i in range(self.max_console_len):
@@ -313,13 +311,14 @@ class BattleScreen(View):
     if self.automated:
       return
     disp_clear()
-    st = self._disp_statline() # 2 lines
-    ar = self._disp_armies() # 18 lines
-    co = self._disp_console() # 3 lines
+    ar = self._disp_armies() 
+    st = self._disp_statline() 
+    co = self._disp_console() 
     fo = self._disp_footerline(pause_str) # 1 line, string
-    assert len(st + ar + co) == self.max_screen_len - 1
+    meat = ar + st + co # meat of the print job, not counting the final string
+    assert len(meat) == self.max_screen_len - 1
     # effects = []
-    for y, li in enumerate(st + ar + co):
+    for y, li in enumerate(meat):
       print(self._render(li))
     print(self._render(fo), end="", flush=True)
 

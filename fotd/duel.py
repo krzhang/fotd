@@ -38,12 +38,14 @@ DUEL_SPEECHES = {
     "Is there no one to fight {csource}?",
     "Come {ctarget}, it is a good day for a fight.",
     "You are no match for me, {ctarget}.",
+    "Let's dance, {ctarget}.",
   ],
   "accept": [
     "Ahaha, you asked for it!",
     "I can beat you with my left hand, {csource}.",
     "I am surprised you dare to challenge me...",
     "{csource}! Exactly who I am waiting for!",
+    "You know nothing, {csource}.",
   ],
   "deny": [
     "A good general does not rely on physical strength alone.",
@@ -51,8 +53,9 @@ DUEL_SPEECHES = {
     "Don't bring playground antics to the battlefield.",
   ],
   "defeats": [
-    "I bested {ctarget}."
-    "I have a hundred problems;{ctarget} was not one of them."
+    "I bested {ctarget}.",
+    "I have a hundred problems and {ctarget} was not one of them.",
+    "Whew. That was a good warmup."
   ]
 }
 

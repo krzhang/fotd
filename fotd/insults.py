@@ -59,7 +59,8 @@ INSULTS_ADJ = [
   "gibbering",
   "raggedy",
   "thundering",
-  "secondary-market"
+  "secondary-market",
+  "yeast",
 ]
 
 INSULTS_NOUNS = [
@@ -97,6 +98,7 @@ INSULTS_NOUNS = [
   "succotash",
   "eggplant",
   "fungus",
+  "infection",
   "lemur",
   "gathropod",
   "anthropod",

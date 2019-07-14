@@ -11,3 +11,6 @@ TODOS
 - really separated the view in the events file; now all events have a battleview pointer
 - making bulbing more obvious:
   - change the statlines so the bulbed tactics are directly visible there
+
+<2019-07-14 Sun>
+- add a simple end-to-end test for pytest

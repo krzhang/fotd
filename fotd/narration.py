@@ -32,7 +32,11 @@ class BattleNarrator(Narrator):
     self.battle = battle
   
   def unit_speech(self, unit, text, **context):
-    self.chara_narrate(unit.character, text, **context)
+    # Han factor:
+    if "Han" in unit.name and "Xu" in unit.name and random.random() < 0.50:
+      self.chara_narrate(unit.character, "Bruh.", **context)
+    else:
+      self.chara_narrate(unit.character, text, **context)
 
   # the lack of symmetry here annoys me
 
@@ -80,7 +84,7 @@ class BattleNarrator(Narrator):
                        "You are a {}!".format(insults.random_diss()),
                        **context)
       if success:
-        self.unit_speech(context["target"], 
+        self.unit_speech(context["ctarget"], 
                          "Uh, uh, you are a {}?".format(insults.random_diss_noun()),
                          **context)
       else:

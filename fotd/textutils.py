@@ -134,16 +134,16 @@ def disp_order_short(order):
   return rps.order_info(order, "short")
 
 
-def disp_unit_ctargetting(unit):
+def disp_unit_targetting(unit):
   """ ex: 'sneaking towards' """
-  if not unit.ctargetting: # set to none etc.
+  if not unit.targetting: # set to none etc.
     return "doing nothing"
-  if unit.ctargetting[0] == "marching":
-    return "marching -> " + disp_unit(unit.ctargetting[1])
-  if unit.ctargetting[0] == "defending":
+  if unit.targetting[0] == "marching":
+    return "marching -> " + disp_unit(unit.targetting[1])
+  if unit.targetting[0] == "defending":
     return "staying put"
-  assert unit.ctargetting[0] == "sneaking"
-  return "sneaking -> " + disp_unit(unit.ctargetting[1])
+  assert unit.targetting[0] == "sneaking"
+  return "sneaking -> " + disp_unit(unit.targetting[1])
 
 def disp_unit_status_noskills(unit):
   """ string for the unit's statuses that do NOT include skills"""

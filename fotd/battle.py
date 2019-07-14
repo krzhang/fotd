@@ -72,7 +72,7 @@ class Battle():
       self.armies[i].tableau.clear()
       for u in self.armies[i].present_units():
         u.move(self.hqs[u.army.armyid])
-        u.ctargetting = None
+        u.targetting = None
         u.last_turn_size = u.size
     assert all((p.is_empty() for p in self.dynamic_positions))
     self.dynamic_positions = []
@@ -145,9 +145,12 @@ class Battle():
       formation = self.formations[i]
       cost = rps.formation_info(formation, "morale_cost")[order]
       if cost:
-        orderlist.append((0, "order_change", contexts.Context(self, opt={"ctarget_army":self.armies[i], "morale_bet":cost})))
+        orderlist.append((0, "order_change",
+                          contexts.Context(self, opt={"ctarget_army":self.armies[i],
+                                                      "morale_bet":cost})))
       if self.yomi_winner == i:
-        orderlist.append((0, "order_yomi_win", contexts.Context(self, opt={"ctarget_army":self.armies[i]})))
+        orderlist.append((0, "order_yomi_win",
+                          contexts.Context(self, opt={"ctarget_army":self.armies[i]})))
       for u in self.armies[i].present_units():
         u.attacked = []
         u.attacked_by = []
@@ -156,12 +159,13 @@ class Battle():
         speed += random.choice([-3,-2,-1,0,1,2,3])
         if order == 'D':
           speed += 7
-        orderlist.append((speed, rps.order_to_event(order),
-                          contexts.Context(self, opt={"ctarget":u})))
+        orderlist.append((speed, "order_received",
+                          contexts.Context(self, opt={"ctarget":u,
+                                                      "order":order})))
     orderlist.sort(key=lambda x: x[0])
     for o in orderlist:
-      self.place_event(o[1], o[2], "Q_ORDER")
-
+      self.place_event(o[1], o[2], 'Q_ORDER')
+                          
   def take_turn(self):
     self.formations = self.get_formations()
     for i in [0,1]:
@@ -173,6 +177,9 @@ class Battle():
     # preloading events
     self._run_status_handlers("bot") # should be queue later
     self._run_queue('Q_ORDER')
+    for i in [0,1]:
+      for u in self.armies[i].present_units():
+        assert u.targetting
     self._run_queue('Q_MANUEVER')
     self._run_queue('Q_RESOLVE')
     self._run_status_handlers("eot") # should be queue later

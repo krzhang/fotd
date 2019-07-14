@@ -1,6 +1,7 @@
 import random
 
 import battle_constants
+import contexts
 import duel
 import rps
 import status
@@ -26,12 +27,6 @@ class Event():
     if ("allow_non_present_actors" not in edict) or not edict["allow_non_present_actors"]:
       if any([not self.context.opt[foo].is_present() for foo in edict["actors"]]): #pylint:disable=blacklisted-name
         return
-    # berserk handler on orders
-    if self.event_name in ["attack_order", "defense_order", "indirect_order"]:
-      ctarget = self.context.ctarget
-      if ctarget.has_unit_status("berserk"):
-        Event("berserked_order", self.context).activate()
-        return
     # panic handler
     if event_info(self.event_name, "panic_blocked"):
       potential_panicker = getattr(self.context, edict["primary_actor"])
@@ -53,6 +48,14 @@ class Event():
                                                     "stat_str":stat_str,
                                                     "stat_viz":str(status.Status(stat_str))})).activate()
 
+  # @classmethod
+  # def event_from_order(cls, battle, unit, order):
+  #   """
+  #   battle module uses this to get an event based on the intelligence's order
+  #   """
+  #   return Event("order_received", context=contexts.Context(battle, opt={"ctarget":unit,
+  #                                                                      "order":order}))
+  
   @classmethod
   def make_speech(cls, unit, context, speech):
     newspeech = speech.format(**context.opt)
@@ -82,9 +85,11 @@ def run_event_func(event_name, context, battlescreen, narrator):
   """
   return globals()[event_name](context, battlescreen, narrator)
 
-################################
+#####################
 # Utility functions #
-################################a
+#####################
+
+# Damage functions
 
 def _roll_dice(s_str, d_str, dicecount):
   if d_str + s_str < 0.00001: # to avoid dividing by 0
@@ -123,28 +128,46 @@ def _compute_arrow_damage(csource, ctarget, multiplier=1):
 ################
 # after these, there should be a ctarget
 
+def order_received(context, bv, narrator):
+  """
+  Handles statuses, etc. that affects receiving of an order.
+  """
+  ctarget = context.ctarget
+  given_order = context.order
+  if ctarget.has_unit_status("panicked") and random.random() < 0.5:
+    Event("panicked_order", context).activate()
+    return
+  if ctarget.has_unit_status("provoked") and random.random() < 0.5:
+    Event("provoked_order", context).activate()
+    return
+  Event(rps.order_to_event(given_order), context).activate()
+
 def attack_order(context, bv, narrator):
+  """
+  what we do in a *committed* attack order (we no longer consider statuses, etc;)
+  """
   ctarget = context.ctarget
   myarmyid = ctarget.army.armyid
   enemy = context.battle.armies[1-myarmyid]
   enemyunits = enemy.present_units()
-  if not enemyunits:
+  if not enemyunits: 
     bv.yprint("No unit to attack!")
+    ctarget.targetting = ("defending", ctarget)
     return
   cnewsource = context.ctarget # new event
   cnewtarget = random.choice(enemyunits)
-  cnewsource.ctargetting = ("marching", cnewtarget)
+  cnewsource.targetting = ("marching", cnewtarget)
   bv.yprint("{}: marching -> {};".format(cnewsource, cnewtarget), debug=True)
   newcontext = context.rebase({"csource":cnewsource, "ctarget":cnewtarget})
   context.battle.place_event("march", newcontext, "Q_MANUEVER")
 
 def defense_order(context, bv, narrator):
   ctarget = context.ctarget
-  ctarget.ctargetting = ("defending", ctarget)
+  ctarget.targetting = ("defending", ctarget)
   ctarget.move(context.battle.hqs[ctarget.army.armyid])
   bv.yprint("{}: staying put at {};".format(ctarget, context.ctarget.position), debug=True)
   Event.gain_status("defended", context, ctarget)
-
+  
 def indirect_order(context, bv, narrator):
   csource = context.ctarget
   myarmyid = csource.army.armyid
@@ -152,52 +175,61 @@ def indirect_order(context, bv, narrator):
   enemyunits = enemy.present_units()
   if not enemyunits:
     bv.yprint("No unit to target!")
+    csource.targetting = ("defending", ctarget)
     return
   cnewsource = context.ctarget # new event
   cnewtarget = random.choice(enemyunits)
-  cnewsource.ctargetting = ("sneaking", cnewtarget)
+  cnewsource.targetting = ("sneaking", cnewtarget)
   bv.yprint("{}: sneaking -> {}; planning strategery".format(cnewsource, cnewtarget), debug=True)
   newcontext = context.rebase({"csource":cnewsource, "ctarget":cnewtarget})
   context.battle.place_event("indirect_raid", newcontext, "Q_MANUEVER")
 
-def berserked_order(context, bv, narrator):
-  csource = context.ctarget
-  armyid = random.choice([0, 1])
-  enemyunits = context.battle.armies[armyid].present_units()
-  cnewtarget = random.choice(enemyunits)
-  bv.yprint("{}: random {} attack -> {}; ignoring original orders".format(
-    csource, status.Status("berserk"), cnewtarget))
-  csource.ctargetting = ("marching", cnewtarget)
-  newcontext = context.rebase({"csource":csource, "ctarget":cnewtarget})
-  context.battle.place_event("march", newcontext, "Q_ORDER") # order, not manuever!
+def panicked_order(context, bv, narrator):
+  newcontext = context.copy(additional_opt={"stat_str":"panicked"})
+  narrator.narrate_status("on_order_override", **newcontext.opt)
+  defense_order(context, bv, narrator)
 
 def provoked_order(context, bv, narrator):
-  csource = context.ctarget
-  armyid = context.ctarget.army.armyid
-  enemyunits = context.battle.armies[armyid].present_units()
-  ctarget = random.choice(enemyunits)
-  bv.yprint("{}: random {} attack -> {}; ignoring original orders".format(
-    csource, status.Status("provoked"), ctarget))
-  csource.ctargetting = ("marching", ctarget)
-  newcontext = context.rebase({"csource":csource, "ctarget":ctarget})
-  context.battle.place_event("march", newcontext, "Q_ORDER")
+  newcontext = context.copy(additional_opt={"stat_str":"provoked"})
+  narrator.narrate_status("on_order_override", **newcontext.opt)
+  attack_order(context, bv, narrator)
 
-EVENTS_ORDERS = {
-  "attack_order": {},
-  "defense_order": {},
-  "indirect_order": {},
-  "berserked_order": {},
-  "provoked_order": {}
-}
+############################################
+# Meta events about the orders themeselves #
+############################################
 
-for ev in EVENTS_ORDERS:
-  EVENTS_ORDERS[ev]["panic_blocked"] = True
-  EVENTS_ORDERS[ev]["actors"] = ["ctarget"]
-  EVENTS_ORDERS[ev]["primary_actor"] = "ctarget"
+def order_change(context, bv, narrator):
+  """
+  When an order changes, if it happens to lose the Yomi, then the cost of the morale is
+  'bet' and will be removed if the opponent out-Yomi's you.
+  """
+  ctarget_army = context.ctarget_army
+  morale_bet = context.morale_bet
+  bv.yprint("It was a feint. {ctarget_army} suddenly " +
+                        rps.order_info(ctarget_army.get_order(), "verb") + ".",
+                        templates={"ctarget_army":ctarget_army})
+  ctarget_army.bet_morale_change = morale_bet
+  # Event("change_morale", context).activate() this cost is pretty high
+  
+def order_yomi_win(context, bv, narrator):
+  csource_army = context.ctarget_army
+  ctarget_army = context.battle.armies[1-csource_army.armyid]
+  ycount = csource_army.get_yomi_count()
+  bet = ctarget_army.bet_morale_change + 1
+  Event("change_morale", context.rebase(opt={"ctarget_army":csource_army, # winning army
+                                             "morale_change":ycount})).activate()
+  Event("change_morale", context.rebase(opt={"ctarget_army":ctarget_army, # losing army
+                                             "morale_change":-bet})).activate()
+  # must put after to show the difference
+  bv.disp_yomi_win(csource_army, ctarget_army, ycount, bet)
 
-################
-# Generic Battlefield Events #
-################
+  
+##################
+# Manuever Phase #
+##################
+
+# The units move around, retarget, etc; no damage is actually done; all these things are put
+# on the main queue, Q_RESOLVE
 
 def march(context, bv, narrator):
   csource = context.csource
@@ -208,9 +240,9 @@ def march(context, bv, narrator):
   if ctarget.is_defended():
     readytext = "$[2]$defended!$[7]$"
   else:
-    readytext = textutils.disp_unit_ctargetting(ctarget)
+    readytext = textutils.disp_unit_targetting(ctarget)
   bv.yprint("{} ({}) marches into {} ({})".format(csource,
-                                                      textutils.disp_unit_ctargetting(csource),
+                                                      textutils.disp_unit_targetting(csource),
                                                       ctarget,
                                                       readytext), debug=True)
   if ctarget.is_defended():
@@ -218,7 +250,7 @@ def march(context, bv, narrator):
   else:
     Event("engage", context).activate()
   
-  converging = bool(ctarget.ctargetting[1] == csource) # if other ctarget is coming towards you
+  converging = bool(ctarget.targetting[1] == csource) # if other ctarget is coming towards you
   if ctarget.is_defended():
     assert ctarget.position == context.battle.hqs[ctarget.army.armyid] # meeting at hq
     csource.move(ctarget.position)
@@ -250,16 +282,16 @@ def indirect_raid(context, bv, narrator):
     bv.yprint("{}'s sneaking up on {} was interrupted by {}!".format(csource, ctarget, csource.attacked_by[0]))
     return
   bv.yprint("{} ({}) sneaks up on {} ({})".format(csource,
-                                                         textutils.disp_unit_ctargetting(csource),
+                                                         textutils.disp_unit_targetting(csource),
                                                          ctarget,
-                                                         textutils.disp_unit_ctargetting(ctarget)), debug=True)
+                                                         textutils.disp_unit_targetting(ctarget)), debug=True)
   context.battle.place_event("duel_consider", context, "Q_RESOLVE")
   # tactic 1: raid
   vulnerable = False
-  if ctarget.ctargetting[0] == "defending":
+  if ctarget.targetting[0] == "defending":
     bv.yprint("  {} is caught unawares by the indirect approach!".format(ctarget), debug=True)
     vulnerable = True
-  elif ctarget.ctargetting[0] == "marching":
+  elif ctarget.targetting[0] == "marching":
     bv.yprint("  {}'s marching soldiers are vigilant!".format(ctarget), debug=True)
   context.battle.place_event("arrow_strike",
                              context.copy(additional_opt={"vulnerable":vulnerable}),
@@ -278,7 +310,7 @@ def engage(context, bv, narrator):
   context.battle.place_event("duel_consider", context, "Q_RESOLVE")
 
 #################
-# RESOLVE PHASE #
+# Resolve Phase #
 #################
 
 def duel_accepted(context, bv, narrator):
@@ -371,59 +403,12 @@ def physical_strike(context, bv, narrator):
                                           "dmgdata":dmgdata,
                                           "dmglog":damlog})).activate()
 
-EVENTS_GENERIC_CTARGETTED = {
-  "arrow_strike": {},
-  "duel_consider": {},
-  "duel_accepted": {},
-  "engage": {},
-  "march": {},
-  "indirect_raid": {},
-  "physical_clash": {},
-  "physical_strike": {}
-}
-
-for ev in EVENTS_GENERIC_CTARGETTED:
-  EVENTS_GENERIC_CTARGETTED[ev]["panic_blocked"] = True
-  EVENTS_GENERIC_CTARGETTED[ev]["actors"] = ["csource", "ctarget"]
-  EVENTS_GENERIC_CTARGETTED[ev]["primary_actor"] = "csource"
 
 ###############
 # MISC EVENTS #
 ###############
 
-# eventually maybe separate things out with one ctarget unit
-  
-EVENTS_MISC = {
-  # "army_destroyed": {
-  #   "actors":["ctarget_army"],
-  #   "primary_actor": "ctarget_army"
-  # },
-  "make_speech": {
-    "actors":["ctarget"],
-    "primary_actor": "ctarget"
-  },
-  "receive_damage": {
-    "actors":["ctarget"],
-    "primary_actor": "ctarget"
-  },
-  "receive_status": {
-    "actors":["ctarget"],
-    "primary_actor": "ctarget"
-    #"need_live_actors":False # maybe need "Captured" etc.
-  },
-  "order_change": {
-    "actors":["ctarget_army"],
-    "primary_actor": "ctarget_army"
-  },
-  "change_morale": {
-    "actors":["ctarget_army"],
-    "primary_actor": "ctarget_army"
-  },
-  "order_yomi_win": {
-    "actors":["ctarget_army"],
-    "primary_actor": "ctarget_army"
-  },
-}
+
 
 # for ev in EVENTS_RECEIVE:
 #   EVENTS_RECEIVE[ev]["panic_blocked"] = True
@@ -448,19 +433,6 @@ def receive_status(context, bv, narrator):
   ctarget.add_unit_status(stat_str)
   narrator.narrate_status("on_receive", **context.opt)
 
-def order_change(context, bv, narrator):
-  """
-  When an order changes, if it happens to lose the Yomi, then the cost of the morale is
-  'bet' and will be removed if the opponent out-Yomi's you.
-  """
-  ctarget_army = context.ctarget_army
-  morale_bet = context.morale_bet
-  bv.yprint("It was a feint. {ctarget_army} suddenly " +
-                        rps.order_info(ctarget_army.get_order(), "verb") + ".",
-                        templates={"ctarget_army":ctarget_army})
-  ctarget_army.bet_morale_change = morale_bet
-  # Event("change_morale", context).activate() this cost is pretty high
-
 def change_morale(context, bv, narrator):
   ctarget_army = context.ctarget_army
   morale_change = context.morale_change
@@ -469,17 +441,6 @@ def change_morale(context, bv, narrator):
   newmorale = max(newmorale, battle_constants.MORALE_MIN)
   ctarget_army.morale = newmorale
 
-def order_yomi_win(context, bv, narrator):
-  csource_army = context.ctarget_army
-  ctarget_army = context.battle.armies[1-csource_army.armyid]
-  ycount = csource_army.get_yomi_count()
-  bet = ctarget_army.bet_morale_change + 1
-  Event("change_morale", context.rebase(opt={"ctarget_army":csource_army, # winning army
-                                             "morale_change":ycount})).activate()
-  Event("change_morale", context.rebase(opt={"ctarget_army":ctarget_army, # losing army
-                                             "morale_change":-bet})).activate()
-  # must put after to show the difference
-  bv.disp_yomi_win(csource_army, ctarget_army, ycount, bet)
 
 ################################
 # targetted Events from Skills #
@@ -592,37 +553,8 @@ def _flood_tactic_success(context, bv, narrator):
   
 def flood_tactic(context, bv, narrator):
   resolve_targetting_event(context, bv, narrator, "flood_tactic", 0.5, "_flood_tactic_success")
+
   
-EVENTS_SKILLS = {
-  "counter_arrow_strike": {
-    "can_aoe": False
-    },
-  "fire_tactic": {
-    "can_aoe": True
-    },
-  "jeer_tactic": {
-    "can_aoe": True
-    },
-  "lure_tactic": {
-    "can_aoe": False
-    },
-  "panic_tactic": {
-    "can_aoe": True
-    },
-  "flood_tactic": {
-    "can_aoe": True
-    },
-  "_fire_tactic_success": {},
-  "_panic_tactic_success": {},
-  "_jeer_tactic_success": {},
-  "_flood_tactic_success": {},
-}
-
-for ev in EVENTS_SKILLS:
-  EVENTS_SKILLS[ev]["panic_blocked"] = True
-  EVENTS_SKILLS[ev]["actors"] = ["csource", "ctarget"]
-  EVENTS_SKILLS[ev]["primary_actor"] = "csource"
-
 #######################################
 # Status Beginning/end of turn Events #
 #######################################
@@ -670,33 +602,137 @@ def burned_eot(context, bv, narrator):
 # Skills #
 ##########
 
+def _trymode_activation_success(context, bv, narrator):
+  Event.gain_status("trymode_activated", context, context.ctarget)
+
 def trymode_status_bot(context, bv, narrator):
   ctarget = context.ctarget
   trymodeprob = (ctarget.size_base-ctarget.size)/ctarget.size_base
-  success = random.random() < trymodeprob
-  bv.disp_activated_narration("trymode", "{} looks for an excuse to pretend to be powered up...".format(ctarget))
-  if success:
-    # import pdb; pdb.set_trace()
-    Event.make_speech(ctarget, context, "Did you really think I took you seriously before?")
-    Event.gain_status("trymode_activated", context, ctarget)
-  else:
-    Event.make_speech(ctarget, context, "Nope, still not trying.")
-  bv.disp_activated_narration("trymode", "", success)
+  resolve_targetting_event(context, bv, narrator, "trymode_status_bot", trymodeprob,
+                           "_trymode_activation_success")
 
-EVENTS_STATUS = {
+###################
+# All actual data #
+###################
+  
+EVENTS_ORDERS = {
+  "order_received": {
+  },
+  "attack_order": {},
+  "defense_order": {},
+  "indirect_order": {},
+  "panicked_order": {
+  },
+  "provoked_order": {
+  }
+}
+
+for ev in EVENTS_ORDERS:
+  if "panic_blocked" not in EVENTS_ORDERS[ev]:
+    EVENTS_ORDERS[ev]["panic_blocked"] = False
+  EVENTS_ORDERS[ev]["actors"] = ["ctarget"]
+  EVENTS_ORDERS[ev]["primary_actor"] = "ctarget"
+  
+EVENTS_GENERIC_CTARGETTED = {
+  "arrow_strike": {},
+  "duel_consider": {},
+  "duel_accepted": {},
+  "engage": {},
+  "march": {},
+  "indirect_raid": {},
+  "physical_clash": {},
+  "physical_strike": {}
+}
+
+for ev in EVENTS_GENERIC_CTARGETTED:
+  EVENTS_GENERIC_CTARGETTED[ev]["panic_blocked"] = True
+  EVENTS_GENERIC_CTARGETTED[ev]["actors"] = ["csource", "ctarget"]
+  EVENTS_GENERIC_CTARGETTED[ev]["primary_actor"] = "csource"
+
+# eventually maybe separate things out with one ctarget unit
+  
+EVENTS_MISC = {
+  # "army_destroyed": {
+  #   "actors":["ctarget_army"],
+  #   "primary_actor": "ctarget_army"
+  # },
+  "make_speech": {
+    "actors":["ctarget"],
+    "primary_actor": "ctarget"
+  },
+  "receive_damage": {
+    "actors":["ctarget"],
+    "primary_actor": "ctarget"
+  },
+  "receive_status": {
+    "actors":["ctarget"],
+    "primary_actor": "ctarget"
+    #"need_live_actors":False # maybe need "Captured" etc.
+  },
+  "order_change": {
+    "actors":["ctarget_army"],
+    "primary_actor": "ctarget_army"
+  },
+  "change_morale": {
+    "actors":["ctarget_army"],
+    "primary_actor": "ctarget_army"
+  },
+  "order_yomi_win": {
+    "actors":["ctarget_army"],
+    "primary_actor": "ctarget_army"
+  },
+}
+  
+EVENTS_PAIRED_TARGETTED = {
+  "counter_arrow_strike": {
+    "can_aoe": False
+    },
+  "fire_tactic": {
+    "can_aoe": True
+    },
+  "jeer_tactic": {
+    "can_aoe": True
+    },
+  "lure_tactic": {
+    "can_aoe": False
+    },
+  "panic_tactic": {
+    "can_aoe": True
+    },
+  "flood_tactic": {
+    "can_aoe": True
+    },
+  "_fire_tactic_success": {},
+  "_panic_tactic_success": {},
+  "_jeer_tactic_success": {},
+  "_flood_tactic_success": {},
+}
+
+for ev in EVENTS_PAIRED_TARGETTED:
+  EVENTS_PAIRED_TARGETTED[ev]["panic_blocked"] = True
+  EVENTS_PAIRED_TARGETTED[ev]["actors"] = ["csource", "ctarget"]
+  EVENTS_PAIRED_TARGETTED[ev]["primary_actor"] = "csource"
+
+  EVENTS_STATUS = {
   "remove_status_probabilistic": {},
   "burned_bot": {},
   "burned_eot": {},
-  "trymode_status_bot": {}
+  "_trymode_activation_success": {
+    "panic_blocked": False, 
+  },
+  "trymode_status_bot": {
+    "panic_blocked": False,
+  }
 }
 
 for ev in EVENTS_STATUS:
-  EVENTS_STATUS[ev]["panic_blocked"] = True
+  if "panic_blocked" not in EVENTS_STATUS[ev]:
+    EVENTS_STATUS[ev]["panic_blocked"] = True
   EVENTS_STATUS[ev]["actors"] = ["ctarget"]
   EVENTS_STATUS[ev]["primary_actor"] = "ctarget"
-
+  
 EVENTS = dict(list(EVENTS_ORDERS.items()) +
               list(EVENTS_GENERIC_CTARGETTED.items()) +
               list(EVENTS_MISC.items()) +
-              list(EVENTS_SKILLS.items()) +
+              list(EVENTS_PAIRED_TARGETTED.items()) +
               list(EVENTS_STATUS.items()))

@@ -147,7 +147,7 @@ ROLLS = {
     "on_fail_speech": [("csource", "{ctarget} narrowly avoided being swept away."),
                        ("ctarget", "No need to play with fire, {csource}!")],
   },
-  "trymode_activation": {
+  "trymode_status_bot": {
     "short": 'trymode',
     "on_roll": ["{ctarget} looks for an excuse to pretend to be powered up..."],
     "on_success_speech": [("ctarget", "Did you really think I took you seriously before?"),

@@ -36,12 +36,12 @@ def status_info(status_str, key):
   #   return cls(skillstr + "_STATUS", skill_str=skillstr)
 
 STATUSES_BATTLE = {
-  "berserk": {
-    "eot":("remove_status_probabilistic", {"fizzle_prob":0.8}),
-    "on_receive": "{ctarget}'s units fall into a confused rage and is now {stat_viz}!",
-    "on_remove": "{ctarget} regains control.",
-    "viz":Colors.RED + "bErSeRk" + Colors.ENDC
-  },
+  # "berserk": {
+  #   "eot":("remove_status_probabilistic", {"fizzle_prob":0.8}),
+  #   "on_receive": "{ctarget}'s units fall into a confused rage and is now {stat_viz}!",
+  #   "on_remove": "{ctarget} regains control.",
+  #   "viz":Colors.RED + "bErSeRk" + Colors.ENDC
+  # },
   "burned": {
     "bot":("burned_bot", {}), # these are length 1, but maybe do variable length eventually
     # this means "bot_func" will have a link to the actual function burn_bot
@@ -54,10 +54,12 @@ STATUSES_BATTLE = {
   "panicked": {
     "eot":("remove_status_probabilistic", {"fizzle_prob":0.5}),
     "on_receive": "{ctarget}'s unit collapses into a chaotic {stat_viz} state",
+    "on_order_override": "{ctarget}'s unit is panicked and stays still, ignoring orders.",
     "on_remove": "{ctarget} regains control.",
   },
   "provoked": {
     "eot":("remove_status_probabilistic", {"fizzle_prob":0.25}),
+    "on_order_override": "{ctarget}'s unit is provoked marches, ignoring orders.",
     "on_receive": "{ctarget}'s units are {stat_viz}; they are angry and out of control!",
     "on_remove": "{ctarget} regains control.",
     "viz":Colors.RED + "provoked" + Colors.ENDC

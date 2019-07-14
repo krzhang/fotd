@@ -399,8 +399,9 @@ class BattleScreen(View):
   def _disp_unit_healthline(self, unit, side):
     healthbar = disp_bar_day_tracker(battle_constants.ARMY_SIZE_MAX, unit.size_base, unit.last_turn_size, unit.size)
     statuses = disp_unit_status_noskills(unit)
-    charstr = "{} {} Hp:{} {}".format(healthbar, disp_cha_fullname(unit.character),
-                                      disp_unit_size(unit), statuses)
+    # charstr = "{} {} Hp:{} {}".format(healthbar, disp_cha_fullname(unit.character),
+    #                                   disp_unit_size(unit), statuses)
+    charstr = "{} {} {}".format(healthbar, disp_cha_fullname(unit.character), statuses)
     return charstr
 
   def _disp_unit_skills(self, unit, side):

@@ -46,7 +46,7 @@ SKILLS = {
     "ai_eval": (2, 1, 1),
     "desc": "Each time this officer is shot by arrows, he/she has a chance to shoot back.",
     "activation": "passive",
-    "short": 'counter-arrow',
+    "short": 'cntr-arrow',
   },
   "chu_ko_nu": {
     "ai_eval": (1, 0, 1),
@@ -130,7 +130,7 @@ SKILLCARDS = {
     "short": 'jeer',
     "on_bulb": {
       'A': "Let me at them in the field; I have a few new insults.",
-      'D': "If we keep teasing them, they may be lured to overexert.",
+      'D': "If we keep teasing them, they may overattack.",
       'I': "We can go harass them and lure them to fight.",
     },
     # "on_roll": ["{csource} prepares some of their best insults..."],

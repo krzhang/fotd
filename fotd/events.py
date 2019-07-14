@@ -215,7 +215,7 @@ def order_yomi_win(context, bv, narrator):
   csource_army = context.ctarget_army
   ctarget_army = context.battle.armies[1-csource_army.armyid]
   ycount = csource_army.get_yomi_count()
-  bet = ctarget_army.bet_morale_change + 1
+  bet = ctarget_army.bet_morale_change + ycount 
   Event("change_morale", context.rebase(opt={"ctarget_army":csource_army, # winning army
                                              "morale_change":ycount})).activate()
   Event("change_morale", context.rebase(opt={"ctarget_army":ctarget_army, # losing army
@@ -314,30 +314,15 @@ def engage(context, bv, narrator):
 #################
 
 def duel_accepted(context, bv, narrator):
-  csource = context.csource
-  ctarget = context.ctarget
-  actors = [csource, ctarget]
-  healths = [20, 20]
-  health_history = [(20, 20)]
-  loser_history = [None]
-  damage_history = []
-  while (healths[0] > 0 and healths[1] > 0):
-    first_win = random.random() < csource.character.power/(ctarget.character.power + csource.character.power)
-    if first_win:
-      loser = 1
-    else:
-      loser = 0
-    loser_history.append(loser)
-    damage = random.randint(1, 3)
-    healths[loser] -= damage
-    damage_history.append(damage)
-    health_history.append(tuple(healths))
-  bv.disp_duel(csource, ctarget, loser_history, health_history, damage_history)
+  duelists = [context.csource, context.ctarget]
+  ourduel = duel.Duel(context, bv, narrator, duelists)
+  # the Duel also gets the renderer and thus 
+  healths = ourduel.resolve()
   for i in [0, 1]:
     if healths[i] <= 0:
-      bv.yprint("{ctarget} collapses; unit retreats!", templates={"ctarget":actors[i]}, debug=True)
-      Event("receive_damage", context.rebase({"damage":actors[i].size,
-                                              "ctarget":actors[i],
+      bv.yprint("{ctarget} collapses; unit retreats!", templates={"ctarget":duelists[i]}, debug=True)
+      Event("receive_damage", context.rebase({"damage":duelists[i].size,
+                                              "ctarget":duelists[i],
                                               "dmgdata":"",
                                               "dmglog":""})).activate()
 
@@ -426,6 +411,15 @@ def receive_damage(context, bv, narrator):
   ctarget.size -= damage
   if ctarget.size <= 0:
     ctarget.leave_battle()
+    army = ctarget.army
+    if ctarget.is_commander:
+      damage = army.morale
+    else:
+      damage = 2
+    Event("change_morale", context.rebase({"ctarget_army":army,
+                                           "morale_change":-damage})).activate()
+    Event("change_morale", context.rebase({"ctarget_army":context.battle.armies[1-army.armyid],
+                                           "morale_change":damage})).activate()
 
 def receive_status(context, bv, narrator):
   ctarget = context.ctarget
@@ -718,16 +712,14 @@ for ev in EVENTS_PAIRED_TARGETTED:
   "burned_bot": {},
   "burned_eot": {},
   "_trymode_activation_success": {
-    "panic_blocked": False, 
   },
   "trymode_status_bot": {
-    "panic_blocked": False,
   }
 }
 
 for ev in EVENTS_STATUS:
   if "panic_blocked" not in EVENTS_STATUS[ev]:
-    EVENTS_STATUS[ev]["panic_blocked"] = True
+    EVENTS_STATUS[ev]["panic_blocked"] = False
   EVENTS_STATUS[ev]["actors"] = ["ctarget"]
   EVENTS_STATUS[ev]["primary_actor"] = "ctarget"
   

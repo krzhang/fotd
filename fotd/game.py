@@ -64,7 +64,7 @@ PC_ATTRS = [ # First Name Last Name, since we are from the future
 
 BIZARRO_ATTRS = [
   ("Ghanz Nagy", "$[4]$Blue$[7]$ Thunder", 71, 80, 74, 60, 5, 4, YAN_SKILLS),
-  ("Bling Chan", "Vomit", 55, 70, 90, 85, 4, 5, JING_SKILLS),
+  ("Bling Chan", "Splurge", 55, 70, 90, 85, 4, 5, JING_SKILLS),
   ("Yo Joe", "Seal Clubber", 31, 90, 63, 21, 4, 2, YOYO_SKILLS),
   ("Xu Han", "WNBA", 90, 85, 12, 24, 2, 6, HAN_SKILLS)]
 
@@ -110,14 +110,14 @@ PC_UNITS = [Unit(test_char(*args), 20, 10) for args in PC_ATTRS]
 BIZARRO_UNITS = [Unit(test_char(*args), 20, 10) for args in BIZARRO_ATTRS]
 OTHER_UNITS = [Unit(test_char(*args), 20, 10) for args in BIZARRO_ATTRS + OTHER_ATTRS]
 
-def army_mysticsoft(armyid, color, aitype):
-  return Army("Mysticsoft", PC_UNITS, armyid, color, aitype, 7)
+def army_mysticsoft(armyid, color, aitype, num=4):
+  return Army("Mysticsoft", PC_UNITS[:num], armyid, color, aitype, 7)
 
-def army_bizarro(armyid, color, aitype):
-  return Army("Mystic$oft", BIZARRO_UNITS, armyid, color, aitype, 7)
+def army_bizarro(armyid, color, aitype, num=4):
+  return Army("Mystic$oft", BIZARRO_UNITS[:num], armyid, color, aitype, 7)
 
-def army_unknown(armyid, color, aitype):
-  return Army("Enemy Unknown", random.sample(OTHER_UNITS, 4), armyid, color, aitype, 7)
+def army_unknown(armyid, color, aitype, num=4):
+  return Army("Enemy Unknown", random.sample(OTHER_UNITS, 4)[:num], armyid, color, aitype, 7)
 
 def link_data_funcs():
   """ A round of processing after getting the text data, to create links to actual functions """
@@ -158,10 +158,26 @@ def play(armies, debug=False, resize=False,
 
 def test(debug=False, resize=False,
          first_intelligence="INT_PLAYER",
+         second_intelligence="INT_AI_NORMAL", num_units=4):
+  armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence, num_units),
+            army_bizarro(1, Colours.MAGENTA, second_intelligence, num_units)]
+  return play(armies, debug, resize, first_intelligence, second_intelligence)
+
+def test_duel(debug=False, resize=False,
+         first_intelligence="INT_PLAYER",
          second_intelligence="INT_AI_NORMAL"):
   armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence),
             army_bizarro(1, Colours.MAGENTA, second_intelligence)]
-  return play(armies, debug, resize, first_intelligence, second_intelligence)
-   
+  automated = (first_intelligence != 'INT_PLAYER') and (second_intelligence != 'INT_PLAYER')  
+  bat = battle.Battle(armies[0], armies[1], debug_mode=debug, automated=automated)
+  armies[0].units[0].health = 100
+  armies[1].units[1].health = 100  
+  import events
+  import contexts
+  events.duel_accepted(contexts.Context(bat, opt={
+    'csource':armies[0].units[0],
+    'ctarget':armies[1].units[1]}), bat.battlescreen, bat.narrator)
+  return 0
+
 if __name__ == "__main__":
   test(resize=True)

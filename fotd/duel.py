@@ -61,3 +61,31 @@ DUEL_SPEECHES = {
 
 def get_pre_duel_speech(speechtype):
   return random.choice(DUEL_SPEECHES[speechtype])
+
+class Duel():
+
+  def __init__(self, context, bv, narrator, duelists):
+    self.context = context
+    self.bv = bv
+    self.narrator = narrator # us this for text mode / separate from graphics mode
+    self.duelists = duelists
+
+  def resolve(self):
+    healths = [20, 20]
+    health_history = [(20, 20)]
+    loser_history = [None]
+    damage_history = []
+    while (healths[0] > 0 and healths[1] > 0):
+      powers = [self.duelists[0].character.power, self.duelists[1].character.power]
+      first_win = random.random() < powers[0]/(powers[0] + powers[1])
+      if first_win:
+        loser = 1
+      else:
+        loser = 0
+      loser_history.append(loser)
+      damage = random.randint(1, 3)
+      healths[loser] -= damage
+      damage_history.append(damage)
+      health_history.append(tuple(healths))
+    self.bv.disp_duel(self.duelists[0], self.duelists[1], loser_history, health_history, damage_history)
+    return healths

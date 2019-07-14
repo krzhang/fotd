@@ -32,7 +32,7 @@ class ArtificialIntelligence(Intelligence):
   def get_order(self, battle, armyid):
   # 2 paths: RPS and story-driven soul reading
     parmy = battle.armies[1 - armyid].present_units()
-    priors = np.array([10,10,10])
+    priors = np.array([20,20,20])
     for unit in parmy:
       for sk in unit.character.skills:
         skstr = sk.skill_str

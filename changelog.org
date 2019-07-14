@@ -1,6 +1,6 @@
 TODOS
-- refactor view
 - duels visualization
+- make morale antes increase with ties
 - strategic layer
 
 <2019-07-12 Fri> Started changelog

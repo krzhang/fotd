@@ -43,7 +43,7 @@ def disp_cha_title(chara):
   return ""
 
 def disp_cha_fullname(chara):
-  return str(chara) + chara.str_title()
+  return disp_chara(chara) + disp_cha_title(chara)
 
 def disp_skill(skill_str, success=None):
   """
@@ -252,7 +252,7 @@ class BattleScreen(View):
     else:
       strat0 = strat1 = "?"
     if self.battle.yomi_winner == -1:
-      winner_text = "VS"
+      winner_text = "$[7,2]$VS$[7]$"
     elif self.battle.yomi_winner == 0:
       winner_text = "$[7,1]$>>$[7]$"
     else:
@@ -280,7 +280,7 @@ class BattleScreen(View):
       for i in range(4):
         if len(battle.armies[j].present_units()) > i:
           unit = battle.armies[j].present_units()[i]
-          header = self._disp_unit_newheader(unit, j)
+          header = self._disp_unit_healthline(unit, j)
           situ = self._disp_unit_skills(unit, j)
         else:
           header = ""
@@ -395,10 +395,11 @@ class BattleScreen(View):
       other_str = disp_text_activation(successtr, success)
     self.yprint(preamble + other_str)
 
-  def _disp_unit_newheader(self, unit, side):
+  def _disp_unit_healthline(self, unit, side):
     healthbar = disp_bar_day_tracker(battle_constants.ARMY_SIZE_MAX, unit.size_base, unit.last_turn_size, unit.size)
     statuses = disp_unit_status_noskills(unit)
-    charstr = "{} {} Hp:{} {}".format(healthbar, disp_unit(unit), disp_unit_size(unit), statuses)
+    charstr = "{} {} Hp:{} {}".format(healthbar, disp_cha_fullname(unit.character),
+                                      disp_unit_size(unit), statuses)
     return charstr
 
   def _disp_unit_skills(self, unit, side):

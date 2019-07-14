@@ -329,7 +329,7 @@ class BattleScreen(View):
     unit = sc.unit
     sc_str = sc.sc_str
     order = sc.order
-    self.yprint("{} <$[4]${}!$[7]$> ".format(disp_unit(unit),
+    self.yprint("{} $[2,1]$|{}|$[7]$ ".format(disp_unit(unit),
                                              skills.skillcard_info(sc_str, "short")) +
                 skills.skillcard_info(sc_str, "on_bulb")[order])
 

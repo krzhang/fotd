@@ -61,6 +61,33 @@ class BattleNarrator(Narrator):
       narrator_str, narrate_text = get_one(ROLLS[key], "on_fail_speech")
     if narrator_str and narrator_str in context and narrate_text:
       self.unit_speech(context[narrator_str], narrate_text, **context)
+
+  def _narrate_jeer(self, success, **context):
+    # after rolling, always make 2 narrations
+    if random.random() < 0.50:
+      # monkey island style
+      ins = random.choice(insults.INSULTS_PAIRS)
+      self.unit_speech(context["csource"], ins[0], **context)
+      if success:
+        # no good comeback
+        self.unit_speech(context["ctarget"], "Uh uh, you are a {}?".format(insults.random_diss_noun()),
+                         **context)
+      else:
+        self.unit_speech(context["ctarget"], ins[1], **context)
+    else:
+      # roguelike style
+      self.unit_speech(context["csource"], 
+                       "You are a {}!".format(insults.random_diss()),
+                       **context)
+      if success:
+        self.unit_speech(context["target"], 
+                         "Uh, uh, you are a {}?".format(insults.random_diss_noun()),
+                         **context)
+      else:
+        self.unit_speech(context["csource"], 
+                         "Well, you are a {}!".format(insults.random_diss()),
+                         **context)
+      
     
   def narrate_roll(self, key, success, **context):
     if "on_roll" in ROLLS[key] and ROLLS[key]["on_roll"]: # need both so you don't format None
@@ -68,15 +95,7 @@ class BattleNarrator(Narrator):
       self.view.yprint(get_one(ROLLS[key], "on_roll"), templates=context)
       # self.view.disp_activated_narration(get_one(ROLLS[key], "short"), on_roll)
     if key == "jeer_tactic":
-      # after rolling, always make 2 narrations
-      ins = random.choice(insults.INSULTS_PAIRS)
-      self.unit_speech(context["csource"], ins[0], **context)
-      if success:
-        self.unit_speech(context["ctarget"], ins[1], **context)
-      else:
-        # no good comeback
-        self.unit_speech(context["ctarget"], "Why, you {}!".format(insults.random_diss()),
-                         **context)
+      self._narrate_jeer(success, **context)
     self.narrate_success(key, success, **context)
     
 ENTRANCES = [

@@ -112,3 +112,6 @@ INSULTS_NOUNS = [
 
 def random_diss():
   return "{} {}".format(random.choice(INSULTS_ADJ), random.choice(INSULTS_NOUNS))
+
+def random_diss_noun():
+  return random.choice(INSULTS_NOUNS)

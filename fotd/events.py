@@ -212,7 +212,7 @@ def march(context, bv, narrator):
   bv.yprint("{} ({}) marches into {} ({})".format(csource,
                                                       textutils.disp_unit_ctargetting(csource),
                                                       ctarget,
-                                                      readytext))
+                                                      readytext), debug=True)
   if ctarget.is_defended():
     Event("engage", context.rebase_switch()).activate()
   else:
@@ -252,7 +252,7 @@ def indirect_raid(context, bv, narrator):
   bv.yprint("{} ({}) sneaks up on {} ({})".format(csource,
                                                          textutils.disp_unit_ctargetting(csource),
                                                          ctarget,
-                                                         textutils.disp_unit_ctargetting(ctarget)))
+                                                         textutils.disp_unit_ctargetting(ctarget)), debug=True)
   context.battle.place_event("duel_consider", context, "Q_RESOLVE")
   # tactic 1: raid
   vulnerable = False
@@ -525,11 +525,13 @@ def _resolve_entanglement(context, bv, narrator):
     elif lure_candidates: # lure roll is available
       # make a lure roll
       lurer = random.choice(lure_candidates)
-      success = roll_target_skill_tactic(context.copy(additional_opt={"lurer":lurer,
+      successes = _roll_target_skill_tactic(context.copy(additional_opt={"lurer":lurer,
                                                                       "ctarget":new_target}), bv,
-                                         narrator, "lure_tactic", 0.6)
-      if success:
-        additional_activations.append(new_target)
+                                            narrator, "lure_tactic", 0.6)
+      # either has 1 or 0 elements
+      if successes:
+        assert len(successes) == 1
+        additional_activations.append(successes[0])
   return additional_activations
 
 def _roll_target_skill_tactic(context, bv, narrator, roll_key, cchance):
@@ -563,30 +565,34 @@ def resolve_targetting_event(context, bv, narrator, roll_key, cchance, success_e
     # todo: can eventually get new kwords this way
     Event(success_event, new_context).activate()
 
+def _fire_tactic_success(context, bv, narrator):
+  Event.gain_status("burned", context, context.ctarget)  
+
 def fire_tactic(context, bv, narrator):
-  def _fire_tactic_success(context, bv, narrator):
-    Event.gain_status("burned", context, context.ctarget)  
-  resolve_targetting_event(context, bv, narrator, "fire_tactic", 0.5, _fire_tactic_success)
+  resolve_targetting_event(context, bv, narrator, "fire_tactic", 0.5, "_fire_tactic_success")
 
+def _jeer_tactic_success(context, bv, narrator):
+  Event.gain_status("provoked", context, context.ctarget)
+  
 def jeer_tactic(context, bv, narrator):
-  def _jeer_tactic_success(context, bv, narrator):
-    Event.gain_status("provoked", context, context.ctarget)
-  resolve_targetting_event(context, bv, narrator, "jeer_tactic", 0.4, _jeer_tactic_success)
+  resolve_targetting_event(context, bv, narrator, "jeer_tactic", 0.4, "_jeer_tactic_success")
 
+def _panic_tactic_success(context, bv, narrator):
+  Event.gain_status("panicked", context, context.ctarget)
+  
 def panic_tactic(context, bv, narrator):
-  def _panic_tactic_success(context, bv, narrator):
-    Event.gain_status("panicked", context, context.ctarget)
-  resolve_targetting_event(context, bv, narrator, "panic_tactic", 0.5, _panic_tactic_success)
+  resolve_targetting_event(context, bv, narrator, "panic_tactic", 0.5, "_panic_tactic_success")
 
+def _flood_tactic_success(context, bv, narrator):
+  new_context = context.rebase({"csource":context.cscource, "ctarget":context.target})
+  damdice = battle_constants.FLOOD_TACTIC_DAMDICE
+  damage = random.choice(range(damdice))
+  dmgdata = (context.csource, context.ctarget, "floods", damage)
+  Event("receive_damage", context.copy(
+    additional_opt={"damage":damage, "dmgdata":dmgdata, "dmglog":""})).activate()
+  
 def flood_tactic(context, bv, narrator):
-  def _flood_tactic_success(context, bv, narrator):
-    new_context = context.rebase({"csource":context.cscource, "ctarget":context.target})
-    damdice = battle_constants.FLOOD_TACTIC_DAMDICE
-    damage = random.choice(range(damdice))
-    dmgdata = (context.csource, context.ctarget, "floods", damage)
-    Event("receive_damage", context.copy(
-      additional_opt={"damage":damage, "dmgdata":dmgdata, "dmglog":""})).activate()
-  resolve_targetting_event(context, bv, narrator, "flood_tactic", 0.5, _flood_tactic_success)
+  resolve_targetting_event(context, bv, narrator, "flood_tactic", 0.5, "_flood_tactic_success")
   
 EVENTS_SKILLS = {
   "counter_arrow_strike": {

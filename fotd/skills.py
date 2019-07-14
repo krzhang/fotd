@@ -12,6 +12,9 @@ class Skill():
     # this allows us to e.g. remove
     return self.skill_str == other.skill_str
 
+  def short(self):
+    return skill_info(self.skill_str, "short")
+  
 def skill_info(skill_str, key):
   if key in SKILLS[skill_str]:
     return SKILLS[skill_str][key]
@@ -42,12 +45,14 @@ SKILLS = {
   "counter_arrow": {
     "ai_eval": (2, 1, 1),
     "desc": "Each time this officer is shot by arrows, he/she has a chance to shoot back.",
-    "short": 'ctr-a',
+    "activation": "passive",
+    "short": 'counter-arrow',
   },
   "chu_ko_nu": {
     "ai_eval": (1, 0, 1),
     "rank": 'A',
-    "short": 'c-k-n'
+    "activation": "passive",
+    "short": 'chu-ko-nu'
   },
   "attack_supplies": {
     "ai_eval": (0, 0, 1),
@@ -69,6 +74,7 @@ SKILLS = {
   "lure_skill": {
     "ai_eval": (0, 0, 1),
     "short": 'lure',
+    "activation": "passive",
   },
   "jeer": {
     "ai_eval": (0, 0, 2),
@@ -79,17 +85,20 @@ SKILLS = {
     "ai_eval": (1, 0, 1)
   },
   "mushou": {
-    "ai_eval": (1, 2, 0)
+    "ai_eval": (1, 2, 0),
+    "activation": "passive",
   },
   "perfect_defense": {
-    "ai_eval": (0, 2, 0)
+    "ai_eval": (0, 2, 0),
+    "activation": "passive",
   },
   "pincer_specialist": {
     "ai_eval": (2, 1, 0)
   },
   "trymode": {
     "ai_eval": (3, 0, 0),
-    "short": 'trym'
+    "short": 'trym',
+    "activation": "passive",
   },
   "water_skill": {
     "ai_eval": (0, 0, 1),

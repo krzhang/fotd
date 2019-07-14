@@ -330,13 +330,14 @@ class BattleScreen(View):
     unit = sc.unit
     sc_str = sc.sc_str
     order = sc.order
-    self.yprint("{}<$[4]$!{}!$[7]$> ".format(disp_unit(unit),
+    self.yprint("{} <$[4]${}!$[7]$> ".format(disp_unit(unit),
                                              skills.skillcard_info(sc_str, "short")) +
                 skills.skillcard_info(sc_str, "on_bulb")[order])
 
   def disp_duel(self, csource, ctarget, loser_history, health_history, damage_history):
-    self.yprint("{csource} and {ctarget} face off!".format(**{"csource":csource,
-                                                              "ctarget":ctarget}))
+    self.yprint("{csource} and {ctarget} face off!",
+                templates={"csource":csource,
+                           "ctarget":ctarget})
     for i, healths in enumerate(health_history[1:]):
       bars = [None, None]
       for j in [0, 1]:
@@ -368,11 +369,12 @@ class BattleScreen(View):
       dmg_str = disp_damage_calc(*dmglog)
       self.yprint(dmg_str, debug=True)
 
-  def disp_chara_speech(self, chara, speech):
+  def disp_chara_speech(self, chara, speech, **context):
     """
     What to display when a character says something.
     """
-    self.yprint("{}: '$[2]${}$[7]$'".format(disp_chara(chara), speech))
+    self.yprint("{}: '$[2]${}$[7]$'".format(disp_chara(chara), speech),
+                templates=context)
   
   def disp_speech(self, unit, speech):
     """ What to display when a unit says something """
@@ -403,14 +405,24 @@ class BattleScreen(View):
     return charstr
 
   def _disp_unit_skills(self, unit, side):
-    passive_skillstr = " ".join((disp_skill(s.skill_str, success=False) for s in unit.character.skills))
-    active_skills = unit.army.tableau.bulbed_by(unit)
-    if passive_skillstr:
-      sepstr = " | Prepped: "
+    # inactive means skills that are not bulbed
+    inactive_skillist = [disp_skill(s.skill_str,
+                                    success=False)
+                         for s in unit.character.skills if
+                         not bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
+    inactive_skillstr = " ".join(inactive_skillist)
+    # 'passive' means skills that are used and are not bulbed, meaning they *are* active
+    active_skillist = [disp_text_activation(('*:' + s.short()),
+                                              success=True, upper=False)
+                       for s in unit.character.skills if
+                       bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
+    active_skillist += [disp_skillcard(sc) for sc in unit.army.tableau.bulbed_by(unit)]
+    if inactive_skillstr:
+      sepstr = " | "
     else:
-      sepstr = "| Prepped: "
-    active_skillstr = sepstr + " ".join([disp_skillcard(sc) for sc in active_skills])
-    charstr = " "*2 + passive_skillstr + active_skillstr
+      sepstr = "| "
+    active_skillstr = sepstr + " ".join(active_skillist)
+    charstr = " "*2 + inactive_skillstr + active_skillstr
     return charstr
 
   def disp_yomi_win(self, csource_army, ctarget_army, ycount, bet):

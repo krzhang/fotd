@@ -143,8 +143,7 @@ class Battle():
         u.attacked = []
         u.attacked_by = []
         u.targetting = None
-        speed = u.speed
-        speed += random.choice([-3,-2,-1,0,1,2,3])
+        speed = u.speed + random.randint(-3, 3)
         if order == 'D':
           speed += 7
         orderlist.append((speed, "order_received",

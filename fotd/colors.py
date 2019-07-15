@@ -12,7 +12,7 @@ class Colors:
   # BOLD = '\033[1m'
   UNDERLINE = '\033[4m'
   # mine below
-  # BLACK
+  BLACK = "$[0]$"
   RED = "$[1]$"
   GREEN = "$[2]$"
   YELLOW = "$[3]$"
@@ -28,7 +28,7 @@ class Colors:
   # CYAN = Fore.CYAN
   # RPS
   # By function
-  INVERT = "$[0,3,7]$"
+  INVERT = "$[7,3]$"
   SUCCESS = "$[2,1]$"
   GOOD = "$[2]$"
   NEUTRAL = "$[5]$"

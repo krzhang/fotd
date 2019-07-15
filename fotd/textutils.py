@@ -18,23 +18,24 @@ import rps
 import skills # move later!
 
 # Takes something like "${5} Yan Zhang ${7}" and converts it to Colorama codes so we can just 
-STR_TO_CR = {
-  "${1}":Colors.RED,
-  "${2}":Colors.GREEN,
-  "${3}":Colors.YELLOW,
-  "${4}":Colors.BLUE,
-  "${5}":Colors.MAGENTA,
-  "${6}":Colors.CYAN,
-  "${7}":Colors.ENDC,
-  "${2,1}":Colors.GREEN + Style.BRIGHT,
-  "${1,3}":Back.RED + Fore.WHITE,
-  "${3,3}":Back.YELLOW + Fore.WHITE,
-  "${4,3}":Back.BLUE + Fore.WHITE,
-  "${7,1}":Fore.WHITE + Style.BRIGHT,
-  "${7,2}":Fore.WHITE + Style.NORMAL,
-}
+# STR_TO_CR = {
+#   "${1}":Colors.RED,
+#   "${2}":Colors.GREEN,
+#   "${3}":Colors.YELLOW,
+#   "${4}":Colors.BLUE,
+#   "${5}":Colors.MAGENTA,
+#   "${6}":Colors.CYAN,
+#   "${7}":Colors.ENDC,
+#   "${2,1}":Colors.GREEN + Style.BRIGHT,
+#   "${1,3}":Back.RED + Fore.WHITE,
+#   "${3,3}":Back.YELLOW + Fore.WHITE,
+#   "${4,3}":Back.BLUE + Fore.WHITE,
+#   "${7,1}":Fore.WHITE + Style.BRIGHT,
+#   "${7,2}":Fore.WHITE + Style.NORMAL,
+# }
 
 AM_TO_CR_FORE = {
+  0:Fore.BLACK,
   1:Fore.RED,
   2:Fore.GREEN,
   3:Fore.YELLOW,
@@ -45,6 +46,7 @@ AM_TO_CR_FORE = {
 }
 
 AM_TO_CR_BACK = {
+  0:Back.BLACK,
   1:Back.RED,
   2:Back.GREEN,
   3:Back.YELLOW,
@@ -110,8 +112,10 @@ class YText():
     new_str = ""
     for i, t in enumerate(self._raw_str):
       if self._color_map[i] != cur_map:
+        new_str += Colors.ENDC
         cur_map = self._color_map[i]
         a,b,c = self._color_map[i]
+        assert a is not None
         if b == 1: # BOLD
           new_str += Style.BRIGHT
         elif b == 2: # NORMAL
@@ -119,15 +123,15 @@ class YText():
         elif b == 4: # UNDERLINE
           new_str += Style.UNDERLINE
         elif b == 3: # REVERSE
-          pass
+          if c is None:
+            c = 0
+          a, c = c, a
         if c:
           new_str += AM_TO_CR_BACK[c]
         else:
           pass
-        if a:
-          new_str += AM_TO_CR_FORE[a]
-        else:
-          new_str += Fore.WHITE
+        assert a is not None
+        new_str += AM_TO_CR_FORE[a]
       new_str += t
     return new_str + Colors.ENDC
   
@@ -341,8 +345,8 @@ def convert_templates(templates):
 
 PAUSE_STRS = {
   "MORE_STR": Colors.INVERT + "MORE... [hit a key]" + Colors.ENDC,
-  "FORMATION_ORDER": Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.BLUE + Back.BLACK +  "FORMATION" + Fore.BLACK + Back.WHITE + " for army {armyid}$[7]$",
-  "FINAL_ORDER": Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.CYAN +  Back.BLACK + "ORDERS" + Fore.BLACK + Back.WHITE + " for army {armyid}$[7]$" 
+  "FORMATION_ORDER": Colors.INVERT +  "Input $[4]$FORMATION" + Colors.INVERT + " for army {armyid}$[7]$",
+  "FINAL_ORDER": Colors.INVERT + "Input $[4]$ORDERS" + Colors.INVERT + " for army {armyid}$[7]$" 
 }
 
 class BattleScreen(View):
@@ -592,7 +596,7 @@ class BattleScreen(View):
     
     pausestr_1 = PAUSE_STRS[order_type].format(**{"armyid":armyid})
     render_list = [order.color_abbrev() for order in order_list]
-    pausestr_2 = " ({}):$[7]$".format("$[7]$/".join(render_list))
+    pausestr_2 = " ({}):$[7]$".format("/".join(render_list))
     return self._get_input(pausestr_1 + pausestr_2,
                            [str(order).upper() for order in order_list])
   

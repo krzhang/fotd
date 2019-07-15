@@ -54,3 +54,9 @@ def read_single_keypress():
   if ret[0] == 'q':
     sys.exit(0)
   return tuple(ret)
+
+def str_to_bool(string):
+  if string == "True":
+    return True
+  assert string == "False"
+  return False

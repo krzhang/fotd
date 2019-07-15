@@ -1,5 +1,7 @@
+import csv
 import random
 
+from utils import str_to_bool
 import battle_constants
 import contexts
 import duel
@@ -12,32 +14,55 @@ import textutils
 # now only have to think about interplays between statuses and events (as opposed to aslo have)
 # skills involved
 
-EVENTS = {}
+def event_csv_loader(filestr):
+  with open(filestr, "r") as csvfile:
+    mydict = {}
+    reader = csv.reader(csvfile, delimiter=',')
+    next(reader)
+    for row in reader:
+      mydict[row[0]] = {"event_type":row[4].strip(),
+                        "actor_type":row[1].strip(),
+                        "can_aoe":str_to_bool(row[3].strip()),
+                        "panic_blocked":str_to_bool(row[4].strip())}
+    return mydict
+    
+EVENTS = event_csv_loader("events.csv")
+ACTORS_DICT = {
+  "unit_single":["ctarget"],
+  "army_single":["ctarget_army"],
+  "unit_double":["csource", "ctarget"],
+}
+PRIMARY_ACTOR_DICT = {
+  "unit_single":"ctarget",
+  "army_single":"ctarget_army",
+  "unit_double":"csource",
+}
 
 class Event():
 
   def __init__(self, event_name, context):
     self.event_name = event_name
+    self.actor_type = EVENTS[event_name]["actor_type"]
+    self.event_func = globals()[event_name]
     self.context = context
 
   def activate(self):
     edict = EVENTS[self.event_name]
     # death handler (should later be "availability" for retreats, etc.)
-    # most events require actors who are alive
-    if ("allow_non_present_actors" not in edict) or not edict["allow_non_present_actors"]:
-      if any([not self.context.opt[foo].is_present() for foo in edict["actors"]]): #pylint:disable=blacklisted-name
-        return
+    # most events require actors who are alive; TODO: exceptions?
+    if any([not self.context.opt[foo].is_present() for foo in ACTORS_DICT[self.actor_type]]): #pylint:disable=blacklisted-name
+      # TODO: exceptions for things like unit_destroyed or army_destroyed
+      return
     # panic handler
     if event_info(self.event_name, "panic_blocked"):
-      potential_panicker = getattr(self.context, edict["primary_actor"])
+      potential_panicker = getattr(self.context, PRIMARY_ACTOR_DICT[self.actor_type])
       if potential_panicker.has_unit_status("panicked"):
         self.context.battle.battlescreen.yprint("  %s is %s! No action" % (potential_panicker, status.Status("panicked")))
         return
     # time to activate this event on the queue; note the event has its own context, battle, etc.
-    results = run_event_func(self.event_name,
-                             self.context,
-                             self.context.battle.battlescreen,
-                             self.context.battle.narrator)
+    results = self.event_func(self.context,
+                              self.context.battle.battlescreen,
+                              self.context.battle.narrator)
 
   @classmethod
   def gain_status(cls, stat_str, context, ctarget):
@@ -393,8 +418,6 @@ def physical_strike(context, bv, narrator):
 # MISC EVENTS #
 ###############
 
-
-
 # for ev in EVENTS_RECEIVE:
 #   EVENTS_RECEIVE[ev]["panic_blocked"] = True
 # No common rules here...
@@ -410,7 +433,7 @@ def receive_damage(context, bv, narrator):
                                           ctarget.size, damage, dmgdata, dmglog)
   ctarget.size -= damage
   if ctarget.size <= 0:
-    ctarget.leave_battle()
+    ctarget.leave_battle() # TODO: eventually make into an event
     army = ctarget.army
     if ctarget.is_commander:
       damage = army.morale
@@ -513,32 +536,34 @@ def _roll_target_skill_tactic(context, bv, narrator, roll_key, cchance):
   bv.disp_activated_narration(roll_key, "", success)
   return successful_targets
 
-def resolve_targetting_event(context, bv, narrator, roll_key, cchance, success_event):
+def resolve_targetting_event(context, bv, narrator, roll_key, cchance, success_func):
   successful_targets = _roll_target_skill_tactic(context, bv, narrator, roll_key, cchance)
+  results = []
   for new_target in successful_targets:
     new_context = context.copy(additional_opt={"ctarget":new_target})
     # todo: can eventually get new kwords this way
-    Event(success_event, new_context).activate()
+    results.append(new_target, success_func(new_context))
+  return results
 
-def _fire_tactic_success(context, bv, narrator):
+def _fire_tactic_success(context): # eventually these should not be events...
   Event.gain_status("burned", context, context.ctarget)  
 
 def fire_tactic(context, bv, narrator):
-  resolve_targetting_event(context, bv, narrator, "fire_tactic", 0.5, "_fire_tactic_success")
+  results = resolve_targetting_event(context, bv, narrator, "fire_tactic", 0.5, _fire_tactic_success)
 
-def _jeer_tactic_success(context, bv, narrator):
+def _jeer_tactic_success(context):
   Event.gain_status("provoked", context, context.ctarget)
   
 def jeer_tactic(context, bv, narrator):
-  resolve_targetting_event(context, bv, narrator, "jeer_tactic", 0.4, "_jeer_tactic_success")
+  results = resolve_targetting_event(context, bv, narrator, "jeer_tactic", 0.4, _jeer_tactic_success)
 
-def _panic_tactic_success(context, bv, narrator):
+def _panic_tactic_success(context):
   Event.gain_status("panicked", context, context.ctarget)
   
 def panic_tactic(context, bv, narrator):
-  resolve_targetting_event(context, bv, narrator, "panic_tactic", 0.5, "_panic_tactic_success")
+  results = resolve_targetting_event(context, bv, narrator, "panic_tactic", 0.5, _panic_tactic_success)
 
-def _flood_tactic_success(context, bv, narrator):
+def _flood_tactic_success(context):
   damdice = battle_constants.FLOOD_TACTIC_DAMDICE
   damage = random.choice(range(damdice))
   dmgdata = (context.csource, context.ctarget, "floods", damage)
@@ -546,7 +571,7 @@ def _flood_tactic_success(context, bv, narrator):
     additional_opt={"damage":damage, "dmgdata":dmgdata, "dmglog":""})).activate()
   
 def flood_tactic(context, bv, narrator):
-  resolve_targetting_event(context, bv, narrator, "flood_tactic", 0.5, "_flood_tactic_success")
+  results = resolve_targetting_event(context, bv, narrator, "flood_tactic", 0.5, _flood_tactic_success)
 
   
 #######################################
@@ -596,7 +621,7 @@ def burned_eot(context, bv, narrator):
 # Skills #
 ##########
 
-def _trymode_activation_success(context, bv, narrator):
+def trymode_activation_success(context, bv, narrator):
   Event.gain_status("trymode_activated", context, context.ctarget)
 
 def trymode_status_bot(context, bv, narrator):
@@ -605,126 +630,3 @@ def trymode_status_bot(context, bv, narrator):
   resolve_targetting_event(context, bv, narrator, "trymode_status_bot", trymodeprob,
                            "_trymode_activation_success")
 
-###################
-# All actual data #
-###################
-  
-EVENTS_ORDERS = {
-  "order_received": {
-  },
-  "attack_order": {},
-  "defense_order": {},
-  "indirect_order": {},
-  "panicked_order": {
-  },
-  "provoked_order": {
-  }
-}
-
-for ev in EVENTS_ORDERS:
-  if "panic_blocked" not in EVENTS_ORDERS[ev]:
-    EVENTS_ORDERS[ev]["panic_blocked"] = False
-  EVENTS_ORDERS[ev]["actors"] = ["ctarget"]
-  EVENTS_ORDERS[ev]["primary_actor"] = "ctarget"
-  
-EVENTS_GENERIC_CTARGETTED = {
-  "arrow_strike": {},
-  "duel_consider": {},
-  "duel_accepted": {},
-  "engage": {},
-  "march": {},
-  "indirect_raid": {},
-  "physical_clash": {},
-  "physical_strike": {}
-}
-
-for ev in EVENTS_GENERIC_CTARGETTED:
-  EVENTS_GENERIC_CTARGETTED[ev]["panic_blocked"] = True
-  EVENTS_GENERIC_CTARGETTED[ev]["actors"] = ["csource", "ctarget"]
-  EVENTS_GENERIC_CTARGETTED[ev]["primary_actor"] = "csource"
-
-# eventually maybe separate things out with one ctarget unit
-  
-EVENTS_MISC = {
-  # "army_destroyed": {
-  #   "actors":["ctarget_army"],
-  #   "primary_actor": "ctarget_army"
-  # },
-  "make_speech": {
-    "actors":["ctarget"],
-    "primary_actor": "ctarget"
-  },
-  "receive_damage": {
-    "actors":["ctarget"],
-    "primary_actor": "ctarget"
-  },
-  "receive_status": {
-    "actors":["ctarget"],
-    "primary_actor": "ctarget"
-    #"need_live_actors":False # maybe need "Captured" etc.
-  },
-  "order_change": {
-    "actors":["ctarget_army"],
-    "primary_actor": "ctarget_army"
-  },
-  "change_morale": {
-    "actors":["ctarget_army"],
-    "primary_actor": "ctarget_army"
-  },
-  "order_yomi_win": {
-    "actors":["ctarget_army"],
-    "primary_actor": "ctarget_army"
-  },
-}
-  
-EVENTS_PAIRED_TARGETTED = {
-  "counter_arrow_strike": {
-    "can_aoe": False
-    },
-  "fire_tactic": {
-    "can_aoe": True
-    },
-  "jeer_tactic": {
-    "can_aoe": True
-    },
-  "lure_tactic": {
-    "can_aoe": False
-    },
-  "panic_tactic": {
-    "can_aoe": True
-    },
-  "flood_tactic": {
-    "can_aoe": True
-    },
-  "_fire_tactic_success": {},
-  "_panic_tactic_success": {},
-  "_jeer_tactic_success": {},
-  "_flood_tactic_success": {},
-}
-
-for ev in EVENTS_PAIRED_TARGETTED:
-  EVENTS_PAIRED_TARGETTED[ev]["panic_blocked"] = True
-  EVENTS_PAIRED_TARGETTED[ev]["actors"] = ["csource", "ctarget"]
-  EVENTS_PAIRED_TARGETTED[ev]["primary_actor"] = "csource"
-
-  EVENTS_STATUS = {
-  "remove_status_probabilistic": {},
-  "burned_bot": {},
-  "burned_eot": {},
-  "_trymode_activation_success": {
-  },
-  "trymode_status_bot": {
-  }
-}
-
-for ev in EVENTS_STATUS:
-  if "panic_blocked" not in EVENTS_STATUS[ev]:
-    EVENTS_STATUS[ev]["panic_blocked"] = False
-  EVENTS_STATUS[ev]["actors"] = ["ctarget"]
-  EVENTS_STATUS[ev]["primary_actor"] = "ctarget"
-  
-EVENTS = dict(list(EVENTS_ORDERS.items()) +
-              list(EVENTS_GENERIC_CTARGETTED.items()) +
-              list(EVENTS_MISC.items()) +
-              list(EVENTS_PAIRED_TARGETTED.items()) +
-              list(EVENTS_STATUS.items()))

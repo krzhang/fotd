@@ -84,6 +84,29 @@ class Battle():
     """
     self.queues[queue_name].appendleft(events.Event(event_type, context))
 
+  def is_raining(self):
+    return self.weather.text == "raining"
+
+  def is_hot(self):
+    return self.weather.text == "hot"
+
+  def make_position(self, ctarget):
+    newpos = positions.Position(self, ctarget) # meeting in the field
+    self.dynamic_positions.append(newpos)
+    return newpos
+
+  ########################
+  # Turn logic functions #
+  ########################
+  
+  def _draw_and_get_orders(self, armyid, order_type):
+    """
+    has an army draw cards into their tableau and then input an order of order_type
+    order_type: FORMATION or FINAL
+    """
+    self.armies[armyid].tableau.draw_cards()
+    return self.armies[armyid].intelligence.get_order(self, armyid, order_type)
+
   def _run_status_handlers(self, func_key):
     for i in [0, 1]:
       # originally these were in lists; the problem is you can change these lists, so make copies
@@ -97,42 +120,7 @@ class Battle():
             event_name = func_list[0]
             additional_opt = {"stat_str":ss}
             additional_opt.update(func_list[1]) # additional arguments
-            events.Event(event_name, ctxt.copy(additional_opt=additional_opt)).activate()
-
-  def is_raining(self):
-    return self.weather.text == "raining"
-
-  def is_hot(self):
-    return self.weather.text == "hot"
-
-  def _run_queue(self, queue_name):
-    while self.queues[queue_name]:
-      event = self.queues[queue_name].pop()
-      event.activate()
-      if any((not self.armies[i].is_present()) for i in [0, 1]):
-        # TODO: replace with arbitary leave condition
-        return
-
-  def make_position(self, ctarget):
-    newpos = positions.Position(self, ctarget) # meeting in the field
-    self.dynamic_positions.append(newpos)
-    return newpos
-
-  def get_formations(self):
-    orders = [None, None]
-    for i in [0, 1]:
-      self.armies[i].tableau.draw_cards()
-      orders[i] = self.armies[i].intelligence.get_formation(self, i)
-      self.armies[i].formation = orders[i]
-    return tuple(orders)
-
-  def get_orders(self):
-    orders = [None, None]
-    for i in [0, 1]:
-      self.armies[i].tableau.draw_cards()
-      orders[i] = self.armies[i].intelligence.get_order(self, i)
-      self.armies[i].order = orders[i]
-    return tuple(orders)
+            events.Event(event_name, ctxt.copy(additional_opt=additional_opt)).activate()  
 
   def _initiate_orders(self, orders):
     self.order_history.append(orders)
@@ -165,17 +153,39 @@ class Battle():
     orderlist.sort(key=lambda x: x[0])
     for o in orderlist:
       self.place_event(o[1], o[2], 'Q_ORDER')
-                          
+
+  def _run_queue(self, queue_name):
+    while self.queues[queue_name]:
+      event = self.queues[queue_name].pop()
+      event.activate()
+      if any((not self.armies[i].is_present()) for i in [0, 1]):
+        # TODO: replace with arbitary leave condition
+        return
+      
   def take_turn(self):
-    self.formations = self.get_formations()
-    for i in [0,1]:
-      form = self.formations[i]
-      self.battlescreen.yprint("{} takes a {}.".format(self.armies[i],
-                                          rps.formation_info(form, "desc")))
-    self.orders = self.get_orders()
-    self._initiate_orders(self.orders)
+    """
+    The main function which takes one turn of this battle.
+    """
+    # formations
+    self.formations = tuple(self._draw_and_get_orders(i, "FORMATION_ORDER") for i in [0,1])
+    for i in [0, 1]:
+      self.armies[i].formation = self.formations[i]
+    # self.battlescreen.disp_formations(self.formations)
+    # orders
+    self.orders = tuple(self._draw_and_get_orders(i, "FINAL_ORDER") for i in [0,1])
+    for i in [0, 1]:
+      self.armies[i].order = self.orders[i]
+    # self.battlescreen.disp_orders(self.orders)
+    
+    # for i in [0, 1]:
+    #   form = self.formations[i]
+    #   self.battlescreen.yprint("{} takes a {}.".format(self.armies[i],
+    #                                                    rps.formation_info(form, "desc")))
+    
+    # go through the queues
     # preloading events
     self._run_status_handlers("bot") # should be queue later
+    self._initiate_orders(self.orders)
     self._run_queue('Q_ORDER')
     for i in [0,1]:
       for u in self.armies[i].present_units():

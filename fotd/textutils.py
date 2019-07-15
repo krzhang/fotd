@@ -202,8 +202,8 @@ def convert_templates(templates):
 
 PAUSE_STRS = {
   "MORE_STR": Colors.INVERT + "MORE... [hit a key]" + Colors.ENDC,
-  "FORMATION_STR": Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.BLUE + Back.BLACK +  "FORMATION" + Fore.BLACK + Back.WHITE + " for army {}$[7]$ " + "({}):".format("/".join([rps.formation_info(i, "short") for i in ("O", "D")])) + Colors.ENDC,
-  "ORDER_STR": Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.CYAN +  Back.BLACK + "ORDERS" + Fore.BLACK + Back.WHITE + " for army {} $[7]$ " + "({}):".format("$[7]$/".join([rps.order_info(i,"short") for i in ("A", "D", "I")])) + Colors.ENDC
+  "FORMATION_ORDER": Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.BLUE + Back.BLACK +  "FORMATION" + Fore.BLACK + Back.WHITE + " for army {armyid}$[7]$",
+  "FINAL_ORDER": Style.BRIGHT + Back.WHITE + Fore.BLACK +  "Input " + Fore.CYAN +  Back.BLACK + "ORDERS" + Fore.BLACK + Back.WHITE + " for army {armyid}$[7]$" 
 }
 
 class BattleScreen(View):
@@ -440,12 +440,24 @@ class BattleScreen(View):
                                                   combostr2))
 
       
-  def input_battle_formation(self, armyid):
-    return self._get_input(PAUSE_STRS['FORMATION_STR'].format(armyid), ['O', 'D'])
-
-  def input_battle_order(self, armyid):
-    return self._get_input(PAUSE_STRS['ORDER_STR'].format(armyid), ['A', 'D', 'I'])
-
+  def input_battle_order(self, order_type, armyid):
+    """
+    Input a list of orders. The orders are objects (probably rps.Order()) with 
+    - colored_abbrev method for display
+    - str method for input
+    """
+    if order_type == 'FORMATION_ORDER':
+      orderlist = [rps.FormationOrder(s) for s in rps.FORMATION_ORDER_LIST]
+    else:
+      assert order_type == 'FINAL_ORDER'
+      orderlist = [rps.FinalOrder(s) for s in rps.FINAL_ORDER_LIST]
+    
+    pausestr_1 = PAUSE_STRS[order_type].format(armyid)
+    render_list = [order.colored_abbrev() for order in order_list]
+    pausestr_2 = " ({}):$[7]$".format("$[7]$/".join(render_list))
+    return self._get_input(pausestr_1 + pausestr_2,
+                           [str(order).upper() for order in order_list])
+  
   def _flush(self):
     self.console_buf = []
 

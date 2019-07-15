@@ -2,34 +2,29 @@ import random
 
 import numpy as np
 
+import rps
 import skills
 from mathutils import normalize
 
 class Intelligence(object):
   def __init__(self):
-    # TODOD: write this later
+    # TODO: write this later
     pass
 
-  def get_formation(self, battle, armyid):
-    pass
-
-  def get_order(self, battle, armyid):
+  def get_order(self, battle, armyid, order_type):
     pass
 
 class PlayerIntelligence(Intelligence):
 
-  def get_formation(self, battle, armyid):
-    return battle.battlescreen.input_battle_formation(armyid)
-
-  def get_order(self, battle, armyid):
-    return battle.battlescreen.input_battle_order(armyid)
+  def get_order(self, battle, armyid, order_type):
+    return battle.battlescreen.input_battle_order(order_type, armyid)
 
 class ArtificialIntelligence(Intelligence):
 
   def get_formation(self, battle, armyid):
     return random.choice(['O', 'D'])
   
-  def get_order(self, battle, armyid):
+  def get_final(self, battle, armyid):
   # 2 paths: RPS and story-driven soul reading
     parmy = battle.armies[1 - armyid].present_units()
     priors = np.array([20,20,20])
@@ -53,24 +48,30 @@ class ArtificialIntelligence(Intelligence):
     battle.battlescreen.yprint("  AI counterpicks    (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters))
     return np.random.choice(["A", "D", "I"], p=counters)
 
+  def get_order(self, battle, armyid, order_type):
+    if order_type == 'FORMATION':
+      return self.get_formation(battle, armyid)
+    else:
+      return self.get_final(battle, armyid)
+  
 class RockIntelligence(Intelligence):
 
-  def get_formation(self, battle, armyid):
-    return 'O'
-
-  def get_order(self, battle, armyid):
+  def get_order(self, battle, armyid, order_type):
     return 'A'
 
 class PaperIntelligence(Intelligence):
 
-  def get_formation(self, battle, armyid):
+  def get_order(self, battle, armyid, order_type):
     return 'D'
 
-  def get_order(self, battle, armyid):
-    return 'D'
+class ScissorsIntelligence(Intelligence):
+
+  def get_order(self, battle, armyid, order_type):
+    return 'I'
 
 INTELLIGENCE_FROM_TYPE = {'INT_AI_NORMAL': ArtificialIntelligence,
                           'INT_PLAYER': PlayerIntelligence,
                           'INT_AI_ROCK': RockIntelligence,
                           'INT_AI_PAPER': PaperIntelligence,
+                          'INT_AI_SCISSORS': ScissorsIntelligence,
                           }

@@ -542,7 +542,7 @@ def resolve_targetting_event(context, bv, narrator, roll_key, cchance, success_f
   for new_target in successful_targets:
     new_context = context.copy(additional_opt={"ctarget":new_target})
     # todo: can eventually get new kwords this way
-    results.append(new_target, success_func(new_context))
+    results.append((new_target, success_func(new_context)))
   return results
 
 def _fire_tactic_success(context): # eventually these should not be events...
@@ -569,11 +569,10 @@ def _flood_tactic_success(context):
   dmgdata = (context.csource, context.ctarget, "floods", damage)
   Event("receive_damage", context.copy(
     additional_opt={"damage":damage, "dmgdata":dmgdata, "dmglog":""})).activate()
-  
+
 def flood_tactic(context, bv, narrator):
   results = resolve_targetting_event(context, bv, narrator, "flood_tactic", 0.5, _flood_tactic_success)
 
-  
 #######################################
 # Status Beginning/end of turn Events #
 #######################################

@@ -26,7 +26,7 @@ class Colors:
 # Fore: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.
 # Back: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.
 # Style: DIM, NORMAL, BRIGHT, RESET_ALL
-  
+
 # ESC [ 0 m       # reset all (colors and brightness)
 # ESC [ 1 m       # bright
 # ESC [ 2 m       # dim (looks same as normal brightness)
@@ -85,34 +85,10 @@ class Attrs:
   A_NORMAL = 2
   A_REVERSE = 3
   A_UNDERLINE = 4
-  
 
-
-# Takes something like "${5} Yan Zhang ${7}" and converts it to Colorama codes so we can just 
-STR_TO_CR = {
-  "${1}":Colors.RED,
-  "${2}":Colors.GREEN,
-  "${3}":Colors.YELLOW,
-  "${4}":Colors.BLUE,
-  "${5}":Colors.MAGENTA,
-  "${6}":Colors.CYAN,
-  "${7}":Colors.ENDC,
-  "${2,1}":Colors.GREEN + Style.BRIGHT,
-  "${1,3}":Back.RED + Fore.WHITE,
-  "${3,3}":Back.YELLOW + Fore.WHITE,
-  "${4,3}":Back.BLUE + Fore.WHITE,
-  "${7,1}":Fore.WHITE + Style.BRIGHT,
-  "${7,2}":Fore.WHITE + Style.NORMAL,
-}
 
 def ctext(text, colornumstr):
   return("$[{}]$".format(colornumstr) + text + "$[7]$")
-
-def str_to_colorama(my_str):
-  new_str = my_str
-  for k in STR_TO_CR:
-    new_str = new_str.replace(k, STR_TO_CR[k])
-  return new_str
 
 # color functions
 

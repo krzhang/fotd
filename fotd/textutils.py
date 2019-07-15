@@ -1,4 +1,11 @@
+"""
+The overall idea is that all text data in this game is carried in my slightly
+modified version of asciimatics text, YText. At the last second, it can be rendered 
+to Colorama, asciimatics, or graphical views (in the future).
+"""
+
 import os
+import re
 import logging
 
 # import graphics_asciimatics
@@ -10,6 +17,94 @@ import narration
 import rps
 import skills # move later!
 
+ATTRIBUTES = {
+    "1": 1, # BOLD
+    "2": 2, # NORMAL
+    "3": 3, # REVERSE
+    "4": 4, # UNDERLINE
+}
+
+# Takes something like "${5} Yan Zhang ${7}" and converts it to Colorama codes so we can just 
+STR_TO_CR = {
+  "${1}":Colors.RED,
+  "${2}":Colors.GREEN,
+  "${3}":Colors.YELLOW,
+  "${4}":Colors.BLUE,
+  "${5}":Colors.MAGENTA,
+  "${6}":Colors.CYAN,
+  "${7}":Colors.ENDC,
+  "${2,1}":Colors.GREEN + Style.BRIGHT,
+  "${1,3}":Back.RED + Fore.WHITE,
+  "${3,3}":Back.YELLOW + Fore.WHITE,
+  "${4,3}":Back.BLUE + Fore.WHITE,
+  "${7,1}":Fore.WHITE + Style.BRIGHT,
+  "${7,2}":Fore.WHITE + Style.NORMAL,
+}
+
+class YText():
+  """
+  Example: Zhang Fei: $[4,1]$I am colored text$[7]$.
+
+  Much of this code is taken from asciimatics.renderer, converted for my purposes  
+  """
+
+  _colour_esc_code = r"^\$\{((\d+),(\d+),(\d+)|(\d+),(\d+)|(\d+))\}(.*)"
+  _colour_sequence = re.compile(_colour_esc_code)
+
+  def __init__(self, _str):
+    self._str = self._prerender(_str)
+
+  def _prerender(self, _str):
+    """
+    converts a my-type color string to something on the screen
+
+    1) I start with strings of the type ah$[3]$hhh$[7]$, 
+    2) which should become ah${3}hhh${7}, (this can be used by asciimatics)
+    3) which in the final output should be converted to colorama (or some other 
+    """
+    return _str.replace('$[', '${').replace(']$', '}')
+
+  def to_colorama(self):
+    """
+    colorama just prints strings with escape characters embedded in
+    """
+    new_str = self._str
+    for k in STR_TO_CR:
+      new_str = new_str.replace(k, STR_TO_CR[k])
+    return new_str
+
+  def to_asciimatics(self):
+    """
+    asciimatics paints with a (text) image and a color map
+    """
+    new_line = ""
+    attributes = (None, None, None)
+    colours = []
+    line = self._str
+    while len(line) > 0:
+      match = self._colour_sequence.match(line)
+      if match is None:
+        new_line += line[0]
+        colours.append(attributes)
+        line = line[1:]
+      else:
+        # The regexp either matches:
+        # - 2,3,4 for ${c,a,b}
+        # - 5,6 for ${c,a}
+        # - 7 for ${c}.
+        if match.group(2) is not None:
+          attributes = (int(match.group(2)),
+                        ATTRIBUTES[match.group(3)],
+                        int(match.group(4)))
+        elif match.group(5) is not None:
+          attributes = (int(match.group(5)),
+                        ATTRIBUTES[match.group(6)],
+                        None)
+        else:
+          attributes = (int(match.group(7)), 0, None)
+        line = match.group(8)
+    return(new_line, colours)
+  
 #########################################
 # Display (convert to string) Functions #
 #########################################
@@ -74,21 +169,11 @@ class View():
   def __init__(self, automated=False):
     self.automated = automated
 
-  def _prerender(self, line):
-    """
-    converts a my-type color string to something on the screen
-
-    1) I start with strings of the type ah$[3]$hhh$[7]$, 
-    2) which should become ah${3}hhh${7}, (this can be used by asciimatics)
-    3) which in the final output should be converted to colorama (or some other 
-    """
-    return line.replace('$[', '${').replace(']$', '}')
-
   def _render(self, line):
     """
     converts a line of my-type of string (see prerender) to step 2, which is colorama-printable
     """
-    return colors.str_to_colorama(self._prerender(line))
+    return YText(line).to_colorama()
 
   def _flush(self):
     pass
@@ -169,8 +254,8 @@ def disp_bar_day_tracker(max_pos, base, last_turn, cur):
 def disp_hrule():
   return "="*80
 
-############
-# Templates
+#############
+# Templates #
 #############
 
 CONVERT_TEMPLATES_DISPS = {

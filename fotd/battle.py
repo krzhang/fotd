@@ -46,7 +46,6 @@ class Battle():
     self.yomis = None
     self.yomi_winner = -1
     self.yomi_list = []
-    self.init_day()
 
   @property
   def formations(self):
@@ -162,6 +161,7 @@ class Battle():
     The main function which takes one turn of this battle.
     """
     # formations
+    self.init_day()
     for i in [0, 1]:
       myarmy = self.armies[i]
       myarmy.tableau.draw_cards()
@@ -185,8 +185,6 @@ class Battle():
     self._run_queue('Q_MANUEVER')
     self._run_queue('Q_RESOLVE')
     self._run_status_handlers("eot") # should be queue later
-    # self.battlescreen.pause_and_display() # could have undisplayed stuff
-    self.init_day()
 
   def losing_status(self):
     losing = [False, False] # they can theoretically both lose

@@ -132,6 +132,7 @@ class Army(object):
     self.formation_bonus = 1.0
     self.formation = None
     self.order = None
+    self.commitment_bonus = False
     
   def __repr__(self):
     return "Army({})".format(self.name)

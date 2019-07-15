@@ -55,31 +55,6 @@ class Battle():
   def orders(self):
     return (self.armies[0].order, self.armies[1].order)
     
-  def init_day(self):
-    """
-    Cleans state, but also most importantly, makes it renderable.
-    """
-    # common knowledge: later take out
-    self.date += 1
-    self.weather = weather.random_weather()
-    self.yomi_winner = -1
-    self.yomis = None
-    # setup stuff
-    for i in [0, 1]:
-      self.armies[i].yomi_edge = None
-      self.armies[i].bet_morale_change = 0
-      self.armies[i].formation = None
-      self.armies[i].order = None
-      self.armies[i].formation_bonus = 1.0
-      self.armies[i].last_turn_morale = self.armies[i].morale
-      self.armies[i].tableau.clear()
-      for u in self.armies[i].present_units():
-        u.move(self.hqs[u.army.armyid])
-        u.targetting = None
-        u.last_turn_size = u.size
-    assert all((p.is_empty() for p in self.dynamic_positions))
-    self.dynamic_positions = []
-
   def place_event(self, event_type, context, queue_name):
     """
     used when we want to make a new event on a queue of our choice 
@@ -102,6 +77,45 @@ class Battle():
   # Turn logic functions #
   ########################
 
+  def _init_day(self):
+    """
+    Cleans state, but also most importantly, makes it renderable.
+    """
+    # common knowledge: later take out
+    self.date += 1
+    self.weather = weather.random_weather()
+    self.yomi_winner = -1
+    self.yomis = None
+    # setup stuff
+    for i in [0, 1]:
+      self.armies[i].yomi_edge = None
+      self.armies[i].bet_morale_change = 0
+      self.armies[i].formation = None
+      self.armies[i].order = None
+      self.armies[i].formation_bonus = 1.0
+      self.armies[i].commitment_bonus = False
+      self.armies[i].last_turn_morale = self.armies[i].morale
+      self.armies[i].tableau.clear()
+      for u in self.armies[i].present_units():
+        u.move(self.hqs[u.army.armyid])
+        u.targetting = None
+        u.last_turn_size = u.size
+    assert all((p.is_empty() for p in self.dynamic_positions))
+    self.dynamic_positions = []
+  
+  def _get_formations_and_orders(self):
+    for i in [0, 1]:
+      myarmy = self.armies[i]
+      myarmy.tableau.draw_cards()
+      myarmy.formation = myarmy.intelligence.get_formation(self, i)
+    self.narrator.narrate_formations()
+
+    # orders
+    for i in [0, 1]:
+      myarmy = self.armies[i]
+      myarmy.tableau.draw_cards()
+      myarmy.order = myarmy.intelligence.get_final(self, i)
+ 
   def _run_status_handlers(self, func_key):
     for i in [0, 1]:
       # originally these were in lists; the problem is you can change these lists, so make copies
@@ -117,7 +131,7 @@ class Battle():
             additional_opt.update(func_list[1]) # additional arguments
             events.Event(event_name, ctxt.copy(additional_opt=additional_opt)).activate()  
 
-  def _initiate_orders(self, orders):
+  def _send_orders_to_armies(self, orders):
     self.order_history.append(orders)
     self.yomi_winner = rps.orders_to_winning_army(orders) # -1 if None
     self.yomis = (rps.beats(orders[0], orders[1]), rps.beats(orders[1], orders[0]))
@@ -131,6 +145,8 @@ class Battle():
         orderlist.append((0, "order_change",
                           contexts.Context(self, opt={"ctarget_army":self.armies[i],
                                                       "morale_bet":cost})))
+      else:
+        self.armies[i].commitment_bonus = True
       if self.yomi_winner == i:
         orderlist.append((0, "order_yomi_win",
                           contexts.Context(self, opt={"ctarget_army":self.armies[i]})))
@@ -161,23 +177,11 @@ class Battle():
     The main function which takes one turn of this battle.
     """
     # formations
-    self.init_day()
-    for i in [0, 1]:
-      myarmy = self.armies[i]
-      myarmy.tableau.draw_cards()
-      myarmy.formation = myarmy.intelligence.get_formation(self, i)
-    self.narrator.narrate_formations()
-
-    # orders
-    for i in [0, 1]:
-      myarmy = self.armies[i]
-      myarmy.tableau.draw_cards()
-      myarmy.order = myarmy.intelligence.get_final(self, i)
-    
-    # go through the queues
+    self._init_day()
+    self._get_formations_and_orders()
     # preloading events
     self._run_status_handlers("bot") # should be queue later
-    self._initiate_orders(self.orders)
+    self._send_orders_to_armies(self.orders)
     self._run_queue('Q_ORDER')
     for i in [0,1]:
       for u in self.armies[i].present_units():

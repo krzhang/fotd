@@ -114,7 +114,7 @@ def army_mysticsoft(armyid, color, aitype, num=4):
   return Army("Mysticsoft", PC_UNITS[:num], armyid, color, aitype, 7)
 
 def army_bizarro(armyid, color, aitype, num=4):
-  return Army("Mystic$oft", BIZARRO_UNITS[:num], armyid, color, aitype, 7)
+  return Army("Mysterioussoft", BIZARRO_UNITS[:num], armyid, color, aitype, 7)
 
 def army_unknown(armyid, color, aitype, num=4):
   return Army("Enemy Unknown", random.sample(OTHER_UNITS, 4)[:num], armyid, color, aitype, 7)

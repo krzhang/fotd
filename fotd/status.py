@@ -53,7 +53,7 @@ STATUSES_BATTLE = {
   },
   "panicked": {
     "eot":("remove_status_probabilistic", {"fizzle_prob":0.5}),
-    "on_receive": "{ctarget}'s unit collapses into a chaotic {stat_viz} state",
+    "on_receive": "{ctarget}'s unit collapses into a chaotic {stat_viz} state!",
     "on_order_override": "{ctarget}'s unit is panicked and stays still, ignoring orders.",
     "on_remove": "{ctarget} regains control.",
   },
@@ -66,7 +66,7 @@ STATUSES_BATTLE = {
   },
   "defended": {
     "eot":("remove_status_probabilistic", {"fizzle_prob":1.1}), # round up for floating error
-    # "on_receive": "{target} is now {stat_viz} against standard tactics",    
+    # "on_receive": "{target} is now {stat_viz} against standard tactics",
     "on_remove": None
   },
   "is_commander": {

@@ -53,7 +53,14 @@ class BattleNarrator(Narrator):
       form = self.battle.formations[i]
       self.view.yprint(rps.formation_info(str(form), "desc"),
                        templates={"ctarget_army":self.battle.armies[i]})
-  
+
+  def narrate_commitment_guarantee(self, key, **context):
+    """
+    Used to narrate the perfect rolls
+    """
+    self.view.disp_activated_narration(ROLLS[key]['short'],
+                                       "guaranteed success by formation commitment!", True)
+      
   def narrate_status(self, key, **context):
     ctarget = context["ctarget"]
     stat_str = context["stat_str"]
@@ -66,7 +73,10 @@ class BattleNarrator(Narrator):
       # use a default
       self.view.yprint(BattleNarrator.STATUS_DEFAULTS[key], templates=context)
 
-  def narrate_success(self, key, success, **context):
+  def narrate_roll_success(self, key, success, **context):
+    """
+    Narrates speeches that happen when a roll succeeds or fails.
+    """
     if success:
       narrator_str, narrate_text = get_one(ROLLS[key], "on_success_speech")
     else:
@@ -74,6 +84,14 @@ class BattleNarrator(Narrator):
     if narrator_str and (narrator_str in context) and narrate_text:
       self.unit_speech(context[narrator_str], narrate_text, **context)
 
+  def narrate_roll_post_success(self, key, success, **context):
+    """
+    This is just a signifier that happens after the roll and the resolution.
+    Ex: <MAD_SKILL> Success!
+    """
+    if ROLLS[key]['show_roll_success']:
+      self.view.disp_activated_narration(ROLLS[key]['short'], "", success)
+      
   def _narrate_jeer(self, success, **context):
     # after rolling, always make 2 narrations
     if random.random() < 0.50:
@@ -108,7 +126,7 @@ class BattleNarrator(Narrator):
       # self.view.disp_activated_narration(get_one(ROLLS[key], "short"), on_roll)
     if key == "jeer_tactic":
       self._narrate_jeer(success, **context)
-    self.narrate_success(key, success, **context)
+    self.narrate_roll_success(key, success, **context)
     
 ENTRANCES = [
   "It's a good day for a battle.",
@@ -135,55 +153,69 @@ CAPTURES = [ "Wow. That really happened.",
 
 ROLLS = {
   "lure_tactic": {
+    "roll_type": 'targetted tactic',
     "short": 'lure',
     "on_success": "{lurer} $[2]$lures$[7]$ {ctarget} into {csource}'s tactic!",
     "on_success_speech": [("lurer", "Here, kitty kitty kitty...")],
+    "show_roll_success": False,
   },
 
   "fire_tactic": {
+    "roll_type": 'targetted tactic',
     "short": 'fire',
     "on_roll": ["{csource} prepares embers and tinder..."],
     "on_success_speech": [("csource", "It's going to get pretty hot!"),
                           ("ctarget", "Oh no! My soldiers are engulfed in flames!")],
     "on_fail_speech": [("csource", "{ctarget} did not fall for my tricks."),
                        ("ctarget", "No need to play with fire, {csource}!")],
+    "show_roll_success": True,
   },
   "jeer_tactic": {
+    "roll_type": 'targetted tactic',
     "short": 'jeer',
     "on_roll": ["{csource} prepares their best insults..."],
     # "on_success_speech":  [("csource", "{ctarget}'s soldiers are fuming to fight."),
     #                        ("ctarget", "Why you...")],
     # "on_fail_speech": [], # has its own routine
+    "show_roll_success": True,
   },
   "lure_tactic": {
+    "roll_type": 'targetted tactic',
     "short": 'lure',
     "on_roll": None,
     "on_success": "{lurer} $[2]$lures$[7]$ {ctarget} into the tactic!",
     "on_success_speech": [("lurer", "Here, kitty kitty kitty...")],
     "on_fail_speech": None, # has its own routine
+    "show_roll_success": False,
   },  
   "panic_tactic": {
+    "roll_type": 'targetted tactic',
     "short": 'panic',
     "on_roll": ["{csource} sows seeds of fear and doubt in {ctarget}'s unit..."],
     "on_success_speech": [("csource", "{ctarget} will be out of commission for a while..."),
                           ("ctarget", "The soldiers are incredibly scared of everything.")],
     "on_fail_speech": [("csource", "{ctarget}'s unit was not shaken."),
                        ("ctarget", "Keep calm, don't let {csource} get to you.")],
+    "show_roll_success": True,
   },
   "flood_tactic": {
+    "roll_type": 'targetted tactic',
     "short": 'flood',
     "on_roll": ["{csource} manipulates the dams..."],
     "on_success_speech": [("csource", "Water is crashing through their ships."),
                           ("csource", "The Gods of nature are unforgiving.")],
     "on_fail_speech": [("csource", "{ctarget} narrowly avoided being swept away."),
                        ("ctarget", "No need to play with fire, {csource}!")],
+    "show_roll_success": True,
   },
   "trymode_status_bot": {
+    "roll_type": 'buff',
     "short": 'trymode',
     "on_roll": ["{ctarget} looks for an excuse to pretend to be powered up..."],
     "on_success_speech": [("ctarget", "Did you really think I took you seriously before?"),
                           ("ctarget", "*Yawn* Let's get it.")],
     "on_fail_speech": [("ctarget", "Nope, still not trying."),
                        ("ctarget", "I have not yet begun to fight.")],
+    "show_roll_success": True,
   },  
 }

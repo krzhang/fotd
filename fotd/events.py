@@ -395,7 +395,7 @@ def arrow_strike(context, bv, narrator):
 def physical_clash(context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
-  bv.yprint("  {} clashes against {}!".format(csource, ctarget))
+  bv.yprint("  {csource} clashes against {ctarget}!", templates=context.opt)
   Event("physical_strike", context).activate()
   # bv.yprint("  %s able to launch retaliation" % ctarget) can die in the middle
   Event("physical_strike", context.rebase_switch()).activate()
@@ -524,8 +524,13 @@ def _roll_target_skill_tactic(context, bv, narrator, roll_key, cchance):
   returns:
     a list of successful targets (could be several due to entanglement, lures, etc.)
   """
-  bv = context.battle.battlescreen
-  success = random.random() < cchance # can replace with harder functions later
+  if (event_info(roll_key, 'event_type') == 'target-skill' and
+      context.battle.armies[context.csource.armyid].commitment_bonus):
+    narrator.narrate_commitment_guarantee(roll_key, **context.opt)
+    new_chance = 1.1
+  else:
+    new_chance = cchance
+  success = random.random() < new_chance # can replace with harder functions later
   # TODO cchance = calc_chance(target, skill) or something
   narrator.narrate_roll(roll_key, success, **context.opt)
   successful_targets = []
@@ -533,7 +538,7 @@ def _roll_target_skill_tactic(context, bv, narrator, roll_key, cchance):
     successful_targets.append(context.ctarget)
     if event_info(roll_key, "can_aoe"):
       successful_targets += _resolve_entanglement(context, bv, narrator)
-  bv.disp_activated_narration(roll_key, "", success)
+  narrator.narrate_roll_post_success(roll_key, success, **context.opt)
   return successful_targets
 
 def resolve_targetting_event(context, bv, narrator, roll_key, cchance, success_func):
@@ -549,19 +554,22 @@ def _fire_tactic_success(context): # eventually these should not be events...
   Event.gain_status("burned", context, context.ctarget)  
 
 def fire_tactic(context, bv, narrator):
-  results = resolve_targetting_event(context, bv, narrator, "fire_tactic", 0.5, _fire_tactic_success)
+  chance = 0.5
+  results = resolve_targetting_event(context, bv, narrator, "fire_tactic", chance, _fire_tactic_success)
 
 def _jeer_tactic_success(context):
   Event.gain_status("provoked", context, context.ctarget)
   
 def jeer_tactic(context, bv, narrator):
-  results = resolve_targetting_event(context, bv, narrator, "jeer_tactic", 0.4, _jeer_tactic_success)
+  chance = 0.5
+  results = resolve_targetting_event(context, bv, narrator, "jeer_tactic", chance, _jeer_tactic_success)
 
 def _panic_tactic_success(context):
   Event.gain_status("panicked", context, context.ctarget)
   
 def panic_tactic(context, bv, narrator):
-  results = resolve_targetting_event(context, bv, narrator, "panic_tactic", 0.5, _panic_tactic_success)
+  chance = 0.5
+  results = resolve_targetting_event(context, bv, narrator, "panic_tactic", chance, _panic_tactic_success)
 
 def _flood_tactic_success(context):
   damdice = battle_constants.FLOOD_TACTIC_DAMDICE
@@ -571,7 +579,8 @@ def _flood_tactic_success(context):
     additional_opt={"damage":damage, "dmgdata":dmgdata, "dmglog":""})).activate()
 
 def flood_tactic(context, bv, narrator):
-  results = resolve_targetting_event(context, bv, narrator, "flood_tactic", 0.5, _flood_tactic_success)
+  chance = 0.5
+  results = resolve_targetting_event(context, bv, narrator, "flood_tactic", chance, _flood_tactic_success)
 
 #######################################
 # Status Beginning/end of turn Events #

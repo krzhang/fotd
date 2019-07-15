@@ -62,7 +62,7 @@ STATUSES_BATTLE = {
     "on_order_override": "{ctarget}'s unit is provoked marches, ignoring orders.",
     "on_receive": "{ctarget}'s units are {stat_viz}; they are angry and out of control!",
     "on_remove": "{ctarget} regains control.",
-    "viz":"$[1]$provoked$7$",
+    "viz":"$[1]$provoked$[7]$",
   },
   "defended": {
     "eot":("remove_status_probabilistic", {"fizzle_prob":1.1}), # round up for floating error

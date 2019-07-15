@@ -309,7 +309,7 @@ def disp_bar_single_hit(max_pos, oldhp, newhp):
   # return  Colors.OKGREEN + '#'*cur + Colors.RED + '#'*(base-cur) + Colors.ENDC + '.'*(total-base)
 
 def disp_bar_day_tracker(max_pos, base, last_turn, cur):
-  return disp_bar_custom([Colors.SUCCESS, Colors.RED, Colors.ENDC, Colors.ENDC],
+  return disp_bar_custom([Colors.GOOD, Colors.RED, Colors.ENDC, Colors.ENDC],
                          ['#', '#', '.', " "],
                          [cur, last_turn-cur, base-last_turn, max_pos-base])
 
@@ -563,8 +563,10 @@ class BattleScreen(View):
       sepstr = " | "
     else:
       sepstr = "| "
-    active_skillstr = sepstr + " ".join(active_skillist)
-    charstr = " "*2 + inactive_skillstr + active_skillstr
+    # active_skillstr = sepstr + " ".join(active_skillist)
+    active_skillstr = " ".join(active_skillist)
+    # charstr = " "*2 + inactive_skillstr + active_skillstr
+    charstr = " "*2 + active_skillstr
     return charstr
 
   def disp_yomi_win(self, csource_army, ctarget_army, ycount, bet):

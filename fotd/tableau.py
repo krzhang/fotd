@@ -12,12 +12,12 @@ class SkillCard():
     self.unit = unit
     self.order = order
     self.armyid = unit.army.armyid
-    self.visibility = {self.armyid:True, 1-self.armyid:False}
+    self.visibility = {0:False, 1:False}
 
   def __hash__(self):
     return hash((self.sc_str, self.unit.name, str(self.order), self.armyid))
   
-  def visibile_to(self, army):
+  def visible_to(self, army):
     return self.visibility[army.armyid]
 
   def make_visible_to(self, army):
@@ -71,9 +71,21 @@ class Tableau():
         proc_chance = skills.skillcard_info(sc.sc_str, "bulb")[str(sc.order)]
         if ((random.random() < proc_chance) and
             (self.battle.weather.text not in skills.skillcard_info(sc.sc_str, "illegal_weather"))):
-          self.bv.disp_bulb(sc)
+          # a new legal card is drawn
           self.sc_dict[sc] = True
+          sc.make_visible_to(self.army)
+          self.bv.disp_bulb(sc)
 
+  def scout(self, army):
+    """
+    armyid is scouting
+    """
+    assert army.armyid == 1-self.armyid
+    for sc in self.sc_dict:
+      if self.sc_dict[sc] and not sc.visibile_to(army.armyid):
+        sc.make_visible_to(army)
+        self.bv.disp_successful_scout(sc, army.armyid)
+    
   def visible_bulbed_cards(self, viewer_army):
     visible_dict = {}
     for key in self.sc_dict:

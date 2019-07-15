@@ -75,7 +75,7 @@ STATUSES_BATTLE = {
   },
   "trymode_activated": {
     # "eot":[],
-    "on_receive": "{ctarget} is actually trying now; they are brimming with power",    
+    "on_receive": "{ctarget} is actually trying now; they are brimming with power.",    
     "on_remove": None
   },
   "received_physical_attack": {

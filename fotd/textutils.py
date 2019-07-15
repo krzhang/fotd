@@ -362,7 +362,12 @@ class BattleScreen(View):
     self.battle = battle
     self.debug_mode = self.battle.debug_mode
     self.armyid = armyid
+    # self.army = self.battle.armies[armyid]
 
+  @property
+  def army(self):
+    return self.battle.armies[self.armyid]
+  
   def _colored_strats(self, orders):
     orders = list(orders)
     ocolors = []
@@ -470,10 +475,24 @@ class BattleScreen(View):
     sc_str = sc.sc_str
     order_str = str(sc.order)
     # self.yprint("{} $[2,1]$|{}|$[7]$ ".format(disp_unit(unit), # also pretty, use somewhere else
-    self.yprint("{}: {}! ".format(disp_unit(unit),
-                                disp_skillcard(sc)) +
-                skills.skillcard_info(sc_str, "on_bulb")[order_str])
+    if sc.visible_to(self.army):
+      self.yprint("{}: {}! ".format(disp_unit(unit),
+                                    disp_skillcard(sc)) +
+                  skills.skillcard_info(sc_str, "on_bulb")[order_str])
 
+  def disp_successful_scout(self, sc, armyid):
+    """
+    armyid just successfully saw a card
+    """
+    unit = sc.unit
+    sc_str = sc.sc_str
+    order_str = str(sc.order)
+    # self.yprint("{} $[2,1]$|{}|$[7]$ ".format(disp_unit(unit), # also pretty, use somewhere else
+    if self.armyid == armyid:
+      self.yprint("Scouts report that {} has prepped {}!".format(
+        disp_army(self.battle.armies[1-armyid]),
+        disp_skillcard(sc)))
+      
   def disp_duel(self, csource, ctarget, loser_history, health_history, damage_history):
     self.yprint("{csource} and {ctarget} face off!",
                 templates={"csource":csource,
@@ -558,7 +577,8 @@ class BattleScreen(View):
                                               success=True, upper=False)
                        for s in unit.character.skills if
                        bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
-    active_skillist += [disp_skillcard(sc) for sc in unit.army.tableau.bulbed_by(unit)]
+    active_skillist += [disp_skillcard(sc) for sc in unit.army.tableau.bulbed_by(unit)
+                        if sc.visible_to(self.army)]
     if inactive_skillstr:
       sepstr = " | "
     else:

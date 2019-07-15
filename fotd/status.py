@@ -1,4 +1,4 @@
-from colors import Colors
+from colors import Colors, ctext
 import skills
 
 STATUSES = {}
@@ -12,11 +12,11 @@ class Status(object):
     # this allows us to e.g. remove
     return self.stat_str == other.stat_str
 
-  def __str__(self):
+  def __str__(self):  # todo: move out
     if "viz" in STATUSES[self.stat_str]:
       return STATUSES[self.stat_str]["viz"]
     else:
-      return Colors.RED + self.stat_str + Colors.ENDC
+      return ctext(self.stat_str, Colors.FAILURE)
 
   def __repr__(self):
     return self.stat_str
@@ -49,7 +49,7 @@ STATUSES_BATTLE = {
     "on_receive": "{ctarget} bursts into flames and is now {stat_viz}!",
     "on_remove": "{ctarget} has put out the fire.",
     "on_retain": "The fire burning {ctarget} rages on.",
-    "viz":Colors.RED+'b'+Colors.YELLOW+'u'+Colors.RED+'r'+Colors.YELLOW+'n'+Colors.RED+'i'+Colors.YELLOW+'n'+Colors.RED+'g'+Colors.ENDC
+    "viz":'$[1]$b$[3]$u$[1]$r$[3]$n$[1]$i$[3]$n$[1]$g$[7]$',
   },
   "panicked": {
     "eot":("remove_status_probabilistic", {"fizzle_prob":0.5}),
@@ -62,7 +62,7 @@ STATUSES_BATTLE = {
     "on_order_override": "{ctarget}'s unit is provoked marches, ignoring orders.",
     "on_receive": "{ctarget}'s units are {stat_viz}; they are angry and out of control!",
     "on_remove": "{ctarget} regains control.",
-    "viz":Colors.RED + "provoked" + Colors.ENDC
+    "viz":"$[1]$provoked$7$",
   },
   "defended": {
     "eot":("remove_status_probabilistic", {"fizzle_prob":1.1}), # round up for floating error
@@ -70,7 +70,7 @@ STATUSES_BATTLE = {
     "on_remove": None
   },
   "is_commander": {
-    "viz":Colors.YELLOW + "commander" + Colors.ENDC, 
+    "viz":"$[3]$commander$[7]$",
   },
   "trymode_activated": {
     # "eot":[],

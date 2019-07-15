@@ -17,13 +17,6 @@ import narration
 import rps
 import skills # move later!
 
-ATTRIBUTES = {
-    "1": 1, # BOLD
-    "2": 2, # NORMAL
-    "3": 3, # REVERSE
-    "4": 4, # UNDERLINE
-}
-
 # Takes something like "${5} Yan Zhang ${7}" and converts it to Colorama codes so we can just 
 STR_TO_CR = {
   "${1}":Colors.RED,
@@ -41,6 +34,37 @@ STR_TO_CR = {
   "${7,2}":Fore.WHITE + Style.NORMAL,
 }
 
+AM_TO_CR_FORE = {
+  1:Fore.RED,
+  2:Fore.GREEN,
+  3:Fore.YELLOW,
+  4:Fore.BLUE,
+  5:Fore.MAGENTA,
+  6:Fore.CYAN,
+  7:Fore.WHITE,  
+}
+
+AM_TO_CR_BACK = {
+  1:Back.RED,
+  2:Back.GREEN,
+  3:Back.YELLOW,
+  4:Back.BLUE,
+  5:Back.MAGENTA,
+  6:Back.CYAN,
+  7:Back.WHITE,  
+}
+
+ATTRIBUTES = {
+    "1": 1, # BOLD
+    "2": 2, # NORMAL
+    "3": 3, # REVERSE
+    "4": 4, # UNDERLINE
+}
+
+# Style.BRIGHT,
+# Style.DIM,
+# Style.NORMAL,
+
 class YText():
   """
   Example: Zhang Fei: $[4,1]$I am colored text$[7]$.
@@ -53,6 +77,7 @@ class YText():
 
   def __init__(self, _str):
     self._str = self._prerender(_str)
+    self._raw_str, self._color_map = self._to_asciimatics()
 
   def _prerender(self, _str):
     """
@@ -64,7 +89,11 @@ class YText():
     """
     return _str.replace('$[', '${').replace(']$', '}')
 
-  def to_colorama(self):
+  def __len__(self):
+    assert len(self._raw_str) == len(self._color_map)
+    return len(self._raw_str)
+  
+  def to_colorama_old(self):
     """
     colorama just prints strings with escape characters embedded in
     """
@@ -73,7 +102,36 @@ class YText():
       new_str = new_str.replace(k, STR_TO_CR[k])
     return new_str
 
-  def to_asciimatics(self):
+  def to_colorama(self):
+    """
+    colorama just prints strings with escape characters embedded in
+    """
+    cur_map = (None, None, None)
+    new_str = ""
+    for i, t in enumerate(self._raw_str):
+      if self._color_map[i] != cur_map:
+        cur_map = self._color_map[i]
+        a,b,c = self._color_map[i]
+        if b == 1: # BOLD
+          new_str += Style.BRIGHT
+        elif b == 2: # NORMAL
+          new_str += Style.NORMAL
+        elif b == 4: # UNDERLINE
+          new_str += Style.UNDERLINE
+        elif b == 3: # REVERSE
+          pass
+        if c:
+          new_str += AM_TO_CR_BACK[c]
+        else:
+          pass
+        if a:
+          new_str += AM_TO_CR_FORE[a]
+        else:
+          new_str += Fore.WHITE
+      new_str += t
+    return new_str + Colors.ENDC
+  
+  def _to_asciimatics(self):
     """
     asciimatics paints with a (text) image and a color map
     """
@@ -94,11 +152,11 @@ class YText():
         # - 7 for ${c}.
         if match.group(2) is not None:
           attributes = (int(match.group(2)),
-                        ATTRIBUTES[match.group(3)],
+                        int(match.group(3)),  # in asciimatics these are ATTRIBUTES
                         int(match.group(4)))
         elif match.group(5) is not None:
           attributes = (int(match.group(5)),
-                        ATTRIBUTES[match.group(6)],
+                        int(match.group(6)),
                         None)
         else:
           attributes = (int(match.group(7)), 0, None)
@@ -232,22 +290,22 @@ def disp_unit_status_noskills(unit):
 
 def disp_bar_morale(max_morale, cur_morale, last_turn_morale):
   if last_turn_morale > cur_morale:
-    return disp_bar_custom([Colors.BLUE + Style.DIM, Colors.RED, Colors.ENDC],
+    return disp_bar_custom([Colors.BLUE, Colors.FAILURE, Colors.ENDC],
                            ['+', '*', '.'],
                            [cur_morale, last_turn_morale-cur_morale, max_morale-last_turn_morale])
-  return disp_bar_custom([Colors.BLUE + Style.DIM, Colors.OKGREEN, Colors.ENDC],
+  return disp_bar_custom([Colors.BLUE, Colors.SUCCESS, Colors.ENDC],
                          ['+', '*', '.'],
                          [last_turn_morale, cur_morale-last_turn_morale, max_morale-cur_morale])
 
 def disp_bar_single_hit(max_pos, oldhp, newhp):
   """Total: length; base: max; cur: current. """
-  return disp_bar_custom([Colors.OKGREEN, Colors.RED, Colors.ENDC],
+  return disp_bar_custom([Colors.SUCCESS, Colors.RED, Colors.ENDC],
                          ['#', '#', ' '],
                          [newhp, oldhp-newhp, max_pos-oldhp])
   # return  Colors.OKGREEN + '#'*cur + Colors.RED + '#'*(base-cur) + Colors.ENDC + '.'*(total-base)
 
 def disp_bar_day_tracker(max_pos, base, last_turn, cur):
-  return disp_bar_custom([Colors.OKGREEN, Colors.RED, Colors.ENDC, Colors.ENDC],
+  return disp_bar_custom([Colors.SUCCESS, Colors.RED, Colors.ENDC, Colors.ENDC],
                          ['#', '#', '.', " "],
                          [cur, last_turn-cur, base-last_turn, max_pos-base])
 
@@ -307,9 +365,9 @@ class BattleScreen(View):
     for i in [0,1]:
       other = 1-i
       if rps.beats(orders[i], orders[other]):
-        ocolors.append(Colors.WIN)
+        ocolors.append(Colors.SUCCESS)
       elif rps.beats(orders[other], orders[i]):
-        ocolors.append(Colors.LOSE)
+        ocolors.append(Colors.FAILURE)
       else:
         ocolors.append("")
     return tuple([ocolors[i] + orders[i] + Colors.ENDC for i in [0,1]])
@@ -441,7 +499,7 @@ class BattleScreen(View):
     fdmgstr = ndmgstr + hpbar + " {} -> {} ({} damage)".format(
       oldsize, newsize, colors.color_damage(damage))
     if newsize == 0:
-      fdmgstr += "; " + Colors.RED + "DESTROYED!" + Colors.ENDC
+      fdmgstr += "; " + ctext("DESTROYED!", Colors.FAILURE)
     self.yprint(fdmgstr)
     if dmglog:
       dmg_str = disp_damage_calc(*dmglog)
@@ -481,6 +539,7 @@ class BattleScreen(View):
     # charstr = "{} {} Hp:{} {}".format(healthbar, disp_cha_fullname(unit.character),
     #                                   disp_unit_size(unit), statuses)
     charstr = "{} {} {}".format(healthbar, disp_cha_fullname(unit.character), statuses)
+    # charstr = "{}".format(disp_cha_fullname(unit.character))
     return charstr
 
   def _disp_unit_skills(self, unit, side):

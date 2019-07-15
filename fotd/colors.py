@@ -2,26 +2,38 @@ from colorama import Fore, Back, Style, init
 init()
 
 class Colors:
-  HEADER = '\033[95m'
-  OKBLUE = '\033[94m'
-  OKGREEN = '\033[92m'
-  WARNING = '\033[93m'
-  FAIL = '\033[91m'
-  # ENDC = '\033[0m'
+  # HEADER = '\033[95m'
+  # OKBLUE = '\033[94m'
+  # OKGREEN = '\033[92m'
+  # WARNING = '\033[93m'
+  # FAIL = '\033[91m'
+  # # ENDC = '\033[0m'
   ENDC = Style.RESET_ALL
-  BOLD = '\033[1m'
+  # BOLD = '\033[1m'
   UNDERLINE = '\033[4m'
   # mine below
-  BLUE = Fore.BLUE
-  YELLOW = Fore.YELLOW
-  RED = Fore.RED
-  GREEN = Fore.GREEN
-  MAGENTA = Fore.MAGENTA
-  CYAN = Fore.CYAN
+  # BLACK
+  RED = "$[1]$"
+  GREEN = "$[2]$"
+  YELLOW = "$[3]$"
+  BLUE = "$[4]$"
+  MAGENTA = "$[5]$"
+  CYAN = "$[6]$"
+  WHITE = "$[7]$"
+  # BLUE = Fore.BLUE
+  # YELLOW = Fore.YELLOW
+  # RED = Fore.RED
+  # GREEN = Fore.GREEN
+  # MAGENTA = Fore.MAGENTA
+  # CYAN = Fore.CYAN
   # RPS
-  WIN = OKGREEN
-  LOSE = Fore.RED
-  INVERT = Fore.BLACK + Back.WHITE
+  # By function
+  INVERT = "$[0,3,7]$"
+  SUCCESS = "$[2,1]$"
+  GOOD = "$[2]$"
+  NEUTRAL = "$[5]$"
+  POOR = "$[3]$"
+  FAILURE = "$[1]$"
 
 # Fore: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.
 # Back: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.
@@ -86,44 +98,41 @@ class Attrs:
   A_REVERSE = 3
   A_UNDERLINE = 4
 
-
+  
 def ctext(text, colornumstr):
-  return("$[{}]$".format(colornumstr) + text + "$[7]$")
+  return(colornumstr + text + "$[7]$")
 
 # color functions
-
+  
 def color_bool(success):
   if success:
-    return Colors.OKGREEN
+    return Colors.SUCCESS
   elif success == False:
-    return Colors.MAGENTA
+    return Colors.FAILURE
   else:
     # when we don't know if it failed
-    return Colors.GREEN
+    return Colors.NEUTRAL
 
 def color_prob(prob):
   pstr = "{:4.3f}".format(prob)
-  if prob > 0.75:
-    return Colors.GREEN + pstr + Colors.ENDC
-  elif prob > 0.5:
-    return Colors.MAGENTA + pstr + Colors.ENDC
-  elif prob > 0.25:
-    return Colors.YELLOW + pstr + Colors.ENDC
+  if prob > 0.8:
+    return ctext(pstr, Colors.SUCCESS)
+  elif prob > 0.6:
+    return ctext(pstr, Colors.GOOD)
+  elif prob > 0.4:
+    return ctext(pstr, Colors.NEUTRAL)
+  elif prob > 0.2:
+    return ctext(pstr, Colors.POOR)
   else:
-    return Colors.RED + pstr + Colors.ENDC
-  
+    return ctext(pstr, Colors.FAILURE)
+
 def color_damage(damage):
   if damage == 0:
-    return Colors.OKGREEN + str(damage) + Colors.ENDC
+    return ctext(str(damage), Colors.SUCCESS)
   elif damage <= 3:
-    return str(damage)
+    return ctext(str(damage), Colors.NEUTRAL)
   else:
-    return Colors.RED + str(damage) + Colors.ENDC
+    return ctext(str(damage), Colors.FAILURE)
 
 def color_size(size, size_base):
-  if size >= 0.66*size_base:
-    return Colors.OKGREEN
-  elif size >= 0.33*size_base:
-    return Colors.YELLOW
-  else:
-    return Colors.RED
+  return color_prob(float(size)/size_base)

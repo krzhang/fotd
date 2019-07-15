@@ -65,7 +65,7 @@ INSULTS_ADJ = [
 
 INSULTS_NOUNS = [
   "troglodyte",
-  "barnacles",
+  "barnacle",
   "elephant",
   "cow",
   "cantaloupe",
@@ -85,7 +85,7 @@ INSULTS_NOUNS = [
   "baboon",
   "bagpiper",
   "beast",
-  "beetles",
+  "beetle",
   "bloodsucker",
   "bootlegger",
   "brat",

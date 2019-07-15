@@ -15,7 +15,7 @@ class SkillCard():
     self.visibility = {self.armyid:True, 1-self.armyid:False}
 
   def __hash__(self):
-    return hash((self.sc_str, self.unit.name, self.order, self.armyid))
+    return hash((self.sc_str, self.unit.name, str(self.order), self.armyid))
   
   def visibile_to(self, army):
     return self.visibility[army.armyid]
@@ -28,7 +28,7 @@ class SkillCard():
 
   def activates_against(self):
     # todo: change to more flexible later
-    return [rps.BEATS[self.order]]
+    return [rps.BEATS[str(self.order)]]
 
 def visible_list(hand, army):
   return [h for h in hand if h.visible_to(army)]
@@ -56,8 +56,8 @@ class Tableau():
       for sk in un.skills:
         sc_str = skills.get_skillcard(sk)
         if sc_str:
-          for order in ['A', 'D', 'I']:
-            sc = SkillCard(sc_str, un, order)
+          for order_str in ['A', 'D', 'I']:
+            sc = SkillCard(sc_str, un, rps.FinalOrder(order_str))
             self.sc_dict[sc] = False # in our deck, not yet drawn
         # now the deck has all the possible skillcards
 
@@ -68,7 +68,7 @@ class Tableau():
     """
     for sc in self.sc_dict:
       if self.sc_dict[sc] == False: # not yet drawn
-        proc_chance = skills.skillcard_info(sc.sc_str, "bulb")[sc.order]
+        proc_chance = skills.skillcard_info(sc.sc_str, "bulb")[str(sc.order)]
         if ((random.random() < proc_chance) and
             (self.battle.weather.text not in skills.skillcard_info(sc.sc_str, "illegal_weather"))):
           self.bv.disp_bulb(sc)

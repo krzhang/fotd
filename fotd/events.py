@@ -6,6 +6,7 @@ import battle_constants
 import contexts
 import duel
 import rps
+import skills
 import status
 import textutils
 
@@ -20,7 +21,7 @@ def event_csv_loader(filestr):
     reader = csv.reader(csvfile, delimiter=',')
     next(reader)
     for row in reader:
-      mydict[row[0]] = {"event_type":row[4].strip(),
+      mydict[row[0]] = {"event_type":row[2].strip(),
                         "actor_type":row[1].strip(),
                         "can_aoe":str_to_bool(row[3].strip()),
                         "panic_blocked":str_to_bool(row[4].strip())}
@@ -172,6 +173,7 @@ def attack_order(context, bv, narrator):
   what we do in a *committed* attack order (we no longer consider statuses, etc;)
   """
   ctarget = context.ctarget
+  ctarget.order = rps.FinalOrder('I')
   myarmyid = ctarget.army.armyid
   enemy = context.battle.armies[1-myarmyid]
   enemyunits = enemy.present_units()
@@ -188,21 +190,23 @@ def attack_order(context, bv, narrator):
 
 def defense_order(context, bv, narrator):
   ctarget = context.ctarget
+  ctarget.order = rps.FinalOrder('D')
   ctarget.targetting = ("defending", ctarget)
   ctarget.move(context.battle.hqs[ctarget.army.armyid])
   bv.yprint("{}: staying put at {};".format(ctarget, context.ctarget.position), debug=True)
   Event.gain_status("defended", context, ctarget)
   
 def indirect_order(context, bv, narrator):
-  csource = context.ctarget
-  myarmyid = csource.army.armyid
+  ctarget = context.ctarget
+  ctarget.order = rps.FinalOrder('I')
+  myarmyid = ctarget.army.armyid
   enemy = context.battle.armies[1-myarmyid]
   enemyunits = enemy.present_units()
   if not enemyunits:
     bv.yprint("No unit to target!")
-    csource.targetting = ("defending", ctarget)
+    ctarget.targetting = ("defending", ctarget)
     return
-  cnewsource = context.ctarget # new event
+  cnewsource = ctarget  # new event
   cnewtarget = random.choice(enemyunits)
   cnewsource.targetting = ("sneaking", cnewtarget)
   bv.yprint("{}: sneaking -> {}; planning strategery".format(cnewsource, cnewtarget), debug=True)
@@ -310,7 +314,7 @@ def indirect_raid(context, bv, narrator):
                                                          textutils.disp_unit_targetting(csource),
                                                          ctarget,
                                                          textutils.disp_unit_targetting(ctarget)), debug=True)
-  context.battle.place_event("duel_consider", context, "Q_RESOLVE")
+  Event("engage", context).activate()
   # tactic 1: raid
   vulnerable = False
   if ctarget.targetting[0] == "defending":
@@ -325,13 +329,16 @@ def indirect_raid(context, bv, narrator):
 def engage(context, bv, narrator):
   """
   What happens when they meet face to face, but before the attacks. All the resolved tactics
-  fire off. Tactics only fire when they have yomi advantage.
+  fire off. Tactics only fire when 
+  1) they match the order of the unit
+  2) they have yomi advantage.
   """
   csource = context.csource
   ctarget = context.ctarget
   army = csource.army
   for sc in army.tableau.bulbed_by(csource):
-    context.battle.place_event(sc.sc_str, context, "Q_RESOLVE")
+    if sc.order == csource.order and context.battle.yomi_winner == army.armyid:
+      context.battle.place_event(sc.sc_str, context, "Q_RESOLVE")
   context.battle.place_event("duel_consider", context, "Q_RESOLVE")
 
 #################
@@ -525,7 +532,8 @@ def _roll_target_skill_tactic(context, bv, narrator, roll_key, cchance):
     a list of successful targets (could be several due to entanglement, lures, etc.)
   """
   if (event_info(roll_key, 'event_type') == 'target-skill' and
-      context.battle.armies[context.csource.armyid].commitment_bonus):
+      roll_key in skills.SKILLCARDS.keys() and  # hack to not include things like lure
+      context.csource.army.commitment_bonus):
     narrator.narrate_commitment_guarantee(roll_key, **context.opt)
     new_chance = 1.1
   else:

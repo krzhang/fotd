@@ -130,10 +130,6 @@ def disp_skillcard(skillcard):
                                  skillcard.order,
                                  skills.skillcard_info(ss, "short"))
 
-def disp_order_short(order):
-  return rps.order_info(order, "short")
-
-
 def disp_unit_targetting(unit):
   """ ex: 'sneaking towards' """
   if not unit.targetting: # set to none etc.
@@ -182,7 +178,7 @@ CONVERT_TEMPLATES_DISPS = {
   "csource":disp_unit,
   "ctarget_army":disp_army,
   "csource_army":disp_army,
-  "order":disp_order_short
+  "order":(lambda x: x.color_abbrev()),
 }
 
 def convert_templates(templates):
@@ -325,11 +321,11 @@ class BattleScreen(View):
     """
     unit = sc.unit
     sc_str = sc.sc_str
-    order = sc.order
+    order_str = str(sc.order)
     # self.yprint("{} $[2,1]$|{}|$[7]$ ".format(disp_unit(unit), # also pretty, use somewhere else
     self.yprint("{}: {}! ".format(disp_unit(unit),
                                 disp_skillcard(sc)) +
-                skills.skillcard_info(sc_str, "on_bulb")[order])
+                skills.skillcard_info(sc_str, "on_bulb")[order_str])
 
   def disp_duel(self, csource, ctarget, loser_history, health_history, damage_history):
     self.yprint("{csource} and {ctarget} face off!",

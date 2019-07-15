@@ -58,8 +58,7 @@ class BattleNarrator(Narrator):
     """
     Used to narrate the perfect rolls
     """
-    self.view.disp_activated_narration(ROLLS[key]['short'],
-                                       "guaranteed success by formation commitment!", True)
+    self.view.disp_activated_narration(ROLLS[key]['short'], "guaranteed!", True)
       
   def narrate_status(self, key, **context):
     ctarget = context["ctarget"]

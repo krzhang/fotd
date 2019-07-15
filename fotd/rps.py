@@ -8,10 +8,10 @@ BEATS = {'A':'I',
 
 FORMATION_ORDERS = {
   'A': {
-    "desc": "$[1]$offensive formation$[7]$",
+    "desc": "{ctarget_army} takes an $[1,3]$offensive formation$[7]$, boosting $[1,3]$A$[7]$ tactics against $[3,3]$I$[7]$.",
     "status": "form_offensive",
     "adj": "offensive",
-    "color": "$[1]$",
+    "color": "$[1,3]$",
     "physical_offense": 1.0,
     "physical_defense": 1.0,
     "arrow_offense": 1.0,
@@ -20,25 +20,25 @@ FORMATION_ORDERS = {
   },
   "D": {
     "adj": "defensive",
-    "color": "$[4]$",
-    "desc":"$[4]$defensive formation$[7]$",
+    "color": "$[4,3]$",
+    "desc":"{ctarget_army} $[4,3]$fortifies$[7]$, boosting $[4,3]$D$[7]$ tactics against $[1,3]$A$[7]$",
     "status": "form_defensive",
     "physical_offense": 0.8,
     "physical_defense": 1.2,
-    "arrow_offense": 0.8,
+    "arrow_offense": 1.0,
     "arrow_defense": 1.2,
     "morale_cost":{'A':1, 'D':0, 'I':1}
   },
   "I": {
     "adj": "scattered",
-    "color": "$[1,3]$",
-    "desc":"$[4]$scattered formation$[7]$",
+    "color": "$[3,3]$",
+    "desc":"{ctarget_army} $[3,3]$scatters$[7]$, boosting $[3,3]$I$[7]$ tactics against $[4,3]$D$[7]$.",
     "status": "form_scattered",
     "physical_offense": 1.0,
     "physical_defense": 1.0,
     "arrow_offense": 1.0,
     "arrow_defense": 1.0,
-    "morale_cost":{'A':1, 'D':0, 'I':1}
+    "morale_cost":{'A':1, 'D':1, 'I':0}
   }
 }
 
@@ -76,19 +76,22 @@ class FinalOrder(Order):
   
 FINAL_ORDERS = {
   "A": {
-    "color": "$[1]$",
+    "color": "$[1,3]$",
+    "color_bulbed": "$[1,3]$",    
     "event": "attack_order",
     "noun": "attack",
     "verb": "marches",
     },
   "D": {
-    "color": "$[4]$",
+    "color": "$[4,3]$",
+    "color_bulbed": "$[4,3]$",    
     "event": "defense_order",
     "noun": "defense",
     "verb": "fortifies",
   },
   "I": {
-    "color": "$[1,3]$",
+    "color": "$[3,3]$",
+    "color_bulbed": "$[3,3]$",    
     "event": "indirect_order",
     "noun": "skullduggery",
     "verb": "scatters",
@@ -98,16 +101,16 @@ FINAL_ORDERS = {
 FINAL_ORDER_LIST = ['A', 'D', 'I'] # keeping the possibility that this list is different
 
 def beats(t1, t2):
-  return BEATS[t1] == t2
+  return BEATS[str(t1)] == str(t2)
 
-def order_to_event(order_str):
-  return FINAL_ORDERS[order_str]["event"]
+def order_to_event(order):
+  return FINAL_ORDERS[str(order)]["event"]
 
 def formation_info(form, info_key):
   return FORMATION_ORDERS[form][info_key]
 
 def order_info(order, info_key):
-  return FINAL_ORDERS[order][info_key]
+  return FINAL_ORDERS[str(order)][info_key]
 
 def orders_to_winning_army(orders):
   """
@@ -115,9 +118,9 @@ def orders_to_winning_army(orders):
   won, or -1 otherwise.
   """
   x,y = orders
-  if x == y:
+  if str(x) == str(y):
     return -1
-  if BEATS[x] == y:
+  if BEATS[str(x)] == str(y):
     return 0
   else:
     return 1

@@ -11,18 +11,24 @@ class Intelligence(object):
     # TODO: write this later
     pass
 
-  def get_order(self, battle, armyid, order_type):
-    pass
-
 class PlayerIntelligence(Intelligence):
 
-  def get_order(self, battle, armyid, order_type):
-    return battle.battlescreen.input_battle_order(order_type, armyid)
+  def get_formation(self, battle, armyid):
+    return rps.FormationOrder(battle.battlescreen.input_battle_order("FORMATION_ORDER", armyid))
+
+  def get_final(self, battle, armyid):
+    return rps.FinalOrder(battle.battlescreen.input_battle_order("FINAL_ORDER", armyid))
+  
+  # def get_order(self, battle, armyid, order_type):
+  #   if order_type == 'FORMATION':
+  #     return rps.FormationOrder(battle.battlescreen.input_battle_order(order_type, armyid))
+  #   else:
+  #     return rps.FinalOrder(battle.battlescreen.input_battle_order(order_type, armyid))
 
 class ArtificialIntelligence(Intelligence):
 
   def get_formation(self, battle, armyid):
-    return random.choice(['O', 'D'])
+    return rps.FormationOrder(random.choice(['A', 'D', 'I']))
   
   def get_final(self, battle, armyid):
   # 2 paths: RPS and story-driven soul reading
@@ -46,28 +52,37 @@ class ArtificialIntelligence(Intelligence):
     battle.battlescreen.yprint("  AI predicts player (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*newpriors))
     counters = np.array(list(newpriors[2:]) + list(newpriors[:2]))
     battle.battlescreen.yprint("  AI counterpicks    (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters))
-    return np.random.choice(["A", "D", "I"], p=counters)
+    return rps.FinalOrder(np.random.choice(['A', 'D', 'I'], p=counters))
 
-  def get_order(self, battle, armyid, order_type):
-    if order_type == 'FORMATION':
-      return self.get_formation(battle, armyid)
-    else:
-      return self.get_final(battle, armyid)
+  # def get_order(self, battle, armyid, order_type):
+  #   if order_type == 'FORMATION':
+  #     return rps.FormationOrder(self.get_formation(battle, armyid))
+  #   else:
+  #     return rps.FinalOrder(self.get_final(battle, armyid))
   
 class RockIntelligence(Intelligence):
 
-  def get_order(self, battle, armyid, order_type):
-    return 'A'
+  def get_formation(self, battle, armyid):
+    return rps.FormationOrder('A')
+
+  def get_final(self, battle, armyid):
+    return rps.FinalOrder('A')
 
 class PaperIntelligence(Intelligence):
 
-  def get_order(self, battle, armyid, order_type):
-    return 'D'
+  def get_formation(self, battle, armyid):
+    return rps.FormationOrder('D')
+
+  def get_final(self, battle, armyid):
+    return rps.FinalOrder('D')
 
 class ScissorsIntelligence(Intelligence):
 
-  def get_order(self, battle, armyid, order_type):
-    return 'I'
+  def get_formation(self, battle, armyid):
+    return rps.FormationOrder('I')
+
+  def get_final(self, battle, armyid):
+    return rps.FinalOrder('I')
 
 INTELLIGENCE_FROM_TYPE = {'INT_AI_NORMAL': ArtificialIntelligence,
                           'INT_PLAYER': PlayerIntelligence,

@@ -43,13 +43,19 @@ class Battle():
     self.order_history = []
     self.date = 0
     self.weather = None
-    self.formations = None
-    self.orders = None
     self.yomis = None
     self.yomi_winner = -1
     self.yomi_list = []
     self.init_day()
 
+  @property
+  def formations(self):
+    return (self.armies[0].formation, self.armies[1].formation)
+    
+  @property
+  def orders(self):
+    return (self.armies[0].order, self.armies[1].order)
+    
   def init_day(self):
     """
     Cleans state, but also most importantly, makes it renderable.
@@ -57,8 +63,6 @@ class Battle():
     # common knowledge: later take out
     self.date += 1
     self.weather = weather.random_weather()
-    self.formations = None
-    self.orders = None
     self.yomi_winner = -1
     self.yomis = None
     # setup stuff
@@ -98,14 +102,6 @@ class Battle():
   ########################
   # Turn logic functions #
   ########################
-  
-  def _draw_and_get_orders(self, armyid, order_type):
-    """
-    has an army draw cards into their tableau and then input an order of order_type
-    order_type: FORMATION or FINAL
-    """
-    self.armies[armyid].tableau.draw_cards()
-    return self.armies[armyid].intelligence.get_order(self, armyid, order_type)
 
   def _run_status_handlers(self, func_key):
     for i in [0, 1]:
@@ -131,7 +127,7 @@ class Battle():
     for i in [0, 1]:
       order = orders[i]
       formation = self.formations[i]
-      cost = rps.formation_info(formation, "morale_cost")[order]
+      cost = rps.formation_info(str(formation), "morale_cost")[str(order)]
       if cost:
         orderlist.append((0, "order_change",
                           contexts.Context(self, opt={"ctarget_army":self.armies[i],
@@ -166,20 +162,17 @@ class Battle():
     The main function which takes one turn of this battle.
     """
     # formations
-    self.formations = tuple(self._draw_and_get_orders(i, "FORMATION_ORDER") for i in [0,1])
     for i in [0, 1]:
-      self.armies[i].formation = self.formations[i]
-    # self.battlescreen.disp_formations(self.formations)
+      myarmy = self.armies[i]
+      myarmy.tableau.draw_cards()
+      myarmy.formation = myarmy.intelligence.get_formation(self, i)
+    self.narrator.narrate_formations()
+
     # orders
-    self.orders = tuple(self._draw_and_get_orders(i, "FINAL_ORDER") for i in [0,1])
     for i in [0, 1]:
-      self.armies[i].order = self.orders[i]
-    # self.battlescreen.disp_orders(self.orders)
-    
-    # for i in [0, 1]:
-    #   form = self.formations[i]
-    #   self.battlescreen.yprint("{} takes a {}.".format(self.armies[i],
-    #                                                    rps.formation_info(form, "desc")))
+      myarmy = self.armies[i]
+      myarmy.tableau.draw_cards()
+      myarmy.order = myarmy.intelligence.get_final(self, i)
     
     # go through the queues
     # preloading events

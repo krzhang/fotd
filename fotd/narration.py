@@ -1,5 +1,7 @@
-import insults
 import random
+
+import insults
+import rps
 import status
 
 def get_one(dictionary, key):
@@ -45,6 +47,12 @@ class BattleNarrator(Narrator):
     "on_remove":"{ctarget} is no longer {stat_str}",
     "on_retain":"{ctarget} is still {stat_str}",
   }
+
+  def narrate_formations(self):
+    for i in [0, 1]:
+      form = self.battle.formations[i]
+      self.view.yprint(rps.formation_info(str(form), "desc"),
+                       templates={"ctarget_army":self.battle.armies[i]})
   
   def narrate_status(self, key, **context):
     ctarget = context["ctarget"]
@@ -63,7 +71,7 @@ class BattleNarrator(Narrator):
       narrator_str, narrate_text = get_one(ROLLS[key], "on_success_speech")
     else:
       narrator_str, narrate_text = get_one(ROLLS[key], "on_fail_speech")
-    if narrator_str and narrator_str in context and narrate_text:
+    if narrator_str and (narrator_str in context) and narrate_text:
       self.unit_speech(context[narrator_str], narrate_text, **context)
 
   def _narrate_jeer(self, success, **context):
@@ -88,7 +96,7 @@ class BattleNarrator(Narrator):
                          "Uh, uh, you are a {}?".format(insults.random_diss_noun()),
                          **context)
       else:
-        self.unit_speech(context["csource"], 
+        self.unit_speech(context["ctarget"], 
                          "Well, you are a {}!".format(insults.random_diss()),
                          **context)
       

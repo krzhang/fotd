@@ -620,12 +620,12 @@ def burned_eot(context, bv, narrator):
 # Skills #
 ##########
 
-def trymode_activation_success(context, bv, narrator):
+def _trymode_activation_success(context):
   Event.gain_status("trymode_activated", context, context.ctarget)
 
 def trymode_status_bot(context, bv, narrator):
   ctarget = context.ctarget
   trymodeprob = (ctarget.size_base-ctarget.size)/ctarget.size_base
   resolve_targetting_event(context, bv, narrator, "trymode_status_bot", trymodeprob,
-                           "_trymode_activation_success")
+                           _trymode_activation_success)
 

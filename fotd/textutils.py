@@ -39,7 +39,7 @@ def disp_chara(chara):
   
 def disp_cha_title(chara):
   if chara.title:
-    return " -={}=-".format(chara.title) # eventually move out
+    return " $[4]$-=$[7]${}$[4]$=-$[7]$".format(chara.title) # eventually move out
   return ""
 
 def disp_cha_fullname(chara):
@@ -126,7 +126,7 @@ def disp_form_short(formation):
 
 def disp_skillcard(skillcard):
   ss = skillcard.sc_str
-  return "<{}{}:{}$[7]$>".format(rps.order_info(skillcard.order, "color"),
+  return "<{}{}:{}$[7]$>".format(rps.order_info(skillcard.order, "color_bulbed"),
                                  skillcard.order,
                                  skills.skillcard_info(ss, "short"))
 
@@ -238,17 +238,14 @@ class BattleScreen(View):
     return "Day {}: {}".format(self.battle.date, self.battle.weather)
 
   def _vs_str(self):
-    if self.battle.formations: # formation orders were given
-      form0 = disp_form_short(self.battle.formations[0])
-      form1 = disp_form_short(self.battle.formations[1])
+    if self.battle.formations[0] and self.battle.formations[1]: # formation orders were given
+      form0 = self.battle.formations[0].color_abbrev()
+      form1 = self.battle.formations[1].color_abbrev()
     else:
       form0 = form1 = "?"
-    if self.battle.orders:
-    # if len(self.battle.order_history) == self.battle.date: # orders were given
-      # strat0, strat1 = self._colored_strats(tuple(self.battle.order_history[-1]))
-      strat0, strat1 = tuple(self.battle.order_history[-1])
-      strat0 = disp_order_short(strat0)
-      strat1 = disp_order_short(strat1)      
+    if self.battle.orders[0] and self.battle.orders[1]:
+      strat0 = self.battle.orders[0].color_abbrev()
+      strat1 = self.battle.orders[1].color_abbrev()
     else:
       strat0 = strat1 = "?"
     if self.battle.yomi_winner == -1:
@@ -329,8 +326,9 @@ class BattleScreen(View):
     unit = sc.unit
     sc_str = sc.sc_str
     order = sc.order
-    self.yprint("{} $[2,1]$|{}|$[7]$ ".format(disp_unit(unit),
-                                             skills.skillcard_info(sc_str, "short")) +
+    # self.yprint("{} $[2,1]$|{}|$[7]$ ".format(disp_unit(unit), # also pretty, use somewhere else
+    self.yprint("{}: {}! ".format(disp_unit(unit),
+                                disp_skillcard(sc)) +
                 skills.skillcard_info(sc_str, "on_bulb")[order])
 
   def disp_duel(self, csource, ctarget, loser_history, health_history, damage_history):
@@ -447,13 +445,13 @@ class BattleScreen(View):
     - str method for input
     """
     if order_type == 'FORMATION_ORDER':
-      orderlist = [rps.FormationOrder(s) for s in rps.FORMATION_ORDER_LIST]
+      order_list = [rps.FormationOrder(s) for s in rps.FORMATION_ORDER_LIST]
     else:
       assert order_type == 'FINAL_ORDER'
-      orderlist = [rps.FinalOrder(s) for s in rps.FINAL_ORDER_LIST]
+      order_list = [rps.FinalOrder(s) for s in rps.FINAL_ORDER_LIST]
     
-    pausestr_1 = PAUSE_STRS[order_type].format(armyid)
-    render_list = [order.colored_abbrev() for order in order_list]
+    pausestr_1 = PAUSE_STRS[order_type].format(**{"armyid":armyid})
+    render_list = [order.color_abbrev() for order in order_list]
     pausestr_2 = " ({}):$[7]$".format("$[7]$/".join(render_list))
     return self._get_input(pausestr_1 + pausestr_2,
                            [str(order).upper() for order in order_list])

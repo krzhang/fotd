@@ -99,6 +99,8 @@ STR_TO_CR = {
   "${7}":Colors.ENDC,
   "${2,1}":Colors.GREEN + Style.BRIGHT,
   "${1,3}":Back.RED + Fore.WHITE,
+  "${3,3}":Back.YELLOW + Fore.WHITE,
+  "${4,3}":Back.BLUE + Fore.WHITE,
   "${7,1}":Fore.WHITE + Style.BRIGHT,
   "${7,2}":Fore.WHITE + Style.NORMAL,
 }

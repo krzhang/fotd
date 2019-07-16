@@ -82,22 +82,20 @@ class Unit(object):
     return float(val)
 
   def physical_defense(self):
-    # val = rps.formation_info(self.army.formation, "physical_defense")
-    # val *= float(self.size)
-    val = 4.0
+    val = 9.0
     if self.is_defended():
       val *= 1.5
     val *= self._generic_multiplier()
     return float(val)
 
   def arrow_offense(self):
-    val = 1.0 # generically this is a 1/10 hit chance
+    val = 1.0 
     # val = rps.formation_info(self.army.formation, "arrow_offense")
     val *= self._generic_multiplier()
     return val
 
   def arrow_defense(self):
-    val = 9.0 # generically this is a 1/10 hit chance
+    val = 19.0 
     # val = rps.formation_info(self.army.formation, "arrow_defense")
     val *= self._generic_multiplier()
     return val

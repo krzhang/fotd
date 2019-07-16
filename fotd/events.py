@@ -59,8 +59,8 @@ class Event():
       potential_panicker = getattr(self.context, PRIMARY_ACTOR_DICT[self.actor_type])
       if potential_panicker.has_unit_status("panicked"):
         self.context.battle.narrator.narrate_status("on_activation",
-                                                    {'ctarget':potential_panicker,
-                                                     'stat_str':'panicked'})
+                                                    **{'ctarget':potential_panicker,
+                                                       'stat_str':'panicked'})
         return
     # time to activate this event on the queue; note the event has its own context, battle, etc.
     results = self.event_func(self.context,

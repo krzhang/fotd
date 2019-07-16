@@ -44,7 +44,7 @@ class Battle():
     self.date = 0
     self.weather = None
     self.yomis = None
-    self.yomi_winner = -1
+    self.yomi_winner_id = -1
     self.yomi_list = []
 
   @property
@@ -105,19 +105,32 @@ class Battle():
   
   def _get_formations_and_orders(self):
     for i in [0, 1]:
-      myarmy = self.armies[i]
-      myarmy.tableau.draw_cards()
-      myarmy.tableau.scouted_by(self.armies[1-i])
-      myarmy.formation = myarmy.intelligence.get_formation(self, i)
+      self.armies[i].tableau.draw_cards()
+      self.armies[i].tableau.scouted_by(self.armies[1-i])
+    for i in [0, 1]:
+      self.armies[i].formation = self.armies[i].intelligence.get_formation(self, i)
     self.narrator.narrate_formations()
 
     # orders
     for i in [0, 1]:
-      myarmy = self.armies[i]
-      myarmy.tableau.draw_cards()
-      myarmy.tableau.scouted_by(self.armies[1-i])
-      myarmy.order = myarmy.intelligence.get_final(self, i)
- 
+      self.armies[i].tableau.draw_cards()
+      self.armies[i].tableau.scouted_by(self.armies[1-i])
+
+    for i in [0, 1]:
+      self.armies[i].order = self.armies[i].intelligence.get_final(self, i)
+      formation = self.formations[i]
+      cost = rps.formation_info(str(formation), "morale_cost")[str(self.armies[i].order)]
+      if cost:
+        self.armies[i].bet_morale_change = cost
+      else:
+        self.armies[i].commitment_bonus = True
+
+    self.order_history.append(self.orders)
+    self.yomi_winner_id = rps.orders_to_winning_armyid(self.orders) # -1 if None
+    self.yomis = (rps.beats(self.orders[0], self.orders[1]), rps.beats(self.orders[1], self.orders[0]))
+    self.yomi_list.append(self.yomis)
+    self.narrator.narrate_orders(self.yomi_winner_id)
+
   def _run_status_handlers(self, func_key):
     for i in [0, 1]:
       # originally these were in lists; the problem is you can change these lists, so make copies
@@ -134,22 +147,16 @@ class Battle():
             events.Event(event_name, ctxt.copy(additional_opt)).activate()  
 
   def _send_orders_to_armies(self, orders):
-    self.order_history.append(orders)
-    self.yomi_winner = rps.orders_to_winning_army(orders) # -1 if None
-    self.yomis = (rps.beats(orders[0], orders[1]), rps.beats(orders[1], orders[0]))
-    self.yomi_list.append(self.yomis)
     orderlist = []
     for i in [0, 1]:
       order = orders[i]
       formation = self.formations[i]
-      cost = rps.formation_info(str(formation), "morale_cost")[str(order)]
-      if cost:
+      bet = self.armies[i].bet_morale_change
+      if bet:
         orderlist.append((0, "order_change",
                           contexts.Context(self, opt={"ctarget_army":self.armies[i],
-                                                      "morale_bet":cost})))
-      else:
-        self.armies[i].commitment_bonus = True
-      if self.yomi_winner == i:
+                                                      "morale_bet":bet})))
+      if self.yomi_winner_id == i:
         orderlist.append((0, "order_yomi_win",
                           contexts.Context(self, opt={"ctarget_army":self.armies[i]})))
       for u in self.armies[i].present_units():

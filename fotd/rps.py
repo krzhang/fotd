@@ -8,7 +8,8 @@ BEATS = {'A':'I',
 
 FORMATION_ORDERS = {
   'A': {
-    "desc": "{ctarget_army} takes an $[1,3]$offensive formation$[7]$, boosting $[1,3]$A$[7]$ tactics against $[3,3]$I$[7]$.",
+    "desc": "{ctarget_army} takes an $[1,3]$offensive$[7]$ formation.",
+    "desc_bonus": "$[1,3]$A$[7]$ tactics against $[3,3]$indirect$[7]$ orders are $[2,1]$guaranteed$[7]$ on $[1,3]$attack$[7]$.",
     "status": "form_offensive",
     "adj": "offensive",
     "color": "$[1,3]$",
@@ -21,7 +22,8 @@ FORMATION_ORDERS = {
   "D": {
     "adj": "defensive",
     "color": "$[4,3]$",
-    "desc":"{ctarget_army} $[4,3]$fortifies$[7]$, boosting $[4,3]$D$[7]$ tactics against $[1,3]$A$[7]$",
+    "desc":"{ctarget_army} takes a $[4,3]$defensive$[7]$ formation.",
+    "desc_bonus": "$[4,3]$D$[7]$ tactics against $[1,3]$attack$[7]$ orders are $[2,1]$guaranteed$[7]$ on $[4,3]$defense$[7]$.",
     "status": "form_defensive",
     "physical_offense": 0.8,
     "physical_defense": 1.2,
@@ -32,7 +34,8 @@ FORMATION_ORDERS = {
   "I": {
     "adj": "scattered",
     "color": "$[3,3]$",
-    "desc":"{ctarget_army} $[3,3]$scatters$[7]$, boosting $[3,3]$I$[7]$ tactics against $[4,3]$D$[7]$.",
+    "desc":"{ctarget_army} takes a $[3,3]$scattered$[7]$ formation.",
+    "desc_bonus": "$[3,3]$I$[7]$ tactics against $[4,3]$defense$[7]$ orders are $[2,1]$guaranteed$[7]$ on $[3,3]$indirect$[7]$ orders.",
     "status": "form_scattered",
     "physical_offense": 1.0,
     "physical_defense": 1.0,
@@ -76,6 +79,9 @@ class FinalOrder(Order):
   
 FINAL_ORDERS = {
   "A": {
+    "desc": "{ctarget_army} $[1,3]$marches$[7]$!",
+    "yomi_bonus": "$[1,3]$A$[7]$ tactics against $[3,3]$indirect$[7]$ orders are $[2]$possible$[7]$!",
+    "commitment_bonus": "$[1,3]$A$[7]$ tactics against $[3,3]$indirect$[7]$ orders are $[2,1]$guaranteed$[7]$!",
     "color": "$[1,3]$",
     "color_bulbed": "$[1,3]$",    
     "event": "attack_order",
@@ -83,6 +89,9 @@ FINAL_ORDERS = {
     "verb": "marches",
     },
   "D": {
+    "desc": "{ctarget_army} $[4,3]$fortifies$[7]$!",
+    "yomi_bonus": "$[4,3]$D$[7]$ tactics against $[1,3]$attack$[7]$ orders are $[2]$possible$[7]$!",
+    "commitment_bonus": "$[4,3]$D$[7]$ tactics against $[1,3]$attack$[7]$ orders are $[2,1]$guaranteed$[7]$!",
     "color": "$[4,3]$",
     "color_bulbed": "$[4,3]$",    
     "event": "defense_order",
@@ -90,6 +99,9 @@ FINAL_ORDERS = {
     "verb": "fortifies",
   },
   "I": {
+    "desc": "{ctarget_army} $[4,3]$scatters$[7]$!",
+    "yomi_bonus": "$[3,3]$I$[7]$ tactics against $[4,3]$defensive$[7]$ orders are $[2]$possible$[7]$!",
+    "commitment_bonus": "$[3,3]$I$[7]$ tactics against $[4,3]$defensive$[7]$ orders are $[2,1]$guaranteed$[7]$!",
     "color": "$[3,3]$",
     "color_bulbed": "$[3,3]$",    
     "event": "indirect_order",
@@ -112,7 +124,7 @@ def formation_info(form, info_key):
 def order_info(order, info_key):
   return FINAL_ORDERS[str(order)][info_key]
 
-def orders_to_winning_army(orders):
+def orders_to_winning_armyid(orders):
   """
   Given a tuple (x,y) of orders, returns the Yomi status, which means a winner (0 or 1) if either
   won, or -1 otherwise.

@@ -338,7 +338,7 @@ def engage(context, bv, narrator):
   ctarget = context.ctarget
   army = csource.army
   for sc in army.tableau.bulbed_by(csource):
-    if sc.order == csource.order and context.battle.yomi_winner == army.armyid:
+    if sc.order == csource.order and context.battle.yomi_winner_id == army.armyid:
       # import pdb; pdb.set_trace()
       newcontext = context.copy({'skillcard':sc})
       context.battle.place_event(sc.sc_str, newcontext, "Q_RESOLVE")

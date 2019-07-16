@@ -51,10 +51,32 @@ class BattleNarrator(Narrator):
   }
 
   def narrate_formations(self):
+    self.view.yprint("", mode=["huddle"])
     for i in [0, 1]:
       form = self.battle.formations[i]
+      # print both into the main event buffer and the huddle buffer
       self.view.yprint(rps.formation_info(str(form), "desc"),
-                       templates={"ctarget_army":self.battle.armies[i]})
+                       templates={"ctarget_army":self.battle.armies[i]}, mode=["console","huddle"])
+      self.view.yprint("  " + rps.formation_info(str(form), "desc_bonus"),
+                       templates={"ctarget_army":self.battle.armies[i]}, mode=["huddle"])
+    self.view.yprint("", mode=["huddle"])
+    self.view._flush()  # so we don't see formations again next time
+
+  def narrate_orders(self, winner_id):
+    self.view.yprint("", mode=["huddle"])
+    for i in [0, 1]:
+      order = self.battle.orders[i]
+      # print both into the main event buffer and the huddle buffer
+      self.view.yprint(rps.order_info(str(order), "desc"),
+                       templates={"ctarget_army":self.battle.armies[i]}, mode=["console","huddle"])
+      if i == winner_id:
+        if self.battle.armies[i].commitment_bonus:
+          self.view.yprint("  " + rps.order_info(str(order), "commitment_bonus"),
+                         templates={"ctarget_army":self.battle.armies[i]}, mode=["huddle"])
+        else:
+          self.view.yprint("  " + rps.order_info(str(order), "yomi_bonus"),
+                           templates={"ctarget_army":self.battle.armies[i]}, mode=["huddle"])
+    self.view.yprint("", mode=["huddle"])
 
   def narrate_commitment_guarantee(self, key, **context):
     """

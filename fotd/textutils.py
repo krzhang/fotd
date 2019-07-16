@@ -2,6 +2,9 @@
 The overall idea is that all text data in this game is carried in my slightly
 modified version of asciimatics text, YText. At the last second, it can be rendered 
 to Colorama, asciimatics, or graphical views (in the future).
+
+The second part really should be separated from this; it is more of a view for the battle than
+a text utility module.
 """
 
 import os
@@ -16,24 +19,7 @@ import colors
 from colors import ctext, Colors, Fore, Back, Style
 import narration
 import rps
-import skills # move later!
-
-# Takes something like "${5} Yan Zhang ${7}" and converts it to Colorama codes so we can just 
-# STR_TO_CR = {
-#   "${1}":Colors.RED,
-#   "${2}":Colors.GREEN,
-#   "${3}":Colors.YELLOW,
-#   "${4}":Colors.BLUE,
-#   "${5}":Colors.MAGENTA,
-#   "${6}":Colors.CYAN,
-#   "${7}":Colors.ENDC,
-#   "${2,1}":Colors.GREEN + Style.BRIGHT,
-#   "${1,3}":Back.RED + Fore.WHITE,
-#   "${3,3}":Back.YELLOW + Fore.WHITE,
-#   "${4,3}":Back.BLUE + Fore.WHITE,
-#   "${7,1}":Fore.WHITE + Style.BRIGHT,
-#   "${7,2}":Fore.WHITE + Style.NORMAL,
-# }
+import skills
 
 AM_TO_CR_FORE = {
   0:Fore.BLACK,
@@ -172,8 +158,8 @@ class YText():
 # Display (convert to string) Functions #
 #########################################
 
-def disp_army(army):
-  return "$[{}]${}$[7]$".format(army.color, army.name)
+def disp_hrule():
+  return "="*80
 
 def disp_bar_custom(colors, chars, nums):
   """
@@ -219,6 +205,9 @@ def disp_text_activation(any_str, success=None, upper=True):
   else:
     newstr = any_str
   return "<" + colors.color_bool(success) + " ".join(newstr.split("_")) + "$[7]$>"
+
+def disp_army(army):
+  return "$[{}]${}$[7]$".format(army.color, army.name)
 
 def disp_unit(unit):
   return disp_chara(unit.character)
@@ -271,7 +260,6 @@ def disp_damage_calc(s_str, d_str, dicecount, hitprob, raw_damage):
 def disp_form_short(formation):
   return rps.formation_info(formation, "short")
 
-
 def disp_skillcard(skillcard):
   ss = skillcard.sc_str
   return "<{}{}:{}$[7]$>".format(rps.order_info(skillcard.order, "color_bulbed"),
@@ -314,9 +302,6 @@ def disp_bar_day_tracker(max_pos, base, last_turn, cur):
                          ['#', '#', '.', " "],
                          [cur, last_turn-cur, base-last_turn, max_pos-base])
 
-def disp_hrule():
-  return "="*80
-
 #############
 # Templates #
 #############
@@ -355,6 +340,7 @@ class BattleScreen(View):
   def __init__(self, battle, armyid, automated=False):
     super().__init__(automated=automated)
     self.console_buf = []
+    self.huddle_buf = []
     self.max_screen_len = 24
     self.max_armies_len = 17
     self.max_stat_len = 3
@@ -365,6 +351,10 @@ class BattleScreen(View):
     self.armyid = armyid
     # self.army = self.battle.armies[armyid]
 
+  def _flush(self):
+    self.console_buf = []
+    self.huddle_buf = []
+    
   @property
   def army(self):
     return self.battle.armies[self.armyid]
@@ -397,9 +387,9 @@ class BattleScreen(View):
       strat1 = self.battle.orders[1].color_abbrev()
     else:
       strat0 = strat1 = "?"
-    if self.battle.yomi_winner == -1:
+    if self.battle.yomi_winner_id == -1:
       winner_text = "$[7,2]$VS$[7]$"
-    elif self.battle.yomi_winner == 0:
+    elif self.battle.yomi_winner_id == 0:
       winner_text = "$[7,1]$>>$[7]$"
     else:
       winner_text = "$[7,1]$<<$[7]$"
@@ -452,10 +442,34 @@ class BattleScreen(View):
     else:
       return(disp_hrule())
 
+  def _disp_huddle_header(self):
+    self.yprint("{ctarget_army}'s strategy session", templates={'ctarget_army':self.army},
+                mode=["huddle"])
+    self.yprint(disp_hrule(), mode=["huddle"])
+    self.huddle_buf = self.huddle_buf[-2:] + self.huddle_buf[:-2]  # such a hack
+
+  def _render_and_pause_huddle(self):
+    """
+    render and clear the 'huddle' buffer used for displaying huddle information
+    """
+    disp_clear()
+    self._disp_huddle_header()
+    for y, li in enumerate(self.huddle_buf):
+      print(self._render(li))
+    while (y < self.max_screen_len-2):
+      print("")
+      y += 1
+    print(self._render(self._disp_footerline(pause_str=PAUSE_STRS["MORE_STR"])),
+          end="", flush=True)
+    _ = read_single_keypress()[0]
+    self.huddle_buf = []
+
   def render_all(self, pause_str=None):
     # blits status
     if self.automated:
       return
+    if self.huddle_buf:
+      self._render_and_pause_huddle()
     disp_clear()
     ar = self._disp_armies() 
     st = self._disp_statline() 
@@ -479,7 +493,11 @@ class BattleScreen(View):
     if sc.visible_to(self.army):
       self.yprint("{}: {}! ".format(disp_unit(unit),
                                     disp_skillcard(sc)) +
-                  skills.skillcard_info(sc_str, "on_bulb")[order_str])
+                  skills.skillcard_info(sc_str, "on_bulb")[order_str],
+                  mode=["huddle"])
+    else:
+      self.yprint("Scouts report that {} is planning skullduggery.".format(
+        disp_army(self.battle.armies[1-self.armyid])), mode=["huddle"])
 
   def disp_successful_scout(self, sc, armyid):
     """
@@ -490,9 +508,9 @@ class BattleScreen(View):
     order_str = str(sc.order)
     # self.yprint("{} $[2,1]$|{}|$[7]$ ".format(disp_unit(unit), # also pretty, use somewhere else
     if self.armyid == armyid:
-      self.yprint("Scouts report that {} has prepped {}!".format(
+      self.yprint("Scouts find that {} has prepped {}!".format(
         disp_army(self.battle.armies[1-armyid]),
-        disp_skillcard(sc)))
+        disp_skillcard(sc)), mode=["huddle"])
       
   def disp_duel(self, csource, ctarget, loser_history, health_history, damage_history):
     duelists = [csource, ctarget]
@@ -639,10 +657,11 @@ class BattleScreen(View):
     pausestr_2 = " ({}):$[7]$".format("/".join(render_list))
     return self._get_input(pausestr_1 + pausestr_2,
                            [str(order).upper() for order in order_list])
-  
-  def _flush(self):
-    self.console_buf = []
 
+  ############
+  # Printing #
+  ############
+  
   def print_line(self, text):
     assert len(self.console_buf) <= self.max_console_len
     if len(self.console_buf) == self.max_console_len:
@@ -651,7 +670,7 @@ class BattleScreen(View):
     self.console_buf.append(text)
     logging.info(text)
 
-  def yprint(self, text, templates=None, debug=False):
+  def yprint(self, text, templates=None, debug=False, mode=("console",)):
     # the converting means to convert, based on the template, which converting function to use.
     # {ctarget} will always be converted to Unit for example
     if self.automated or text is None:
@@ -665,4 +684,10 @@ class BattleScreen(View):
     if debug and not self.debug_mode:
       return
     # so we get here if either SHOW_DEBUG or debug=False, which means we send it to the buffer
-    self.print_line(converted_text)
+    for m in mode:
+      if m == "console":
+        self.print_line(converted_text)
+      else:
+        assert m == "huddle"
+        self.huddle_buf.append(converted_text)
+    logging.info(text)

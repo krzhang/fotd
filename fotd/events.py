@@ -493,7 +493,7 @@ def _resolve_entanglement(context, bv, narrator):
   bv = context.battle.battlescreen
   csource = context.csource
   ctarget = context.ctarget
-  base_entanglement_chance = 0.25
+  base_entanglement_chance = 0.2
   additional_activations = []
   possible_aoe = tuple([u for u in context.ctarget.position.units[ctarget.army.armyid] if u != ctarget])
   # eventually make it just the people who are in position
@@ -512,10 +512,12 @@ def _resolve_entanglement(context, bv, narrator):
       lurer = random.choice(lure_candidates)
       successes = _roll_target_skill_tactic(context.copy(additional_opt={"lurer":lurer,
                                                                       "ctarget":new_target}), bv,
-                                            narrator, "lure_tactic", 0.6)
+                                            narrator, "lure_tactic", 0.25)
+      # TODO: add chain tactic for Pang Tong
       # either has 1 or 0 elements
       if successes:
         assert len(successes) == 1
+        bv.yprint("{ctarget} was also entangled into the tactic!".format(**{"ctarget":new_target}))
         additional_activations.append(successes[0])
   return additional_activations
 

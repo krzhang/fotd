@@ -40,7 +40,11 @@ PRIMARY_ACTOR_DICT = {
 }
 
 class Event():
-
+  """
+  Not true events since I didn't really set up Handlers, etc; really just glorified functions
+  with wrapper logic.
+  """
+  
   def __init__(self, battle, event_name, context):
     self.battle = battle
     self.event_name = event_name
@@ -75,21 +79,8 @@ class Event():
     Basically, nothing should call add_unit_status except for this, so all the handlers are there.
     """
     Event(battle, "receive_status", context=contexts.Context({"ctarget":ctarget,
-                                                                   "stat_str":stat_str,
-                                                                   "stat_viz":str(status.Status(stat_str))})).activate()
-
-  # @classmethod
-  # def event_from_order(cls, battle, unit, order):
-  #   """
-  #   battle module uses this to get an event based on the intelligence's order
-  #   """
-  #   return Event("order_received", context=contexts.Context(battle, opt={"ctarget":unit,
-  #                                                                      "order":order}))
-
-  @classmethod
-  def remove_status(cls, stat_str, context, ctarget):
-    pass
-
+                                                              "stat_str":stat_str,
+                                                              "stat_viz":str(status.Status(stat_str))})).activate()
 
 def event_dict(event_name):
   return EVENTS[event_name]

@@ -92,13 +92,6 @@ def event_info(event_name, key):
     return edict[key]
   return None
 
-def run_event_func(event_name, context, battlescreen, narrator):
-  """
-  runs one of the event functions in this section by name, giving a context 
-  and a view (battlescreen)
-  """
-  return globals()[event_name](context, battlescreen, narrator)
-
 #####################
 # Utility functions #
 #####################

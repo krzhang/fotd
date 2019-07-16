@@ -119,24 +119,6 @@ def army_bizarro(armyid, color, aitype, num=4):
 def army_unknown(armyid, color, aitype, num=4):
   return Army("Enemy Unknown", random.sample(OTHER_UNITS, 4)[:num], armyid, color, aitype, 7)
 
-def link_data_funcs():
-  """ A round of processing after getting the text data, to create links to actual functions """
-  # first, every event has an actual func
-  # so we set EVENTS['burn']['func'] to the actual function 'burn' inside events
-  EVENTS = events.EVENTS
-  STATUSES = status.STATUSES
-  for ev in EVENTS:
-    EVENTS[ev]["func"] = getattr(events, ev)
-  # second, STATUSES[stat_str][func_name+'func'] will contain a legitimate function
-  # Example: if STATUSES['burn'] has 'eot': 'panic_eot', it will now contain an actual function 
-  #   named that
-  for st in STATUSES:
-    for func_type in ["eot", "bot"]:
-      if func_type in STATUSES[st]:
-        STATUSES[st][func_type+'_func'] = getattr(events, STATUSES[st][func_type][0])
-
-# link_data_funcs()
-
 def play(armies, debug=False, resize=False,
          first_intelligence="INT_PLAYER",
          second_intelligence="INT_AI_NORMAL"):

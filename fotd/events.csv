@@ -19,18 +19,15 @@ receive_status,unit_single,single-general,False,False
 order_change,army_single,army-general,False,False
 change_morale,army_single,army-general,False,False
 order_yomi_win,army_single,army-general,False,False
-counter_arrow_strike,unit_double ,target-skill,False,True
+counter_arrow,unit_double ,target-skill,False,True
+chu_ko_nu,unit_double ,target-skill,False,True
+fire_arrow,unit_double ,target-skill,False,True
 fire_tactic,unit_double ,target-skill,True,True
 jeer_tactic,unit_double ,target-skill,True,True
 lure_tactic,unit_double ,target-skill,False,True
 panic_tactic,unit_double ,target-skill,True,True
 flood_tactic,unit_double ,target-skill,True,True
-fire_tactic_success,unit_double ,target-skill,False,True
-panic_tactic_success,unit_double ,target-skill,False,True
-jeer_tactic_success,unit_double ,target-skill,False,True
-flood_tactic_success,unit_double ,target-skill,False,True
 remove_status_probabilistic,unit_single,status,False,False
 burned_bot,unit_single,status,False,False
 burned_eot,unit_single,status,False,False
-trymode_activation_success,unit_single,status,False,False
 trymode_status_bot,unit_single,status,False,False

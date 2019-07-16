@@ -1,5 +1,6 @@
 import random
 
+import duel
 import insults
 import rps
 import status
@@ -102,12 +103,12 @@ class BattleNarrator(Narrator):
     """
     if success:
       narrator_str, narrate_text = get_one(ROLLS[key], "on_success_speech")
-      if key == 'fire_tactic':
-        graphics_asciimatics.render_fire_tactic()
-      if key == 'panic_tactic':
-        graphics_asciimatics.render_panic_tactic() 
-      if key == 'flood_tactic':
-        graphics_asciimatics.render_flood_tactic() 
+      if not self.view.automated:
+        if 'graphics_renderer' in ROLLS[key]:
+          getattr(graphics_asciimatics, ROLLS[key]['graphics_renderer'])()
+      if key == 'chu_ko_nu':
+        if random.random() < 0.5 and context['csource'].name == "Zhuge Liang":
+          narrator_str = 'The name is a bit embarassing...'
     else:
       narrator_str, narrate_text = get_one(ROLLS[key], "on_fail_speech")
     if narrator_str and (narrator_str in context) and narrate_text:
@@ -144,7 +145,9 @@ class BattleNarrator(Narrator):
                       "Well, you are a {}!".format(insults.random_diss()))
     self.unit_speech(narration0[0], narration0[1], **context)
     self.unit_speech(narration1[0], narration1[1], **context)
-    graphics_asciimatics.render_jeer_tactic(narration0, narration1)
+    if not self.view.automated:
+      # hack: move later
+      graphics_asciimatics.render_jeer_tactic(narration0, narration1)
 
   def narrate_roll(self, key, success, **context):
     if "on_roll" in ROLLS[key] and ROLLS[key]["on_roll"]:  # need both so you don't format None
@@ -155,6 +158,16 @@ class BattleNarrator(Narrator):
       self._narrate_jeer(success, **context)
     self.narrate_roll_success(key, success, **context)
 
+  def narrate_duel_consider(self, **context):
+    acceptances = context['acceptances']
+    if acceptances[0]:
+      self.unit_speech(context['csource'], duel.get_duel_speech("challenge"), **context)
+      if acceptances[1]:
+        self.unit_speech(context['ctarget'], duel.get_duel_speech("accept"), **context)
+      else:
+        self.unit_speech(context['ctarget'], duel.get_duel_speech("deny"), **context)
+
+    
 ENTRANCES = [
   "It's a good day for a battle.",
   "War... what is it good for?",
@@ -194,6 +207,7 @@ ROLLS = {
     "on_fail_speech": [("csource", "{ctarget} did not fall for my tricks."),
                        ("ctarget", "No need to play with fire, {csource}!")],
     "show_roll_success": True,
+    "graphics_renderer": 'render_fire_tactic',
   },
   "jeer_tactic": {
     "roll_type": 'targetted tactic',
@@ -203,6 +217,7 @@ ROLLS = {
     #                        ("ctarget", "Why you...")],
     # "on_fail_speech": [], # has its own routine
     "show_roll_success": True,
+#    "graphics_renderer": 'render_jeer_tactic',
   },
   "lure_tactic": {
     "roll_type": 'targetted tactic',
@@ -222,6 +237,32 @@ ROLLS = {
     "on_fail_speech": [("csource", "{ctarget}'s unit was not shaken."),
                        ("ctarget", "Keep calm, don't let {csource} get to you.")],
     "show_roll_success": True,
+    "graphics_renderer": 'render_panic_tactic',
+  },
+  "counter_arrow": {
+    "roll_type": 'targetted tactic',
+    "short": 'counter arrow',
+    "on_roll": None,
+    "on_success_speech": [('csource', "Let's show {ctarget} how to actually use arrows!"),
+                          (None, '{csource} counters with their own volley.')],
+    "on_fail_speech": None,
+    "show_roll_success": False,
+   },
+   "chu_ko_nu": {
+    "roll_type": 'targetted tactic',
+    "short": 'chu ko nu',
+    "on_roll": None,
+    "on_success_speech": [("csource", "Have some more!")],
+    "on_fail_speech": None,
+    "show_roll_success": False,    
+  },
+  "fire_arrow": {
+    "roll_type": 'targetted tactic',
+    "short": 'fire arrow',
+    "on_roll": None,
+    "on_success_speech": [("csource", "Let them have a taste of these flaming arrows!")],
+    "on_fail_speech": None,
+    "show_roll_success": False,
   },
   "flood_tactic": {
     "roll_type": 'targetted tactic',
@@ -232,6 +273,7 @@ ROLLS = {
     "on_fail_speech": [("csource", "{ctarget} narrowly avoided being swept away."),
                        ("ctarget", "No need to play with fire, {csource}!")],
     "show_roll_success": True,
+    "graphics_renderer": 'render_flood_tactic',
   },
   "trymode_status_bot": {
     "roll_type": 'buff',

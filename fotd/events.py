@@ -361,14 +361,11 @@ def duel_consider(battle, context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
   acceptances, duel_data = duel.duel_commit(context, csource, ctarget)
-  if acceptances[0]:
-    Event.make_speech(csource, context, duel.get_duel_speech("challenge"))
-    if acceptances[1]:
-      Event.make_speech(ctarget, context, duel.get_duel_speech("accept"))
-      Event(battle, "duel_accepted", context).activate()
-    else:
-      Event.make_speech(ctarget, context, duel.get_duel_speech("deny"))
-
+  newcontext = context.copy({'acceptances':acceptances})
+  narrator.narrate_duel_consider(**newcontext.opt)
+  if all(acceptances):
+      Event(battle, "duel_accepted", newcontext).activate()
+      
 def arrow_strike(battle, context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
@@ -381,23 +378,12 @@ def arrow_strike(battle, context, bv, narrator):
   dmgdata = (csource, ctarget, wording, damage)
   Event(battle, "receive_damage",
         contexts.Context({"damage":damage, "ctarget":ctarget, "dmgdata":dmgdata, "dmglog":dmglog})).activate()
-  if csource.has_unit_status("fire_arrow"):
-    if random.random() < 0.5 and not battle.is_raining():
-      bv.disp_activated_narration("fire_arrow", "{}'s arrows are covered with fire!".format(csource), True)
-      Event.make_speech(csource, context, "Light'em up!")
-      Event.gain_status(battle, "burned", context, ctarget)
+  if csource.has_unit_status("fire_arrow"): 
+    Event(battle, 'fire_arrow', context).activate()
   if csource.has_unit_status("chu_ko_nu"):
-    if random.random() < 0.5:
-      bv.disp_activated_narration("chu_ko_nu", "{}'s arrows continue to rain!".format(csource), True)
-      if random.random() < 0.5 and csource.name == "Zhuge Liang":
-        Event.make_speech(csource, context, "The name is a bit embarassing...")
-      else:
-        Event.make_speech(csource, context, "Have some more!")
-      Event(battle, "arrow_strike", context).activate()
+    Event(battle, 'chu_ko_nu', context).activate()
   elif ctarget.has_unit_status("counter_arrow"):
-    if random.random() < 0.8:
-      newcontext = context.clean_switch().copy({'vulnerable':False}) # vulerability doesn't transfer
-      Event(battle, "counter_arrow_strike", context.clean_switch()).activate()
+    Event(battle, 'counter_arrow', context).activate()
 
 def physical_clash(battle, context, bv, narrator):
   csource = context.csource
@@ -477,17 +463,6 @@ def change_morale(battle, context, bv, narrator):
 # targetted Events from Skills #
 ################################
 
-def counter_arrow_strike(battle, context, bv, narrator):
-  csource = context.csource
-  ctarget = context.ctarget
-  bv.disp_activated_narration("counter_arrow", "{} counters with their own volley".format(csource), True)
-  Event.make_speech(csource, context, "Let's show them guys how to actually use arrows!")
-  Event(battle, "arrow_strike",
-        contexts.Context({"csource":csource, "ctarget":ctarget})).activate()
-  return True
-
-# Tactics
-
 def _resolve_entanglement(battle, context, bv, narrator):
   """
   a bit harder since we dont know who the lurer actually is
@@ -566,6 +541,39 @@ def resolve_targetting_event(battle, context, bv, narrator, roll_key, cchance, s
     # todo: can eventually get new kwords this way
     results.append((new_target, success_func(battle, new_context)))
   return results
+
+##########################################
+# Targetting from skills -- no skillcard #
+##########################################
+
+def _fire_arrow_success(battle, context): # eventually these should not be events...
+  Event.gain_status(battle, "burned", context, context.ctarget)  
+
+def fire_arrow(battle, context, bv, narrator):
+  if not battle.is_raining():
+    chance = 0.5
+  else:
+    chance = -0.1
+  results = resolve_targetting_event(battle, context, bv, narrator, "fire_arrow", chance, _fire_arrow_success)
+
+def _chu_ko_nu_success(battle, context): 
+  Event(battle, 'arrow_strike', context).activate()
+
+def chu_ko_nu(battle, context, bv, narrator):
+  chance = 0.5
+  results = resolve_targetting_event(battle, context, bv, narrator, "chu_ko_nu", chance, _chu_ko_nu_success)
+
+def _counter_arrow_success(battle, context): 
+  Event(battle, "arrow_strike", context).activate()  # this is already switched
+  
+def counter_arrow(battle, context, bv, narrator):
+  chance = 0.8
+  newcontext = context.clean_switch() #  kill things like "vulnerable"
+  results = resolve_targetting_event(battle, newcontext, bv, narrator, "counter_arrow", chance, _counter_arrow_success)
+
+##############
+# Skillcards #
+##############
 
 def _fire_tactic_success(battle, context): # eventually these should not be events...
   Event.gain_status(battle, "burned", context, context.ctarget)  

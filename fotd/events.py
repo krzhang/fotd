@@ -173,7 +173,7 @@ def attack_order(context, bv, narrator):
   what we do in a *committed* attack order (we no longer consider statuses, etc;)
   """
   ctarget = context.ctarget
-  ctarget.order = rps.FinalOrder('I')
+  ctarget.order = rps.FinalOrder('A')
   myarmyid = ctarget.army.armyid
   enemy = context.battle.armies[1-myarmyid]
   enemyunits = enemy.present_units()

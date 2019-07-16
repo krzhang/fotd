@@ -2,12 +2,12 @@ from collections import defaultdict
 import sys
 
 from pyfiglet import Figlet
-from asciimatics.effects import Cycle, Print, Stars, Sprite
+from asciimatics.effects import Cycle, Print, Stars, Sprite, RandomNoise
 from asciimatics.event import KeyboardEvent, MouseEvent
 from asciimatics.exceptions import ResizeScreenError, StopApplication
 from asciimatics.particles import Explosion, StarFirework, DropScreen, Rain
 from asciimatics.paths import Path, DynamicPath
-from asciimatics.renderers import StaticRenderer, SpeechBubble, FigletText
+from asciimatics.renderers import StaticRenderer, SpeechBubble, FigletText, Rainbow
 from asciimatics.sprites import Arrow, Plot, Sam
 from asciimatics.renderers import SpeechBubble, FigletText, Box, Fire
 from asciimatics.scene import Scene
@@ -432,6 +432,12 @@ def flood_demo(screen):
 
   effects = [
     Rain(screen, 200),
+    Print(screen,
+          FigletText("Flood!", "banner3"),
+          (screen.height - 4) // 2,
+          colour=Screen.COLOUR_CYAN,
+          speed=1,
+          stop_frame=30),
   ]
   scenes.append(Scene(effects, -1))
 
@@ -450,6 +456,12 @@ def fire_demo(screen):
           0,
           speed=1,
           transparent=False),
+    Print(screen,
+          FigletText("Fire!", "banner3"),
+          (screen.height - 4) // 2,
+          colour=Screen.COLOUR_BLACK,
+          speed=1,
+          stop_frame=30),
   ]
   scenes.append(Scene(effects, -1))
   screen.play(scenes, stop_on_resize=True, repeat=False)
@@ -461,10 +473,13 @@ def panic_demo(screen):
   scenes = []
 
   effects = [
+    RandomNoise(screen,
+                signal=Rainbow(screen,
+                               FigletText("Help!"))),
     Print(screen,
-          FigletText("Help!", "banner3"),
+          FigletText("Panic!", "banner3"),
           (screen.height - 4) // 2,
-          colour=Screen.COLOUR_WHITE,
+          colour=Screen.COLOUR_MAGENTA,
           speed=1,
           stop_frame=30),
   ]
@@ -509,6 +524,12 @@ def jeer_demo(screen, narration0, narration1):
     Sam(screen, path1),
     _speak(screen, narration0[1], spodium0, 30),
     _speak(screen, narration1[1], spodium1, 110, tail='R'),
+    Print(screen,
+          FigletText("Jeer!", "banner3"),
+          (screen.height - 4) // 2,
+          colour=Screen.COLOUR_RED,
+          speed=1,
+          stop_frame=30),
   ]
   
   scenes.append(Scene(effects, -1))

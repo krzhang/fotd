@@ -239,20 +239,20 @@ def order_change(context, bv, narrator):
                         templates={"ctarget_army":ctarget_army})
   ctarget_army.bet_morale_change = morale_bet
   # Event("change_morale", context).activate() this cost is pretty high
-  
+
 def order_yomi_win(context, bv, narrator):
   csource_army = context.ctarget_army
   ctarget_army = context.battle.armies[1-csource_army.armyid]
   ycount = csource_army.get_yomi_count()
-  bet = ctarget_army.bet_morale_change + ycount 
+  bet_bool = bool(ctarget_army.bet_morale_change > 0)
+  morale_dam = ctarget_army.bet_morale_change + ycount 
   Event("change_morale", context.rebase(opt={"ctarget_army":csource_army, # winning army
                                              "morale_change":ycount})).activate()
   Event("change_morale", context.rebase(opt={"ctarget_army":ctarget_army, # losing army
-                                             "morale_change":-bet})).activate()
+                                             "morale_change":-morale_dam})).activate()
   # must put after to show the difference
-  bv.disp_yomi_win(csource_army, ctarget_army, ycount, bet)
+  bv.disp_yomi_win(csource_army, ctarget_army, ycount, morale_dam, bet_bool)
 
-  
 ##################
 # Manuever Phase #
 ##################
@@ -339,6 +339,7 @@ def engage(context, bv, narrator):
   army = csource.army
   for sc in army.tableau.bulbed_by(csource):
     if sc.order == csource.order and context.battle.yomi_winner == army.armyid:
+      import pdb; pdb.set_trace()
       newcontext = context.copy(additional_opt={'skillcard':sc})
       context.battle.place_event(sc.sc_str, newcontext, "Q_RESOLVE")
   context.battle.place_event("duel_consider", context, "Q_RESOLVE")
@@ -389,7 +390,7 @@ def arrow_strike(context, bv, narrator):
       Event.make_speech(csource, context, "Light'em up!")
       Event.gain_status("burned", context, ctarget)
   if csource.has_unit_status("chu_ko_nu"):
-    if random.random() < 0.5:
+    if random.random() < 0.4:
       bv.disp_activated_narration("chu_ko_nu", "{}'s arrows continue to rain!".format(csource), True)
       if random.random() < 0.5 and csource.name == "Zhuge Liang":
         Event.make_speech(csource, context, "The name is a bit embarassing...")

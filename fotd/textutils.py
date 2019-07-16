@@ -607,13 +607,13 @@ class BattleScreen(View):
     charstr = " "*2 + active_skillstr
     return charstr
 
-  def disp_yomi_win(self, csource_army, ctarget_army, ycount, bet):
+  def disp_yomi_win(self, csource_army, ctarget_army, ycount, morale_dam, bet):
     if ycount > 1:
       combostr1 = "$[2,1]$+{} morale$[7]$ from combo".format(ycount)
     else:
       combostr1 = "$[2,1]$+1 morale$[7]$"
-    if bet > 1:
-      combostr2 = "$[1]$-{} morale$[7]$ from order change".format(bet)
+    if bet:
+      combostr2 = "$[1]$-{} morale$[7]$ from order change".format(morale_dam)
     else:
       combostr2 = "$[1]$-1 morale$[7]$"
     self.yprint("{} ({}) outread {} ({})!".format(disp_army(csource_army),

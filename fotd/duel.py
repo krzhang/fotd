@@ -57,7 +57,7 @@ DUEL_SPEECHES = {
     "I have ninety-nine problems and {ctarget} was not one of them.",
     "Enemy down.",
     "{ctarget}'s soldiers will now tremble at {csource}'s name.",
-    "Whew. That was a good warmup."
+    "Whew. That was a good warmup.",
     "That was a close one.",
   ]
 }

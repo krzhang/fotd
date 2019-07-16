@@ -522,8 +522,8 @@ def jeer_demo(screen, narration0, narration1):
   effects = [
     Sam(screen, path0),
     Sam(screen, path1),
-    _speak(screen, narration0[1], spodium0, 30),
-    _speak(screen, narration1[1], spodium1, 110, tail='R'),
+    _speak(screen, narration0[1], spodium0, 0),
+    _speak(screen, narration1[1], spodium1, 0, tail='R'),
     Print(screen,
           FigletText("Jeer!", "banner3"),
           (screen.height - 4) // 2,

@@ -503,15 +503,15 @@ def _speak(screen, text, pos, start, tail="L"):
     colour=Screen.COLOUR_CYAN,
     clear=True,
     start_frame=start,
-    stop_frame=start+50)
+    stop_frame=start+200)
   
 def jeer_demo(screen, narration0, narration1):
   scenes = []
   centre = (screen.width // 2, screen.height // 2)
   podium0 = (8, 5)
-  podium1 = (72, 5)
+  podium1 = (78, 5)
   spodium0 = (16, 5)
-  spodium1 = (30, 5)
+  spodium1 = (50, 8)
   
   # Scene 1.
   path0 = Path()

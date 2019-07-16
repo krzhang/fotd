@@ -131,7 +131,7 @@ class Battle():
             event_name = func_list[0]
             additional_opt = {"stat_str":ss}
             additional_opt.update(func_list[1]) # additional arguments
-            events.Event(event_name, ctxt.copy(additional_opt=additional_opt)).activate()  
+            events.Event(event_name, ctxt.copy(additional_opt)).activate()  
 
   def _send_orders_to_armies(self, orders):
     self.order_history.append(orders)

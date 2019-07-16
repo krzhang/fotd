@@ -86,8 +86,6 @@ class Event():
   def make_speech(cls, unit, context, speech):
     newspeech = speech.format(**context.opt)
     context.battle.narrator.unit_speech(unit, newspeech)
-    # Event("make_speech", context=context.copy(additional_opt={"ctarget":unit,
-    #                                                           "speech":newspeech})).activate()
 
   @classmethod
   def remove_status(cls, stat_str, context, ctarget):
@@ -214,12 +212,12 @@ def indirect_order(context, bv, narrator):
   context.battle.place_event("indirect_raid", newcontext, "Q_MANUEVER")
 
 def panicked_order(context, bv, narrator):
-  newcontext = context.copy(additional_opt={"stat_str":"panicked"})
+  newcontext = context.copy({"stat_str":"panicked"})
   narrator.narrate_status("on_order_override", **newcontext.opt)
   defense_order(context, bv, narrator)
 
 def provoked_order(context, bv, narrator):
-  newcontext = context.copy(additional_opt={"stat_str":"provoked"})
+  newcontext = context.copy({"stat_str":"provoked"})
   narrator.narrate_status("on_order_override", **newcontext.opt)
   attack_order(context, bv, narrator)
 
@@ -279,7 +277,6 @@ def march(context, bv, narrator):
     Event("engage", context.rebase_switch()).activate()
   else:
     Event("engage", context).activate()
-  
   converging = bool(ctarget.targetting[1] == csource) # if other ctarget is coming towards you
   if ctarget.is_defended():
     assert ctarget.position == context.battle.hqs[ctarget.army.armyid] # meeting at hq
@@ -318,13 +315,13 @@ def indirect_raid(context, bv, narrator):
   Event("engage", context).activate()
   # tactic 1: raid
   vulnerable = False
-  if ctarget.targetting[0] == "defending":
+  if ctarget.targetting[0] == "defending": # TODO: replace by order check?
     bv.yprint("  {} is caught unawares by the indirect approach!".format(ctarget), debug=True)
     vulnerable = True
   elif ctarget.targetting[0] == "marching":
     bv.yprint("  {}'s marching soldiers are vigilant!".format(ctarget), debug=True)
   context.battle.place_event("arrow_strike",
-                             context.copy(additional_opt={"vulnerable":vulnerable}),
+                             context.copy({"vulnerable":vulnerable}),
                              "Q_RESOLVE")
 
 def engage(context, bv, narrator):
@@ -339,8 +336,8 @@ def engage(context, bv, narrator):
   army = csource.army
   for sc in army.tableau.bulbed_by(csource):
     if sc.order == csource.order and context.battle.yomi_winner == army.armyid:
-      import pdb; pdb.set_trace()
-      newcontext = context.copy(additional_opt={'skillcard':sc})
+      # import pdb; pdb.set_trace()
+      newcontext = context.copy({'skillcard':sc})
       context.battle.place_event(sc.sc_str, newcontext, "Q_RESOLVE")
   context.battle.place_event("duel_consider", context, "Q_RESOLVE")
 
@@ -390,30 +387,34 @@ def arrow_strike(context, bv, narrator):
       Event.make_speech(csource, context, "Light'em up!")
       Event.gain_status("burned", context, ctarget)
   if csource.has_unit_status("chu_ko_nu"):
-    if random.random() < 0.4:
+    if random.random() < 0.5:
       bv.disp_activated_narration("chu_ko_nu", "{}'s arrows continue to rain!".format(csource), True)
       if random.random() < 0.5 and csource.name == "Zhuge Liang":
         Event.make_speech(csource, context, "The name is a bit embarassing...")
       else:
         Event.make_speech(csource, context, "Have some more!")
       Event("arrow_strike", context).activate()
-  if ctarget.has_unit_status("counter_arrow"):
+  elif ctarget.has_unit_status("counter_arrow"):
     if random.random() < 0.8:
-#      bv.yprint("  <counter arrow skill> %s can counter with their own volley of arrows" % ctarget)
+      newcontext = context.rebase_switch().copy({'vulnerable':False}) # vulerability doesn't transfer
       Event("counter_arrow_strike", context.rebase_switch()).activate()
 
 def physical_clash(context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
   bv.yprint("  {csource} clashes against {ctarget}!", templates=context.opt)
-  Event("physical_strike", context).activate()
+  vulnerable = (csource.order == rps.FinalOrder('A')) and (ctarget.order == rps.FinalOrder('I'))
+  Event("physical_strike", context.copy({"vulnerable":vulnerable})).activate()
   # bv.yprint("  %s able to launch retaliation" % ctarget) can die in the middle
   Event("physical_strike", context.rebase_switch()).activate()
   
 def physical_strike(context, bv, narrator):
   """ strike is the singular act of hitting """
   csource = context.csource
-  ctarget = context.ctarget
+  ctarget = context.ctarget 
+  multiplier = 1
+  if "vulnerable" in context.opt and context.vulnerable:
+    multiplier = 2
   damage, damlog = _compute_physical_damage(csource, ctarget, multiplier=1)
   dmgdata = (csource, ctarget, "hits", damage)
   ctarget.attacked_by.append(csource)
@@ -513,8 +514,8 @@ def _resolve_entanglement(context, bv, narrator):
     elif lure_candidates: # lure roll is available
       # make a lure roll
       lurer = random.choice(lure_candidates)
-      successes = _roll_target_skill_tactic(context.copy(additional_opt={"lurer":lurer,
-                                                                      "ctarget":new_target}), bv,
+      successes = _roll_target_skill_tactic(context.copy({"lurer":lurer,
+                                                          "ctarget":new_target}), bv,
                                             narrator, "lure_tactic", 0.25)
       # TODO: add chain tactic for Pang Tong
       # either has 1 or 0 elements
@@ -558,7 +559,7 @@ def resolve_targetting_event(context, bv, narrator, roll_key, cchance, success_f
   successful_targets = _roll_target_skill_tactic(context, bv, narrator, roll_key, cchance)
   results = []
   for new_target in successful_targets:
-    new_context = context.copy(additional_opt={"ctarget":new_target})
+    new_context = context.copy({"ctarget":new_target})
     # todo: can eventually get new kwords this way
     results.append((new_target, success_func(new_context)))
   return results
@@ -592,7 +593,7 @@ def _flood_tactic_success(context):
   damage = random.choice(range(damdice))
   dmgdata = (context.csource, context.ctarget, "floods", damage)
   Event("receive_damage", context.copy(
-    additional_opt={"damage":damage, "dmgdata":dmgdata, "dmglog":""})).activate()
+    {"damage":damage, "dmgdata":dmgdata, "dmglog":""})).activate()
 
 def flood_tactic(context, bv, narrator):
   chance = 0.5
@@ -638,9 +639,8 @@ def burned_eot(context, bv, narrator):
     damage = random.choice(range(damdice))
     dmgdata = (None, ctarget, "burned", damage)
     Event("receive_damage", context.copy(
-      additional_opt={"damage":damage, "dmgdata":dmgdata, "dmglog":""})).activate()
-    Event("remove_status_probabilistic", context.copy(additional_opt={
-      "fizzle_prob": 0.5})).activate()
+      {"damage":damage, "dmgdata":dmgdata, "dmglog":""})).activate()
+    Event("remove_status_probabilistic", context.copy({"fizzle_prob": 0.5})).activate()
 
 ##########
 # Skills #

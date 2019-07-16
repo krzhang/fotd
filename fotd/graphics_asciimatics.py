@@ -1,16 +1,19 @@
+from collections import defaultdict
+import sys
+
+from pyfiglet import Figlet
 from asciimatics.effects import Cycle, Print, Stars, Sprite
+from asciimatics.event import KeyboardEvent, MouseEvent
+from asciimatics.exceptions import ResizeScreenError, StopApplication
+from asciimatics.particles import Explosion, StarFirework, DropScreen, Rain
 from asciimatics.paths import Path, DynamicPath
+from asciimatics.renderers import StaticRenderer, SpeechBubble, FigletText
 from asciimatics.sprites import Arrow, Plot, Sam
-from asciimatics.renderers import SpeechBubble, FigletText, Box
+from asciimatics.renderers import SpeechBubble, FigletText, Box, Fire
 from asciimatics.scene import Scene
 from asciimatics.screen import Screen
-from asciimatics.exceptions import ResizeScreenError, StopApplication
 from asciimatics.widgets import Frame, Layout, MultiColumnListBox, Widget, Label, TextBox, PopUpDialog
-from collections import defaultdict
-from asciimatics.event import KeyboardEvent, MouseEvent
-from asciimatics.renderers import StaticRenderer, SpeechBubble, FigletText
 
-import sys
 
 class YTextBox(TextBox):
   def __init__(self, height, label=None, name=None, as_string=False, line_wrap=False,
@@ -423,85 +426,50 @@ def demo(screen):
   
   screen.play(scenes, stop_on_resize=True)
 
-from pyfiglet import Figlet
-from asciimatics.renderers import FigletText, Fire
+
+def flood_demo(screen):
+  scenes = []
+
+  effects = [
+    Rain(screen, 200),
+  ]
+  scenes.append(Scene(effects, -1))
+
+  screen.play(scenes, stop_on_resize=True, repeat=False)
+
+def render_flood_tactic():
+  Screen.wrapper(flood_demo)
 
 def fire_demo(screen):
-    scenes = []
+  scenes = []
 
-    effects = [
-        Print(screen,
-              Fire(screen.height, 80, "*" * 70, 0.8, 60, screen.colours,
-                   bg=screen.colours >= 256),
-              0,
-              speed=1,
-              transparent=False),
-        # Print(screen,
-        #       FigletText("I'm", "banner3"),
-        #       (screen.height - 4) // 2,
-        #       colour=Screen.COLOUR_BLACK,
-        #       speed=1,
-        #       start_frame=30,
-        #       stop_frame=50),
-        # Print(screen,
-        #       FigletText("on", "banner3"),
-        #       (screen.height - 4) // 2,
-        #       colour=Screen.COLOUR_BLACK,
-        #       speed=1,
-        #       start_frame=50,
-        #       stop_frame=70),
-        # Print(screen,
-        #       FigletText("Fire!", "banner3"),
-        #       (screen.height - 4) // 2,
-        #       colour=Screen.COLOUR_BLACK,
-        #       speed=1,
-        #       start_frame=70),
-    ]
-    scenes.append(Scene(effects, -1))
-
-    # text = Figlet(font="banner", width=200).renderText("ASCIIMATICS")
-    # width = max([len(x) for x in text.split("\n")])
-
-    # effects = [
-    #     Print(screen,
-    #           Fire(screen.height, 80, text, 0.4, 40, screen.colours),
-    #           0,
-    #           speed=1,
-    #           transparent=False),
-    #     Print(screen,
-    #           FigletText("ASCIIMATICS", "banner"),
-    #           screen.height - 9, x=(screen.width - width) // 2 + 1,
-    #           colour=Screen.COLOUR_BLACK,
-    #           bg=Screen.COLOUR_BLACK,
-    #           speed=1),
-    #     Print(screen,
-    #           FigletText("ASCIIMATICS", "banner"),
-    #           screen.height - 9,
-    #           colour=Screen.COLOUR_WHITE,
-    #           bg=Screen.COLOUR_WHITE,
-    #           speed=1),
-    # ]
-    # scenes.append(Scene(effects, -1))
-
-    screen.play(scenes, stop_on_resize=True, repeat=False)
+  effects = [
+    Print(screen,
+          Fire(screen.height, 80, "*" * 70, 0.8, 60, screen.colours,
+               bg=screen.colours >= 256),
+          0,
+          speed=1,
+          transparent=False),
+  ]
+  scenes.append(Scene(effects, -1))
+  screen.play(scenes, stop_on_resize=True, repeat=False)
 
 def render_fire_tactic():
   Screen.wrapper(fire_demo)
 
 def panic_demo(screen):
-    scenes = []
+  scenes = []
 
-    effects = [
-        Print(screen,
-              FigletText("Help!", "banner3"),
-              (screen.height - 4) // 2,
-              colour=Screen.COLOUR_WHITE,
-              speed=1,
-              stop_frame=30),
-    ]
-    scenes.append(Scene(effects, -1))
-    
-    screen.play(scenes, stop_on_resize=True, repeat=False)
+  effects = [
+    Print(screen,
+          FigletText("Help!", "banner3"),
+          (screen.height - 4) // 2,
+          colour=Screen.COLOUR_WHITE,
+          speed=1,
+          stop_frame=30),
+  ]
+  scenes.append(Scene(effects, -1))  
+  screen.play(scenes, stop_on_resize=True, repeat=False)
 
 def render_panic_tactic():
   Screen.wrapper(panic_demo)

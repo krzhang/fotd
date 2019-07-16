@@ -83,6 +83,8 @@ class BattleNarrator(Narrator):
         graphics_asciimatics.render_fire_tactic()
       if key == 'panic_tactic':
         graphics_asciimatics.render_panic_tactic() 
+      if key == 'flood_tactic':
+        graphics_asciimatics.render_flood_tactic() 
     else:
       narrator_str, narrate_text = get_one(ROLLS[key], "on_fail_speech")
     if narrator_str and (narrator_str in context) and narrate_text:

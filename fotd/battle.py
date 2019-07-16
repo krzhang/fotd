@@ -60,7 +60,7 @@ class Battle():
     used when we want to make a new event on a queue of our choice 
     we pop from right, so we should place left.
     """
-    self.queues[queue_name].appendleft(events.Event(event_type, context))
+    self.queues[queue_name].appendleft(events.Event(self, event_type, context))
 
   def is_raining(self):
     return self.weather.text == "raining"
@@ -136,7 +136,7 @@ class Battle():
       # originally these were in lists; the problem is you can change these lists, so make copies
       for unit in tuple(self.armies[i].units):
         for sta in tuple(unit.unit_status):
-          ctxt = contexts.Context(self, opt={"ctarget":unit})
+          ctxt = contexts.Context({"ctarget":unit})
           ss = sta.stat_str
           func_list = status.status_info(ss, func_key)
           if func_list: # found a function (func_name, kwargs)
@@ -144,7 +144,7 @@ class Battle():
             event_name = func_list[0]
             additional_opt = {"stat_str":ss}
             additional_opt.update(func_list[1]) # additional arguments
-            events.Event(event_name, ctxt.copy(additional_opt)).activate()  
+            events.Event(self, event_name, ctxt.copy(additional_opt)).activate()  
 
   def _send_orders_to_armies(self, orders):
     orderlist = []
@@ -154,11 +154,11 @@ class Battle():
       bet = self.armies[i].bet_morale_change
       if bet:
         orderlist.append((0, "order_change",
-                          contexts.Context(self, opt={"ctarget_army":self.armies[i],
-                                                      "morale_bet":bet})))
+                          contexts.Context({"ctarget_army":self.armies[i],
+                                            "morale_bet":bet})))
       if self.yomi_winner_id == i:
         orderlist.append((0, "order_yomi_win",
-                          contexts.Context(self, opt={"ctarget_army":self.armies[i]})))
+                          contexts.Context({"ctarget_army":self.armies[i]})))
       for u in self.armies[i].present_units():
         u.attacked = []
         u.attacked_by = []
@@ -167,8 +167,8 @@ class Battle():
         if order == 'D':
           speed += 7
         orderlist.append((speed, "order_received",
-                          contexts.Context(self, opt={"ctarget":u,
-                                                      "order":order})))
+                          contexts.Context(opt={"ctarget":u,
+                                                "order":order})))
     orderlist.sort(key=lambda x: x[0])
     for o in orderlist:
       self.place_event(o[1], o[2], 'Q_ORDER')

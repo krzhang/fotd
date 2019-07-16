@@ -8,8 +8,7 @@ class Context(object):
 
   # currently a terrible more complex version of a dictionary. Sigh
   
-  def __init__(self, battle, opt={}):
-    self.battle = battle
+  def __init__(self, opt):
     self.opt = opt
     for o in opt:
       setattr(self, o, opt[o])
@@ -18,15 +17,11 @@ class Context(object):
     """Make a copy with the same battle context"""
     nopt = self.opt.copy()
     nopt.update(additional_opt)
-    return Context(self.battle, opt=nopt)
+    return Context(nopt)
 
-  def rebase(self, opt):
-    """Make a copy with the same battle context"""
-    return Context(self.battle, opt=opt)
-
-  def rebase_switch(self):
+  def clean_switch(self, additional_opt={}):
     """Most common usecase: create a context with switched source/ctargets. """
-    return self.rebase({"ctarget":self.csource, "csource":self.ctarget})
+    return Context({"ctarget":self.csource, "csource":self.ctarget}).copy(additional_opt)
 
   # def speech(self, narrator, text):
   #   """

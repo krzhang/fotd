@@ -174,7 +174,7 @@ def test_duel(debug=False, resize=False,
   armies[1].units[1].health = 100  
   import events
   import contexts
-  events.duel_accepted(contexts.Context(bat, opt={
+  events.duel_accepted(bat, contexts.Context({
     'csource':armies[0].units[0],
     'ctarget':armies[1].units[1]}), bat.battlescreen, bat.narrator)
   return 0

@@ -58,7 +58,9 @@ class Event():
     if event_info(self.event_name, "panic_blocked"):
       potential_panicker = getattr(self.context, PRIMARY_ACTOR_DICT[self.actor_type])
       if potential_panicker.has_unit_status("panicked"):
-        self.context.battle.battlescreen.yprint("  %s is %s! No action" % (potential_panicker, status.Status("panicked")))
+        self.context.battle.narrator.narrate_status("on_activation",
+                                                    {'ctarget':potential_panicker,
+                                                     'stat_str':'panicked'})
         return
     # time to activate this event on the queue; note the event has its own context, battle, etc.
     results = self.event_func(self.context,
@@ -376,10 +378,12 @@ def arrow_strike(context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
   multiplier = 1
+  wording = "shoots"
   if "vulnerable" in context.opt and context.vulnerable:
     multiplier = 2
+    wording = "mows"
   damage, dmglog = _compute_arrow_damage(csource, ctarget, multiplier=multiplier)
-  dmgdata = (csource, ctarget, "shoots", damage)
+  dmgdata = (csource, ctarget, wording, damage)
   Event("receive_damage",
         context.rebase({"damage":damage, "ctarget":ctarget, "dmgdata":dmgdata, "dmglog":dmglog})).activate()
   if csource.has_unit_status("fire_arrow"):
@@ -415,10 +419,12 @@ def physical_strike(context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget 
   multiplier = 1
+  wording = "hits"
   if "vulnerable" in context.opt and context.vulnerable:
     multiplier = 2
-  damage, damlog = _compute_physical_damage(csource, ctarget, multiplier=1)
-  dmgdata = (csource, ctarget, "hits", damage)
+    wording = "flanks"
+  damage, damlog = _compute_physical_damage(csource, ctarget, multiplier=multiplier)
+  dmgdata = (csource, ctarget, wording, damage)
   ctarget.attacked_by.append(csource)
   csource.attacked.append(ctarget)
   Event("receive_damage", context.rebase({"damage":damage,

@@ -104,7 +104,7 @@ class BattleNarrator(Narrator):
       narration0 = (context["csource"], ins[0])
       if success:
         # no good comeback
-        narration1 = (context["ctarget"], "Uh uh, you are a {}?".format(insults.random_diss_noun()))
+        narration1 = (context["ctarget"], "Uh, um...")
       else:
         narration1 = (context["ctarget"], ins[1])
     else:
@@ -113,7 +113,7 @@ class BattleNarrator(Narrator):
                     "You are a {}!".format(insults.random_diss()))
       if success:
         narration1 = (context["ctarget"], 
-                      "Uh, uh, you are a {}?".format(insults.random_diss_noun()))
+                      "Uh, um...")
       else:
         narration1 = (context["ctarget"], 
                       "Well, you are a {}!".format(insults.random_diss()))

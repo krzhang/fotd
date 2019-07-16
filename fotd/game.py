@@ -63,7 +63,7 @@ PC_ATTRS = [ # First Name Last Name, since we are from the future
   ("Han Xu", "Finalmente", 90, 85, 12, 24, 2, 6, HAN_SKILLS)]
 
 BIZARRO_ATTRS = [
-  ("Ghanz Nagy", "$[4]$Blue$[7]$ Thunder", 71, 80, 74, 60, 5, 4, YAN_SKILLS),
+  ("Hanz Nagy", "$[4]$Blue$[7]$ Thunder", 71, 80, 74, 60, 5, 4, YAN_SKILLS),
   ("Bling Chan", "Splurge", 55, 70, 90, 85, 4, 5, JING_SKILLS),
   ("Yo Joe", "Seal Clubber", 31, 90, 63, 21, 4, 2, YOYO_SKILLS),
   ("Xu Han", "WNBA", 90, 85, 12, 24, 2, 6, HAN_SKILLS)]

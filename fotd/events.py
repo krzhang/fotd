@@ -84,6 +84,7 @@ class Event():
   
   @classmethod
   def make_speech(cls, unit, context, speech):
+    # TODO: deprecate this function later for narrator.unit_speech, etc.
     newspeech = speech.format(**context.opt)
     context.battle.narrator.unit_speech(unit, newspeech)
 
@@ -406,7 +407,8 @@ def physical_clash(context, bv, narrator):
   vulnerable = (csource.order == rps.FinalOrder('A')) and (ctarget.order == rps.FinalOrder('I'))
   Event("physical_strike", context.copy({"vulnerable":vulnerable})).activate()
   # bv.yprint("  %s able to launch retaliation" % ctarget) can die in the middle
-  Event("physical_strike", context.rebase_switch()).activate()
+  if random.random() < 0.5:
+    Event("physical_strike", context.rebase_switch()).activate()
   
 def physical_strike(context, bv, narrator):
   """ strike is the singular act of hitting """

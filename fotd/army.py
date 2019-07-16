@@ -75,32 +75,31 @@ class Unit(object):
     return val
 
   def physical_offense(self):
-    val = 1.0
+    val = 1.0 # generically this is a 1/5 hit chance, so a full sized unit does about 4 damage
     # val = rps.formation_info(self.army.formation, "physical_offense")
-    val *= float(self.size)/4.0
+    # val *= float(self.size)/4.0
     val *= self._generic_multiplier()
     return float(val)
 
   def physical_defense(self):
-    val = 1.5
     # val = rps.formation_info(self.army.formation, "physical_defense")
-    val *= float(self.size)
+    # val *= float(self.size)
+    val = 4.0
     if self.is_defended():
       val *= 1.5
     val *= self._generic_multiplier()
     return float(val)
 
   def arrow_offense(self):
-    val = 1.0
+    val = 1.0 # generically this is a 1/10 hit chance
     # val = rps.formation_info(self.army.formation, "arrow_offense")
     val *= 2.0 # per-arrow strength does not scale with size
     val *= self._generic_multiplier()
     return val
 
   def arrow_defense(self):
-    val = 1.0
+    val = 9.0 # generically this is a 1/10 hit chance
     # val = rps.formation_info(self.army.formation, "arrow_defense")
-    val *= 18.0 # per-arrow strength does not scale with size
     val *= self._generic_multiplier()
     return val
 

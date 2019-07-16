@@ -580,7 +580,7 @@ class BattleScreen(View):
     active_skillcards = [disp_skillcard(sc) for sc in unit.army.tableau.bulbed_by(unit)
                          if sc.visible_to(self.army)]
     invisible_count = len(unit.army.tableau.bulbed_by(unit)) - len(active_skillcards)
-    active_skillcards += ["<$[7,3]$?:????$[7]$>"]*invisible_count 
+    active_skillcards += ["<$[7,3]$?:??????$[7]$>"]*invisible_count 
     if inactive_skillstr:
       sepstr = " | "
     else:

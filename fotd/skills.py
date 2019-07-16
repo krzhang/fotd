@@ -46,13 +46,13 @@ SKILLS = {
     "ai_eval": (2, 1, 1),
     "desc": "Each time this officer is shot by arrows, he/she has a chance to shoot back.",
     "activation": "passive",
-    "short": 'cntr-arrow',
+    "short": 'ctr-ar',
   },
   "chu_ko_nu": {
     "ai_eval": (1, 0, 1),
     "rank": 'A',
     "activation": "passive",
-    "short": 'chu-ko-nu'
+    "short": 'c-k-nu'
   },
   "attack_supplies": {
     "ai_eval": (0, 0, 1),
@@ -60,7 +60,7 @@ SKILLS = {
   },
   "panic_skill": {
     "ai_eval": (0, 0, 2),
-    "short": 'panic',
+    "short": ' panic',
     "skillcard": "panic_tactic",
   },
   "cheer": {
@@ -68,17 +68,17 @@ SKILLS = {
   },
   "fire_skill": {
     "ai_eval": (0, 0, 1),
-    "short": 'fire',
+    "short": ' fire ',
     "skillcard": "fire_tactic",
   },
   "lure_skill": {
     "ai_eval": (0, 0, 1),
-    "short": 'lure',
+    "short": ' lure ',
     "activation": "passive",
   },
   "jeer": {
     "ai_eval": (0, 0, 2),
-    "short": 'jeer',
+    "short": ' jeer ',
     "skillcard": "jeer_tactic",
   },
   "manuever": {
@@ -97,12 +97,12 @@ SKILLS = {
   },
   "trymode": {
     "ai_eval": (3, 0, 0),
-    "short": 'trym',
+    "short": ' try-m',
     "activation": "passive",
   },
   "water_skill": {
     "ai_eval": (0, 0, 1),
-    "short": 'water',
+    "short": ' water',
     "skillcard": "flood_tactic",
   }
 }
@@ -112,7 +112,7 @@ SKILLCARDS = {
     "bulb": {'A':0, 'D':0.15, 'I':0.3},
     "illegal_weather": ["raining"],
     "power": 5,
-    "short": 'fire',
+    "short": ' fire ',
     "on_bulb": {
       'D': "When they attack, these traps should burn them up.",
       'I': "If they turtle, they are an easy target for fire today.",
@@ -127,7 +127,7 @@ SKILLCARDS = {
     "bulb": {'A':0.2, 'D':0.2, 'I':0.2},
     "illegal_weather": [],
     "power": 2,
-    "short": 'jeer',
+    "short": ' jeer ',
     "on_bulb": {
       'A': "Let me at them in the field; I have a few new insults.",
       'D': "If we keep teasing them, they may overattack.",
@@ -142,7 +142,7 @@ SKILLCARDS = {
     "bulb": {'A':0.25, 'D':0, 'I':0.25},
     "illegal_weather": [],
     "power": 5,
-    "short": 'panic',
+    "short": ' panic',
     "on_bulb": {
       'A': "If we attack, I can fill their units with fear.",
       'I': "When they are defending, we can spread rumors and lies.",
@@ -157,7 +157,7 @@ SKILLCARDS = {
     "bulb": {'A':0, 'D':0.6, 'I':0},
     "illegal_weather": ["sunny", "hot"],
     "power": 8,
-    "short": 'flood',
+    "short": ' flood',
     "on_bulb": {
       'D': "If they attack near this barely-dammed river...",
     },

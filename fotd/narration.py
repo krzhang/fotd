@@ -112,27 +112,27 @@ class BattleNarrator(Narrator):
         narration1 = (context["ctarget"], ins[1])
     else:
       # roguelike style
-      narration0 = (context["csource"], 
+      narration0 = (context["csource"],
                     "You are a {}!".format(insults.random_diss()))
       if success:
-        narration1 = (context["ctarget"], 
+        narration1 = (context["ctarget"],
                       "Uh, um...")
       else:
-        narration1 = (context["ctarget"], 
+        narration1 = (context["ctarget"],
                       "Well, you are a {}!".format(insults.random_diss()))
     self.unit_speech(narration0[0], narration0[1], **context)
     self.unit_speech(narration1[0], narration1[1], **context)
     graphics_asciimatics.render_jeer_tactic(narration0, narration1)
-    
+
   def narrate_roll(self, key, success, **context):
-    if "on_roll" in ROLLS[key] and ROLLS[key]["on_roll"]: # need both so you don't format None
+    if "on_roll" in ROLLS[key] and ROLLS[key]["on_roll"]:  # need both so you don't format None
       # normal situation
       self.view.yprint(get_one(ROLLS[key], "on_roll"), templates=context)
       # self.view.disp_activated_narration(get_one(ROLLS[key], "short"), on_roll)
     if key == "jeer_tactic":
       self._narrate_jeer(success, **context)
     self.narrate_roll_success(key, success, **context)
-    
+
 ENTRANCES = [
   "It's a good day for a battle.",
   "War... what is it good for?",
@@ -146,15 +146,13 @@ ENTRANCES = [
 WITHDRAWS = [
   "Of the 36 tactics, running is the best one.",
   "Seems we are bested, but we will pay it back later with interest.",
-  "Not going to stay around for a losing battle. Next time!"
-  "Win some, lose some."
-]
+  "Not going to stay around for a losing battle. Next time!",
+  "Win some, lose some."]
 
 CAPTURES = [ "Wow. That really happened.",
             "Did not think I would be captured...",
             "Win some, lose some.",
-            "I wasn't trying, so does it count?"
-]
+            "I wasn't trying, so does it count?"]
 
 ROLLS = {
   "lure_tactic": {
@@ -222,5 +220,5 @@ ROLLS = {
     "on_fail_speech": [("ctarget", "Nope, still not trying."),
                        ("ctarget", "I have not yet begun to fight.")],
     "show_roll_success": True,
-  },  
+  },
 }

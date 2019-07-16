@@ -38,10 +38,14 @@ class BattleNarrator(Narrator):
   
   def unit_speech(self, unit, text, **context):
     # Han factor:
-    if "Han" in unit.name and "Xu" in unit.name and random.random() < 0.50:
-      self.chara_narrate(unit.character, "Bruh.", **context)
+    if unit:
+      if "Han" in unit.name and "Xu" in unit.name and random.random() < 0.50:
+        self.chara_narrate(unit.character, "Bruh.", **context)
+      else:
+        self.chara_narrate(unit.character, text, **context)
     else:
-      self.chara_narrate(unit.character, text, **context)
+      # straight narration
+      self.view.yprint(text, templates=context)
 
   # the lack of symmetry here annoys me
 

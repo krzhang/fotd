@@ -123,7 +123,9 @@ class BattleNarrator(Narrator):
     This is just a signifier that happens after the roll and the resolution.
     Ex: <MAD_SKILL> Success!
     """
-    if ROLLS[key]['show_roll_success']:
+    if success and ROLLS[key]['show_roll_success']:
+      self.view.disp_activated_narration(ROLLS[key]['short'], "", success)
+    if (not success) and ROLLS[key]['show_roll_failure']:
       self.view.disp_activated_narration(ROLLS[key]['short'], "", success)
       
   def _narrate_jeer(self, success, **context):
@@ -194,14 +196,6 @@ CAPTURES = [ "Wow. That really happened.",
             "I wasn't trying, so does it count?"]
 
 ROLLS = {
-  "lure_tactic": {
-    "roll_type": 'targetted tactic',
-    "short": 'lure',
-    "on_success": "{lurer} $[2]$lures$[7]$ {ctarget} into {csource}'s tactic!",
-    "on_success_speech": [("lurer", "Here, kitty kitty kitty...")],
-    "show_roll_success": False,
-  },
-
   "fire_tactic": {
     "roll_type": 'targetted tactic',
     "short": 'fire',
@@ -211,6 +205,7 @@ ROLLS = {
     "on_fail_speech": [("csource", "{ctarget} did not fall for my tricks."),
                        ("ctarget", "No need to play with fire, {csource}!")],
     "show_roll_success": True,
+    "show_roll_failure": True,
     "graphics_renderer": 'render_fire_tactic',
   },
   "jeer_tactic": {
@@ -221,6 +216,7 @@ ROLLS = {
     #                        ("ctarget", "Why you...")],
     # "on_fail_speech": [], # has its own routine
     "show_roll_success": True,
+    "show_roll_failure": True,
 #    "graphics_renderer": 'render_jeer_tactic',
   },
   "lure_tactic": {
@@ -228,9 +224,11 @@ ROLLS = {
     "short": 'lure',
     "on_roll": None,
     "on_success": "{lurer} $[2]$lures$[7]$ {ctarget} into the tactic!",
-    "on_success_speech": [("lurer", "Here, kitty kitty kitty...")],
+    "on_success_speech": [("lurer", "Here, kitty kitty kitty..."),
+                          ("lurer", "Let's bring {ctarget} along too...")],
     "on_fail_speech": None, # has its own routine
     "show_roll_success": False,
+    "show_roll_failure": False,
   },  
   "panic_tactic": {
     "roll_type": 'targetted tactic',
@@ -241,32 +239,8 @@ ROLLS = {
     "on_fail_speech": [("csource", "{ctarget}'s unit was not shaken."),
                        ("ctarget", "Keep calm, don't let {csource} get to you.")],
     "show_roll_success": True,
+    "show_roll_failure": True,
     "graphics_renderer": 'render_panic_tactic',
-  },
-  "counter_arrow": {
-    "roll_type": 'targetted tactic',
-    "short": 'counter arrow',
-    "on_roll": None,
-    "on_success_speech": [('csource', "Let's show {ctarget} how to actually use arrows!"),
-                          (None, '{csource} counters with their own volley.')],
-    "on_fail_speech": None,
-    "show_roll_success": False,
-   },
-   "chu_ko_nu": {
-    "roll_type": 'targetted tactic',
-    "short": 'chu ko nu',
-    "on_roll": None,
-    "on_success_speech": [("csource", "Have some more!")],
-    "on_fail_speech": None,
-    "show_roll_success": False,    
-  },
-  "fire_arrow": {
-    "roll_type": 'targetted tactic',
-    "short": 'fire arrow',
-    "on_roll": None,
-    "on_success_speech": [("csource", "Let them have a taste of these flaming arrows!")],
-    "on_fail_speech": None,
-    "show_roll_success": False,
   },
   "flood_tactic": {
     "roll_type": 'targetted tactic',
@@ -277,16 +251,47 @@ ROLLS = {
     "on_fail_speech": [("csource", "{ctarget} narrowly avoided being swept away."),
                        ("ctarget", "No need to play with fire, {csource}!")],
     "show_roll_success": True,
+    "show_roll_failure": True,
     "graphics_renderer": 'render_flood_tactic',
+  },
+  "counter_arrow": {
+    "roll_type": 'targetted tactic',
+    "short": 'counter arrow',
+    "on_roll": None,
+    "on_success_speech": [('csource', "Let's show {ctarget} how to actually use arrows!"),
+                          (None, '{csource} counters with their own volley.')],
+    "on_fail_speech": None,
+    "show_roll_success": False,
+    "show_roll_failure": False,    
+   },
+   "chu_ko_nu": {
+    "roll_type": 'targetted tactic',
+    "short": 'chu ko nu',
+    "on_roll": None,
+    "on_success_speech": [("csource", "Have some more!")],
+    "on_fail_speech": None,
+    "show_roll_success": False,    
+    "show_roll_failure": False,    
+  },
+  "fire_arrow": {
+    "roll_type": 'targetted tactic',
+    "short": 'fire arrow',
+    "on_roll": None,
+    "on_success_speech": [("csource", "Let them have a taste of these flaming arrows!")],
+    "on_fail_speech": None,
+    "show_roll_success": False,
+    "show_roll_failure": False,    
   },
   "trymode_status_bot": {
     "roll_type": 'buff',
     "short": 'trymode',
-    "on_roll": ["{ctarget} looks for an excuse to pretend to be powered up..."],
+    # "on_roll": ["{ctarget} looks for an excuse to pretend to be powered up..."],
+    "on_roll": None,
     "on_success_speech": [("ctarget", "Did you really think I took you seriously before?"),
                           ("ctarget", "*Yawn* Let's get it.")],
     "on_fail_speech": [("ctarget", "Nope, still not trying."),
                        ("ctarget", "I have not yet begun to fight.")],
     "show_roll_success": True,
+    "show_roll_failure": False,
   },
 }

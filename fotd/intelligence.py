@@ -49,9 +49,9 @@ class ArtificialIntelligence(Intelligence):
       priors += np.array([1-m, 1-m, 1-m])
       assert min(priors) > 0
     newpriors = normalize(priors)
-    battle.battlescreen.yprint("  AI predicts player (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*newpriors))
+    battle.battlescreen.yprint("  AI predicts player (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*newpriors), mode=['huddle'])
     counters = np.array(list(newpriors[2:]) + list(newpriors[:2]))
-    battle.battlescreen.yprint("  AI counterpicks    (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters))
+    battle.battlescreen.yprint("  AI counterpicks    (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters), mode=['huddle'])
     return rps.FinalOrder(np.random.choice(['A', 'D', 'I'], p=counters))
 
   # def get_order(self, battle, armyid, order_type):

@@ -422,3 +422,151 @@ def demo(screen):
   # scenes.append(Scene(effects, 500))
   
   screen.play(scenes, stop_on_resize=True)
+
+from pyfiglet import Figlet
+from asciimatics.renderers import FigletText, Fire
+
+def fire_demo(screen):
+    scenes = []
+
+    effects = [
+        Print(screen,
+              Fire(screen.height, 80, "*" * 70, 0.8, 60, screen.colours,
+                   bg=screen.colours >= 256),
+              0,
+              speed=1,
+              transparent=False),
+        Print(screen,
+              FigletText("Help!", "banner3"),
+              (screen.height - 4) // 2,
+              colour=Screen.COLOUR_BLACK,
+              speed=1,
+              stop_frame=30),
+        # Print(screen,
+        #       FigletText("I'm", "banner3"),
+        #       (screen.height - 4) // 2,
+        #       colour=Screen.COLOUR_BLACK,
+        #       speed=1,
+        #       start_frame=30,
+        #       stop_frame=50),
+        # Print(screen,
+        #       FigletText("on", "banner3"),
+        #       (screen.height - 4) // 2,
+        #       colour=Screen.COLOUR_BLACK,
+        #       speed=1,
+        #       start_frame=50,
+        #       stop_frame=70),
+        # Print(screen,
+        #       FigletText("Fire!", "banner3"),
+        #       (screen.height - 4) // 2,
+        #       colour=Screen.COLOUR_BLACK,
+        #       speed=1,
+        #       start_frame=70),
+    ]
+    scenes.append(Scene(effects, -1))
+
+    # text = Figlet(font="banner", width=200).renderText("ASCIIMATICS")
+    # width = max([len(x) for x in text.split("\n")])
+
+    # effects = [
+    #     Print(screen,
+    #           Fire(screen.height, 80, text, 0.4, 40, screen.colours),
+    #           0,
+    #           speed=1,
+    #           transparent=False),
+    #     Print(screen,
+    #           FigletText("ASCIIMATICS", "banner"),
+    #           screen.height - 9, x=(screen.width - width) // 2 + 1,
+    #           colour=Screen.COLOUR_BLACK,
+    #           bg=Screen.COLOUR_BLACK,
+    #           speed=1),
+    #     Print(screen,
+    #           FigletText("ASCIIMATICS", "banner"),
+    #           screen.height - 9,
+    #           colour=Screen.COLOUR_WHITE,
+    #           bg=Screen.COLOUR_WHITE,
+    #           speed=1),
+    # ]
+    # scenes.append(Scene(effects, -1))
+
+    screen.play(scenes, stop_on_resize=True)
+
+def render_fire_tactic():
+  Screen.wrapper(fire_demo)
+
+def panic_demo(screen):
+    scenes = []
+
+    effects = [
+        Print(screen,
+              FigletText("Help!", "banner3"),
+              (screen.height - 4) // 2,
+              colour=Screen.COLOUR_WHITE,
+              speed=1,
+              stop_frame=30),
+    ]
+    scenes.append(Scene(effects, -1))
+    
+    screen.play(scenes, stop_on_resize=True)
+
+def render_panic_tactic():
+  Screen.wrapper(panic_demo)
+  
+def _speak(screen, text, pos, start):
+    return Print(
+        screen,
+        SpeechBubble(text, "L", uni=screen.unicode_aware),
+        x=pos[0] + 4, y=pos[1] - 4,
+        colour=Screen.COLOUR_CYAN,
+        clear=True,
+        start_frame=start,
+        stop_frame=start+50)
+  
+def jeer_demo(screen, narration0, narration1):
+  scenes = []
+  centre = (screen.width // 2, screen.height // 2)
+  podium = (8, 5)
+  
+  # Scene 1.
+  path = Path()
+  path.jump_to(-20, centre[1])
+  path.move_straight_to(centre[0], centre[1], 10)
+  path.wait(30)
+  path.move_straight_to(podium[0], podium[1], 10)
+  path.wait(100)
+  
+  effects = [
+      Arrow(screen, path, colour=Screen.COLOUR_BLUE),
+      _speak(screen, narration0[1], centre, 30),
+      _speak(screen, narration1[1], podium, 110),
+  ]
+  scenes.append(Scene(effects))
+  
+  # # Scene 2.
+  # path = Path()
+  # path.jump_to(podium[0], podium[1])
+  
+  # effects = [
+  #     Arrow(screen, path, colour=Screen.COLOUR_GREEN),
+  #     _speak(screen, "Let's start with the Screen...", podium, 10),
+  #     _speak(screen, "This is your Screen object.", podium, 80),
+  #     Print(screen,
+  #           Box(screen.width, screen.height, uni=screen.unicode_aware),
+  #           0, 0, start_frame=90),
+  #     _speak(screen, "It lets you play a Scene like this one I'm in.",
+  #            podium, 150),
+  #     _speak(screen, "A Scene contains one or more Effects.", podium, 220),
+  #     _speak(screen, "Like me - I'm a Sprite!", podium, 290),
+  #     _speak(screen, "Or these Stars.", podium, 360),
+  #     _speak(screen, "As you can see, the Screen handles them both at once.",
+  #            podium, 430),
+  #     _speak(screen, "It can handle as many Effects as you like.",
+  #            podium, 500),
+  #     _speak(screen, "Please press <SPACE> now.", podium, 570),
+  #     Stars(screen, (screen.width + screen.height) // 2, start_frame=360)
+  # ]
+  scenes.append(Scene(effects, -1))
+  screen.play(scenes, stop_on_resize=True)
+
+def render_jeer_tactic(narration0, narration1):
+  Screen.wrapper(jeer_demo, arguments=[narration0, narration1])

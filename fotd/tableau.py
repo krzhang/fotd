@@ -76,15 +76,16 @@ class Tableau():
           sc.make_visible_to(self.army)
           self.bv.disp_bulb(sc)
 
-  def scout(self, army):
+  def scouted_by(self, army):
     """
-    armyid is scouting
+    the other army scouts this tableau, and can see some of the new cards
     """
     assert army.armyid == 1-self.armyid
     for sc in self.sc_dict:
-      if self.sc_dict[sc] and not sc.visibile_to(army.armyid):
-        sc.make_visible_to(army)
-        self.bv.disp_successful_scout(sc, army.armyid)
+      if self.sc_dict[sc] and not sc.visible_to(army):
+        if random.random() < 0.5:
+          sc.make_visible_to(army)
+          self.bv.disp_successful_scout(sc, army.armyid)
     
   def visible_bulbed_cards(self, viewer_army):
     visible_dict = {}

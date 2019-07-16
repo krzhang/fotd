@@ -107,6 +107,7 @@ class Battle():
     for i in [0, 1]:
       myarmy = self.armies[i]
       myarmy.tableau.draw_cards()
+      myarmy.tableau.scouted_by(self.armies[1-i])
       myarmy.formation = myarmy.intelligence.get_formation(self, i)
     self.narrator.narrate_formations()
 
@@ -114,6 +115,7 @@ class Battle():
     for i in [0, 1]:
       myarmy = self.armies[i]
       myarmy.tableau.draw_cards()
+      myarmy.tableau.scouted_by(self.armies[1-i])
       myarmy.order = myarmy.intelligence.get_final(self, i)
  
   def _run_status_handlers(self, func_key):

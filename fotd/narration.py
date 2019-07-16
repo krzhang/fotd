@@ -3,6 +3,7 @@ import random
 import insults
 import rps
 import status
+import graphics_asciimatics
 
 def get_one(dictionary, key):
   """
@@ -78,6 +79,10 @@ class BattleNarrator(Narrator):
     """
     if success:
       narrator_str, narrate_text = get_one(ROLLS[key], "on_success_speech")
+      if key == 'fire_tactic':
+        graphics_asciimatics.render_fire_tactic()
+      if key == 'panic_tactic':
+        graphics_asciimatics.render_panic_tactic() 
     else:
       narrator_str, narrate_text = get_one(ROLLS[key], "on_fail_speech")
     if narrator_str and (narrator_str in context) and narrate_text:
@@ -96,27 +101,25 @@ class BattleNarrator(Narrator):
     if random.random() < 0.50:
       # monkey island style
       ins = random.choice(insults.INSULTS_PAIRS)
-      self.unit_speech(context["csource"], ins[0], **context)
+      narration0 = (context["csource"], ins[0])
       if success:
         # no good comeback
-        self.unit_speech(context["ctarget"], "Uh uh, you are a {}?".format(insults.random_diss_noun()),
-                         **context)
+        narration1 = (context["ctarget"], "Uh uh, you are a {}?".format(insults.random_diss_noun()))
       else:
-        self.unit_speech(context["ctarget"], ins[1], **context)
+        narration1 = (context["ctarget"], ins[1])
     else:
       # roguelike style
-      self.unit_speech(context["csource"], 
-                       "You are a {}!".format(insults.random_diss()),
-                       **context)
+      narration0 = (context["csource"], 
+                    "You are a {}!".format(insults.random_diss()))
       if success:
-        self.unit_speech(context["ctarget"], 
-                         "Uh, uh, you are a {}?".format(insults.random_diss_noun()),
-                         **context)
+        narration1 = (context["ctarget"], 
+                      "Uh, uh, you are a {}?".format(insults.random_diss_noun()))
       else:
-        self.unit_speech(context["ctarget"], 
-                         "Well, you are a {}!".format(insults.random_diss()),
-                         **context)
-      
+        narration1 = (context["ctarget"], 
+                      "Well, you are a {}!".format(insults.random_diss()))
+    self.unit_speech(narration0[0], narration0[1], **context)
+    self.unit_speech(narration1[0], narration1[1], **context)
+    graphics_asciimatics.render_jeer_tactic(narration0, narration1)
     
   def narrate_roll(self, key, success, **context):
     if "on_roll" in ROLLS[key] and ROLLS[key]["on_roll"]: # need both so you don't format None

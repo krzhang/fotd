@@ -366,12 +366,12 @@ def duel_consider(context, bv, narrator):
   acceptances, duel_data = duel.duel_commit(context, csource, ctarget)
   bv.yprint(str(duel_data), debug=True)
   if acceptances[0]:
-    Event.make_speech(csource, context, duel.get_pre_duel_speech("challenge"))
+    Event.make_speech(csource, context, duel.get_duel_speech("challenge"))
     if acceptances[1]:
-      Event.make_speech(ctarget, context, duel.get_pre_duel_speech("accept"))
+      Event.make_speech(ctarget, context, duel.get_duel_speech("accept"))
       Event("duel_accepted", context).activate()
     else:
-      Event.make_speech(ctarget, context, duel.get_pre_duel_speech("deny"))
+      Event.make_speech(ctarget, context, duel.get_duel_speech("deny"))
 
 def arrow_strike(context, bv, narrator):
   csource = context.csource

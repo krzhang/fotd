@@ -33,6 +33,7 @@ class BattleNarrator(Narrator):
   def __init__(self, battle, battleview):
     super().__init__(battleview)
     self.battle = battle
+    self.battle.narrator = self
   
   def unit_speech(self, unit, text, **context):
     # Han factor:

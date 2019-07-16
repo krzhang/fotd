@@ -10,6 +10,7 @@ import logging
 
 # import graphics_asciimatics
 import battle_constants
+import duel
 from utils import read_single_keypress
 import colors
 from colors import ctext, Colors, Fore, Back, Style
@@ -494,6 +495,7 @@ class BattleScreen(View):
         disp_skillcard(sc)))
       
   def disp_duel(self, csource, ctarget, loser_history, health_history, damage_history):
+    duelists = [csource, ctarget]
     self.yprint("{csource} and {ctarget} face off!",
                 templates={"csource":csource,
                            "ctarget":ctarget})
@@ -508,6 +510,20 @@ class BattleScreen(View):
                                              bars[0],
                                              bars[1],
                                              disp_unit(ctarget)))
+    final_healths = health_history[-1]
+    # it's not always true there is a winner
+    has_winner = False
+    if final_healths[0] > 0 and final_healths[1] <= 0:
+      has_winner = True
+      winner = csource
+      loser = ctarget
+    elif final_healths[0] <= 0 and final_healths[1] > 0:
+      has_winner = True
+      winner = ctarget
+      loser = csource
+    newcontext = {"csource":winner, "ctarget":loser}
+    if has_winner:
+      self.disp_speech(winner, duel.get_duel_speech('defeats'), **newcontext)
 
   def disp_damage(self, max_pos, oldsize, damage, dmgdata, dmglog):
     newsize = oldsize - damage
@@ -535,9 +551,9 @@ class BattleScreen(View):
     self.yprint("{}: '$[2]${}$[7]$'".format(disp_chara(chara), speech),
                 templates=context)
   
-  def disp_speech(self, unit, speech):
+  def disp_speech(self, unit, speech, **context):
     """ What to display when a unit says something """
-    self.disp_chara_speech(unit.character, speech)
+    self.disp_chara_speech(unit.character, speech, **context)
 
   def disp_activated_narration(self, activated_text, other_str, success=None):
     """ 

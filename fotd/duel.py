@@ -54,12 +54,15 @@ DUEL_SPEECHES = {
   ],
   "defeats": [
     "I bested {ctarget}.",
-    "I have a hundred problems and {ctarget} was not one of them.",
+    "I have ninety-nine problems and {ctarget} was not one of them.",
+    "Enemy down.",
+    "{ctarget}'s soldiers will now tremble at {csource}'s name.",
     "Whew. That was a good warmup."
+    "That was a close one.",
   ]
 }
 
-def get_pre_duel_speech(speechtype):
+def get_duel_speech(speechtype):
   return random.choice(DUEL_SPEECHES[speechtype])
 
 class Duel():

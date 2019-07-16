@@ -6,9 +6,10 @@ STAT_BASES = {"power":"power_base",
               "cha":"cha_base"}
 
 class Character(object):
-  def __init__(self, name, title, power, intel, pol, cha, coolness, bravery, skillstrs):
+  def __init__(self, name, title, power, intel, pol, cha, coolness, bravery, skillstrs, gender='M'):
     self.id = name + title # this really needs to be rewritten
     self.name = name
+    self.gender = gender
     self.title = title
     self.power_base = power
     self.intel_base = intel

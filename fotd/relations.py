@@ -1,11 +1,23 @@
 import status
 
-class Relations(object):
+class Relation(object):
   """ a class to store relationships in a single context (such as a battle) """
 
-  def __init__(self, units):
+  def __init__(self, source, target):
+    self.source = source
+    self.target = target
+
+  def narration_self(self):
+    """
+    What the source calls him/herself
+    """
     pass
 
+  def narration_target(self):
+    """
+    What the source calls the target
+    """
+    
   def aid_chance(self, source, target, context):
     # maybe source will save target
     pass
@@ -27,3 +39,21 @@ class Relations(object):
 
   def is_flanking(self, source, target):
     pass
+
+RELATIONS = {
+  'liege': {
+    ''
+  },
+  'vendetta': {
+    
+  },
+  'brother': {
+    
+  },
+  'protege': {
+    
+  },
+  'master': {
+    
+  },  
+}

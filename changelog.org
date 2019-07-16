@@ -2,6 +2,9 @@ TODOS
 - duels visualization
 - make morale antes increase with ties
 - strategic layer
+- for relations:
+  - speech functions in narrator should intercept any mentions of another unit and run through
+    a preprocessor
 
 <2019-07-12 Fri> Started changelog
 - skeletons of most battle systems in place
@@ -14,3 +17,7 @@ TODOS
 
 <2019-07-14 Sun>
 - add a simple end-to-end test for pytest
+
+<2019-07-15 Mon> Landmark!
+- added asciimatics samples as placeholders for tactics graphics
+- hiding cards / scouting complete: main battle mechanics are all in the game now

@@ -263,8 +263,9 @@ def order_yomi_win(context, bv, narrator):
 def march(context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
-  if ctarget in csource.attacked_by:
-    bv.yprint("{} already engaged {}, but they already engaged".format(csource, ctarget), debug=True)
+  # if ctarget in csource.attacked_by:
+  if csource.attacked_by:
+    bv.yprint("{} engages {}, but they already engaged".format(csource, ctarget), debug=True)
     return
   if ctarget.is_defended():
     readytext = "$[2]$defended!$[7]$"
@@ -396,7 +397,7 @@ def arrow_strike(context, bv, narrator):
         Event.make_speech(csource, context, "Have some more!")
       Event("arrow_strike", context).activate()
   if ctarget.has_unit_status("counter_arrow"):
-    if random.random() < 0.85:
+    if random.random() < 0.8:
 #      bv.yprint("  <counter arrow skill> %s can counter with their own volley of arrows" % ctarget)
       Event("counter_arrow_strike", context.rebase_switch()).activate()
 

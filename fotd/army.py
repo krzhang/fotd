@@ -82,7 +82,7 @@ class Unit(object):
     return float(val)
 
   def physical_defense(self):
-    val = 1.0
+    val = 1.5
     # val = rps.formation_info(self.army.formation, "physical_defense")
     val *= float(self.size)
     if self.is_defended():

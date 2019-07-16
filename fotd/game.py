@@ -106,19 +106,6 @@ OTHER_ATTRS = [
 
 # add: CaoRen + stonewall/iron wall
 
-PC_UNITS = [Unit(test_char(*args), 20, 10) for args in PC_ATTRS]
-BIZARRO_UNITS = [Unit(test_char(*args), 20, 10) for args in BIZARRO_ATTRS]
-OTHER_UNITS = [Unit(test_char(*args), 20, 10) for args in BIZARRO_ATTRS + OTHER_ATTRS]
-
-def army_mysticsoft(armyid, color, aitype, num=4):
-  return Army("Mysticsoft", PC_UNITS[:num], armyid, color, aitype, 7)
-
-def army_bizarro(armyid, color, aitype, num=4):
-  return Army("Mysterioussoft", BIZARRO_UNITS[:num], armyid, color, aitype, 7)
-
-def army_unknown(armyid, color, aitype, num=4):
-  return Army("Enemy Unknown", random.sample(OTHER_UNITS, 4)[:num], armyid, color, aitype, 7)
-
 def play(armies, debug=False, resize=False,
          first_intelligence="INT_PLAYER",
          second_intelligence="INT_AI_NORMAL"):
@@ -138,6 +125,18 @@ def play(armies, debug=False, resize=False,
       bat.battlescreen.pause_and_display(pause_str="The battle ends...")
       return 0
 
+def army_mysticsoft(armyid, color, aitype, num=4):
+  PC_UNITS = [Unit(test_char(*args), 20, 10) for args in PC_ATTRS]  
+  return Army("Mysticsoft", PC_UNITS[:num], armyid, color, aitype, 7)
+
+def army_bizarro(armyid, color, aitype, num=4):
+  BIZARRO_UNITS = [Unit(test_char(*args), 20, 10) for args in BIZARRO_ATTRS]
+  return Army("Mysterioussoft", BIZARRO_UNITS[:num], armyid, color, aitype, 7)
+
+def army_unknown(armyid, color, aitype, num=4):
+  OTHER_UNITS = [Unit(test_char(*args), 20, 10) for args in BIZARRO_ATTRS + OTHER_ATTRS]
+  return Army("Enemy Unknown", random.sample(OTHER_UNITS, 4)[:num], armyid, color, aitype, 7)
+    
 def test(debug=False, resize=False,
          first_intelligence="INT_PLAYER",
          second_intelligence="INT_AI_NORMAL", num_units=4):

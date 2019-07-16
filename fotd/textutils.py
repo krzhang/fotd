@@ -577,14 +577,16 @@ class BattleScreen(View):
                                               success=True, upper=False)
                        for s in unit.character.skills if
                        bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
-    active_skillist += [disp_skillcard(sc) for sc in unit.army.tableau.bulbed_by(unit)
-                        if sc.visible_to(self.army)]
+    active_skillcards = [disp_skillcard(sc) for sc in unit.army.tableau.bulbed_by(unit)
+                         if sc.visible_to(self.army)]
+    invisible_count = len(unit.army.tableau.bulbed_by(unit)) - len(active_skillcards)
+    active_skillcards += ["<$[7,3]$?:????$[7]$>"]*invisible_count 
     if inactive_skillstr:
       sepstr = " | "
     else:
       sepstr = "| "
-    # active_skillstr = sepstr + " ".join(active_skillist)
-    active_skillstr = " ".join(active_skillist)
+    # active_skillstr = sepstr + " ".join(active_skillist + active_skillcards)
+    active_skillstr = " ".join(active_skillist + active_skillcards)
     # charstr = " "*2 + inactive_skillstr + active_skillstr
     charstr = " "*2 + active_skillstr
     return charstr

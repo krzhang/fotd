@@ -23,6 +23,10 @@ class SkillCard():
   def make_visible_to(self, army):
     self.visibility[army.armyid] = True
 
+  def make_visible_to_all(self):
+    for army in self.unit.army.battle.armies:
+      self.make_visible_to(self, army)
+    
   def activates_on(self):
     return self.order
 

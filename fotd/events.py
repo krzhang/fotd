@@ -338,7 +338,8 @@ def engage(context, bv, narrator):
   army = csource.army
   for sc in army.tableau.bulbed_by(csource):
     if sc.order == csource.order and context.battle.yomi_winner == army.armyid:
-      context.battle.place_event(sc.sc_str, context, "Q_RESOLVE")
+      newcontext = context.copy(additional_opt:{'skillcard':sc})
+      context.battle.place_event(sc.sc_str, newcontext, "Q_RESOLVE")
   context.battle.place_event("duel_consider", context, "Q_RESOLVE")
 
 #################
@@ -565,6 +566,7 @@ def _fire_tactic_success(context): # eventually these should not be events...
 
 def fire_tactic(context, bv, narrator):
   chance = 0.5
+  context.skillcard.make_visible_to_all()
   results = resolve_targetting_event(context, bv, narrator, "fire_tactic", chance, _fire_tactic_success)
 
 def _jeer_tactic_success(context):
@@ -572,6 +574,7 @@ def _jeer_tactic_success(context):
   
 def jeer_tactic(context, bv, narrator):
   chance = 0.5
+  context.skillcard.make_visible_to_all()
   results = resolve_targetting_event(context, bv, narrator, "jeer_tactic", chance, _jeer_tactic_success)
 
 def _panic_tactic_success(context):
@@ -579,6 +582,7 @@ def _panic_tactic_success(context):
   
 def panic_tactic(context, bv, narrator):
   chance = 0.5
+  context.skillcard.make_visible_to_all()
   results = resolve_targetting_event(context, bv, narrator, "panic_tactic", chance, _panic_tactic_success)
 
 def _flood_tactic_success(context):
@@ -590,6 +594,7 @@ def _flood_tactic_success(context):
 
 def flood_tactic(context, bv, narrator):
   chance = 0.5
+  context.skillcard.make_visible_to_all()
   results = resolve_targetting_event(context, bv, narrator, "flood_tactic", chance, _flood_tactic_success)
 
 #######################################

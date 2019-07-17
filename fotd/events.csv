@@ -26,7 +26,7 @@ jeer_tactic,unit_double ,target-skill,True,True
 lure_tactic,unit_double ,target-skill,False,True
 panic_tactic,unit_double ,target-skill,True,True
 flood_tactic,unit_double ,target-skill,True,True
-gain_status_event,unit_single,single-general,False,False
+gain_status,unit_single,single-general,False,False
 remove_status_probabilistic,unit_single,status,False,False
 burned_bot,unit_single,status,False,False
 burned_eot,unit_single,status,False,False

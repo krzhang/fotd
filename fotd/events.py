@@ -171,7 +171,7 @@ def defense_order(battle, context, bv, narrator):
   ctarget.targetting = ("defending", ctarget)
   ctarget.move(battle.hqs[ctarget.army.armyid])
   bv.yprint("{}: staying put at {};".format(ctarget, context.ctarget.position), mode=["huddle"])
-  gain_status(battle, "defended", ctarget)
+  Event(battle, "gain_status", context).activate("defended")
 
 def indirect_order(battle, context, bv, narrator):
   ctarget = context.ctarget
@@ -538,7 +538,7 @@ def resolve_targetting_event(battle, context, bv, narrator, roll_key, cchance, s
 ##########################################
 
 def _fire_arrow_success(battle, context): # eventually these should not be events...
-  gain_status(battle, "burned", context.ctarget)  
+  Event(battle, "gain_status", context).activate("burned")
 
 def fire_arrow(battle, context, bv, narrator):
   if not battle.is_raining():
@@ -567,7 +567,7 @@ def counter_arrow(battle, context, bv, narrator):
 ##############
 
 def _fire_tactic_success(battle, context): # eventually these should not be events...
-  gain_status(battle, "burned", context.ctarget)  
+  Event(battle, "gain_status", context).activate("burned")
 
 def fire_tactic(battle, context, bv, narrator):
   chance = 0.5
@@ -575,7 +575,7 @@ def fire_tactic(battle, context, bv, narrator):
   results = resolve_targetting_event(battle, context, bv, narrator, "fire_tactic", chance, _fire_tactic_success)
 
 def _jeer_tactic_success(battle, context):
-  gain_status(battle, "provoked", context.ctarget)
+  Event(battle, "gain_status", context).activate("provoked")
   
 def jeer_tactic(battle, context, bv, narrator):
   chance = 0.5
@@ -583,7 +583,7 @@ def jeer_tactic(battle, context, bv, narrator):
   results = resolve_targetting_event(battle, context, bv, narrator, "jeer_tactic", chance, _jeer_tactic_success)
 
 def _panic_tactic_success(battle, context):
-  gain_status(battle, "panicked", context.ctarget)
+  Event(battle, "gain_status", context).activate("panicked")
 
 def panic_tactic(battle, context, bv, narrator):
   chance = 0.5
@@ -606,24 +606,16 @@ def flood_tactic(battle, context, bv, narrator):
 # Status #
 ##########
 
-def gain_status(battle, stat_str, ctarget):
+def gain_status(battle, context, bv, narrator, stat_str):
   """
   nothing should call add_unit_status except for this, so all the handlers are there.
   
   This will call gain_status_event with the right context put in
   """
-  newcontext = contexts.Context({'ctarget':ctarget, "stat_str":stat_str})
-  Event(battle, "gain_status_event", newcontext).activate()
-
-def gain_status_event(battle, context, bv, narrator):
-  """
-  Event called when a status is gained.
-  """
   ctarget = context.ctarget
-  stat_str = context.stat_str
   ctarget.add_unit_status(stat_str)
   narrator.narrate_status("on_receive", context.copy(
-    {"stat_viz":status.Status(stat_str).stat_viz()}))
+    {"stat_str":stat_str, "stat_viz":status.Status(stat_str).stat_viz()}))
 
 def remove_status_probabilistic(battle, context, bv, narrator):
   """
@@ -668,7 +660,7 @@ def burned_eot(battle, context, bv, narrator):
 ##########
 
 def _trymode_activation_success(battle, context):
-  gain_status(battle, "trymode_activated", context.ctarget)
+  Event(battle, "gain_status", context).activate("trymode_activated")
 
 def trymode_status_bot(battle, context, bv, narrator):
   ctarget = context.ctarget

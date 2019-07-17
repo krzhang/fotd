@@ -39,3 +39,8 @@ class Character(object):
   def __str__(self):
     return self.name
   
+TITLES = [
+  "Finalmente",
+  "Indubtibly",
+  "Nine Dragons", # see more Water Margin
+]

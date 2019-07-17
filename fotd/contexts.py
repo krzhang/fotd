@@ -18,6 +18,9 @@ class Context(object):
 
   def __contains__(self, key):
     return key in self.opt
+
+  def __iter__(self):
+    return iter(self.opt)
   
   def copy(self, additional_opt):
     """Make a copy with the same battle context"""

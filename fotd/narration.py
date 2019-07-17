@@ -113,12 +113,11 @@ class BattleNarrator(Narrator):
       self.view.yprint(order_str,
                        templates={"ctarget_army":self.battle.armies[i]}, mode=["huddle"])
       if i == winner_id:
-        if self.battle.armies[i].commitment_bonus:
-          self.view.yprint("  " + rps.order_info(str(order), "commitment_bonus"),
+        self.view.yprint("  " + rps.order_info(str(order), "yomi_bonus"),
                          templates={"ctarget_army":self.battle.armies[i]}, mode=["huddle"])
-        else:
-          self.view.yprint("  " + rps.order_info(str(order), "yomi_bonus"),
-                           templates={"ctarget_army":self.battle.armies[i]}, mode=["huddle"])
+        if self.battle.armies[i].commitment_bonus:
+          self.view.yprint("  commitment bonus: " + rps.order_info(str(order), "commitment_bonus"),
+                         templates={"ctarget_army":self.battle.armies[i]}, mode=["huddle"])
     self.view.yprint("", mode=["huddle"])
 
   def narrate_commitment_guarantee(self, key, context):

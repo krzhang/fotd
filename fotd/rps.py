@@ -80,7 +80,7 @@ class FinalOrder(Order):
 FINAL_ORDERS = {
   "A": {
     "desc": "{ctarget_army} $[1,3]$marches$[7]$!",
-    "yomi_bonus": "$[1,3]$A$[7]$ tactics against $[3,3]$indirect$[7]$ orders are $[2]$possible$[7]$!",
+    "yomi_bonus": "against $[3,3]$indirect$[7]$ orders: physical attacks up, $[1,3]$A$[7]$ tactics $[2]$enabled$[7]$!",
     "commitment_bonus": "$[1,3]$A$[7]$ tactics against $[3,3]$indirect$[7]$ orders are $[2,1]$guaranteed$[7]$!",
     "color": "$[1,3]$",
     "color_bulbed": "$[1,3]$",    
@@ -90,7 +90,7 @@ FINAL_ORDERS = {
     },
   "D": {
     "desc": "{ctarget_army} $[4,3]$fortifies$[7]$!",
-    "yomi_bonus": "$[4,3]$D$[7]$ tactics against $[1,3]$attack$[7]$ orders are $[2]$possible$[7]$!",
+    "yomi_bonus": "against $[1,3]$attack$[7]$ orders: defense strength up, $[4,3]$D$[7]$ tactics $[2]$enabled$[7]$!",
     "commitment_bonus": "$[4,3]$D$[7]$ tactics against $[1,3]$attack$[7]$ orders are $[2,1]$guaranteed$[7]$!",
     "color": "$[4,3]$",
     "color_bulbed": "$[4,3]$",    
@@ -100,7 +100,7 @@ FINAL_ORDERS = {
   },
   "I": {
     "desc": "{ctarget_army} $[4,3]$scatters$[7]$!",
-    "yomi_bonus": "$[3,3]$I$[7]$ tactics against $[4,3]$defensive$[7]$ orders are $[2]$possible$[7]$!",
+    "yomi_bonus": "against $[4,3]$defensive$[7]$ orders: arrow strength up, $[3,3]$I$[7]$ tactics $[2]$enabled$[7]$!",
     "commitment_bonus": "$[3,3]$I$[7]$ tactics against $[4,3]$defensive$[7]$ orders are $[2,1]$guaranteed$[7]$!",
     "color": "$[3,3]$",
     "color_bulbed": "$[3,3]$",    

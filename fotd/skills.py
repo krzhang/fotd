@@ -1,4 +1,5 @@
 import random
+import colors
 
 class Skill():
 
@@ -14,6 +15,12 @@ class Skill():
 
   def short(self):
     return skill_info(self.skill_str, "short")
+
+  def str_fancy(self, success=None):
+    """
+    Ex: < fire >
+    """
+    return "<" + colors.color_bool(success) + skill_info(self.skill_str, "short") + "$[7]$>"
   
 def skill_info(skill_str, key):
   if key in SKILLS[skill_str]:
@@ -76,7 +83,7 @@ SKILLS = {
     "short": ' lure ',
     "activation": "passive",
   },
-  "jeer": {
+  "jeer_skill": {
     "ai_eval": (0, 0, 2),
     "short": ' jeer ',
     "skillcard": "jeer_tactic",
@@ -113,6 +120,7 @@ SKILLCARDS = {
     "illegal_weather": ["raining"],
     "power": 5,
     "short": ' fire ',
+    "skill": "fire_skill",
     "on_bulb": {
       'D': "When they attack, these traps should burn them up.",
       'I': "If they turtle, they are an easy target for fire today.",
@@ -128,6 +136,7 @@ SKILLCARDS = {
     "illegal_weather": [],
     "power": 2,
     "short": ' jeer ',
+    "skill": "jeer_skill",
     "on_bulb": {
       'A': "Let me at them in the field; I have a few new insults.",
       'D': "If we keep teasing them, they may overattack.",
@@ -143,6 +152,7 @@ SKILLCARDS = {
     "illegal_weather": [],
     "power": 5,
     "short": ' panic',
+    "skill": "panic_skill",
     "on_bulb": {
       'A': "If we attack, I can fill their units with fear.",
       'I': "When they are defending, we can spread rumors and lies.",
@@ -158,6 +168,7 @@ SKILLCARDS = {
     "illegal_weather": ["sunny", "hot"],
     "power": 8,
     "short": ' flood',
+    "skill": "water_skill",
     "on_bulb": {
       'D': "If they attack near this barely-dammed river...",
     },

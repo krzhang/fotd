@@ -4,6 +4,7 @@ import random
 
 from narration import BattleNarrator
 import textutils
+from battleview import BattleScreen
 import contexts
 import events
 import rps
@@ -18,7 +19,7 @@ class Battle():
 
   def __init__(self, army1, army2, debug_mode=False, automated=False):
     self.debug_mode = debug_mode
-    self.battlescreen = textutils.BattleScreen(self, 0, automated=automated)
+    self.battlescreen = BattleScreen(self, 0, automated=automated)
     self.narrator = BattleNarrator(self, self.battlescreen)
     self.armies = [army1, army2]
     for a in self.armies:
@@ -205,10 +206,10 @@ class Battle():
     for i in [0, 1]:
       if not self.armies[i].is_present():
         self.battlescreen.yprint("{}'s units have all been defeated.".format(
-          textutils.disp_army(self.armies[i])))
+          self.armies[i].color_name()))
         losing[i] = True
       if self.armies[i].morale <= 0:
         losing[i] = True
         self.battlescreen.yprint("{} collapses due to catastrophic morale.".format(
-          textutils.disp_army(self.armies[i])))
+          self.armies[i].color_name()))
     return tuple(losing)

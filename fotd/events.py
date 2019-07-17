@@ -50,7 +50,7 @@ class Event():
     self.battle = battle
     self.event_name = event_name
     # this is so we don't have to write it for lots of functions
-    self.event_func = globals().get(event_name, (lambda x, y, z, w: None))
+    self.event_func = globals().get(event_name, None)
     self.context = context
 
   def get_actor_type(self):
@@ -77,10 +77,11 @@ class Event():
     # narrator handler
     self.battle.narrator.notify(self, *args)
     # time to activate this event on the queue; note the event has its own context, battle, etc.
-    self.event_func(self.battle,
-                    self.context,
-                    self.battle.battlescreen,
-                    self.battle.narrator, *args)
+    if self.event_func:
+      self.event_func(self.battle,
+                      self.context,
+                      self.battle.battlescreen,
+                      self.battle.narrator, *args)
 
 def event_info(event_name, key):
   """ Main auxilary function; gets a piece of info about an event type, and None otherwise."""
@@ -238,14 +239,6 @@ def march(battle, context, bv, narrator):
     # currently, this never activates since the order phase doesn't change attacked_by...
     Event(battle, "action_already_used", context).activate()
     return
-  if ctarget.is_defended():
-    readytext = "$[2]$defended!$[7]$"
-  else:
-    readytext = textutils.disp_unit_targetting(ctarget)
-  bv.yprint("{} ({}) marches into {} ({})".format(csource.color_str(),
-                                                  textutils.disp_unit_targetting(csource),
-                                                  ctarget.color_str(),
-                                                  readytext), debug=True)
   ctarget.attacked_by.append(csource)
   csource.attacked.append(ctarget)
   if ctarget.is_defended():
@@ -283,10 +276,6 @@ def indirect_raid(battle, context, bv, narrator):
   if csource.attacked_by:
     Event(battle, "action_already_used", context).activate()
     return
-  bv.yprint("{} ({}) sneaks up on {} ({})".format(csource,
-                                                         textutils.disp_unit_targetting(csource),
-                                                         ctarget,
-                                                         textutils.disp_unit_targetting(ctarget)), debug=True)
   Event(battle, "engage", context).activate()
   # tactic 1: raid
   vulnerable = False
@@ -332,9 +321,10 @@ def duel_accepted(battle, context, bv, narrator):
     if healths[i] <= 0:
       bv.yprint("{ctarget} collapses; unit retreats!", templates={"ctarget":duelists[i]}, debug=True)
       Event(battle, "receive_damage", contexts.Context({"damage":duelists[i].size,
-                                              "ctarget":duelists[i],
-                                              "dmgdata":"",
-                                              "dmglog":""})).activate()
+                                                        "ctarget":duelists[i],
+                                                        "dmgtype":"lost_duel",
+                                                        "dmgdata":"",
+                                                        "dmglog":""})).activate()
   # it's not always true there is a winner
   has_winner = False
   if healths[0] > 0 and healths[1] <= 0:
@@ -372,8 +362,11 @@ def arrow_strike(battle, context, bv, narrator):
     wording = "mows"
   damage, dmglog = _compute_arrow_damage(csource, ctarget, multiplier=multiplier)
   dmgdata = (csource, ctarget, wording, damage)
-  Event(battle, "receive_damage",
-        contexts.Context({"damage":damage, "ctarget":ctarget, "dmgdata":dmgdata, "dmglog":dmglog})).activate()
+  Event(battle, "receive_damage", contexts.Context({"damage":damage,
+                                                    "ctarget":ctarget,
+                                                    "dmgtype":"arrow",
+                                                    "dmgdata":dmgdata,
+                                                    "dmglog":dmglog})).activate()
   if csource.has_unit_status("fire_arrow"): 
     Event(battle, 'fire_arrow', context).activate()
   if csource.has_unit_status("chu_ko_nu"):
@@ -502,22 +495,22 @@ def _roll_target_skill_tactic(battle, context, bv, narrator, roll_key, cchance):
   returns:
     a list of successful targets (could be several due to entanglement, lures, etc.)
   """
+  commitment_guarantee = False
   if (event_info(roll_key, 'event_type') == 'target-skill' and
       roll_key in skills.SKILLCARDS.keys() and  # hack to not include things like lure
       context.csource.army.commitment_bonus):
-    narrator.narrate_commitment_guarantee(roll_key, context)
+    commitment_guarantee = True
     new_chance = 1.1
   else:
     new_chance = cchance
   success = random.random() < new_chance # can replace with harder functions later
-  # TODO cchance = calc_chance(target, skill) or something
-  narrator.narrate_roll(roll_key, success, context)
+  Event(battle, "roll_success", context).activate(roll_key, success, commitment_guarantee)
   successful_targets = []
   if success:
     successful_targets.append(context.ctarget)
     if event_info(roll_key, "can_aoe"):
       successful_targets += _resolve_entanglement(battle, context, bv, narrator)
-  narrator.narrate_roll_post_success(roll_key, success, context)
+  Event(battle, "roll_post_success", context).activate(roll_key, success)
   return successful_targets
 
 def resolve_targetting_event(battle, context, bv, narrator, roll_key, cchance, success_func):

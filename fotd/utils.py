@@ -1,3 +1,5 @@
+import os
+
 def read_single_keypress():
   """Waits for a single keypress on stdin.
 
@@ -14,7 +16,7 @@ def read_single_keypress():
   handled.
   
   """
-  import termios, fcntl, sys, os
+  import termios, fcntl, sys
   fd = sys.stdin.fileno()
   # save old state
   flags_save = fcntl.fcntl(fd, fcntl.F_GETFL)
@@ -54,6 +56,9 @@ def read_single_keypress():
   if ret[0] == 'q':
     sys.exit(0)
   return tuple(ret)
+
+def clear_screen():
+  os.system('cls' if os.name == 'nt' else 'clear')
 
 def str_to_bool(string):
   if string == "True":

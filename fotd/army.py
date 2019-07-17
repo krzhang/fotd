@@ -23,11 +23,30 @@ class Unit(object):
     return hasattr(self, "character") and hasattr(other, "character") and self.character == other.character
 
   def __repr__(self):
-    return self.color_str()
+    return self.color_name()
 
-  def color_str(self):
+  def color_name(self):
     return "$[{}]${}$[7]$".format(self.color, self.name)
+
+  def str_unit_size(unit):
+    csize = colors.color_size(unit.size, unit.size_base) + str(unit.size) + "$[7]$"
+    return "{}/{}".format(str(csize), str(unit.size_base))
   
+  def str_targetting(self):
+    """ 
+    dispays targetting status (a tuple of (action, target)) for a unit that's created by then
+    unit's (final) order.
+    ex: 'sneaking towards X' 
+    """
+    if not self.targetting: # set to none etc.
+      return "doing nothing"
+    if self.targetting[0] == "marching":
+      return "marching -> " + self.targetting[1].color_name()
+    if self.targetting[0] == "defending":
+      return "staying put"
+    assert self.targetting[0] == "sneaking"
+    return "sneaking -> " + self.targetting[1].color_name()
+
   def set_color(self, color):
     self.color = color
     self.character.color = color
@@ -133,9 +152,9 @@ class Army(object):
     self.commitment_bonus = False
     
   def __repr__(self):
-    return self.color_str()
+    return self.color_name()
 
-  def color_str(self):
+  def color_name(self):
     return "$[{}]${}$[7]$".format(self.color, self.name)
   
   def get_order(self):

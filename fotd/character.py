@@ -38,6 +38,18 @@ class Character(object):
 
   def __str__(self):
     return self.name
+
+  def color_name(self):
+    return "$[{}]${}$[7]$".format(self.color, self.name)
+  
+  def title_fancy(self):
+    if self.title:
+      return " $[4]$-=$[7]${}$[4]$=-$[7]$".format(self.title) # eventually move out
+    return ""
+
+  def full_name_fancy(self):
+    return self.color_name() + self.title_fancy()
+
   
 TITLES = [
   "Finalmente",

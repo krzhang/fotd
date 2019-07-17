@@ -31,7 +31,7 @@ SKILLS_IMPLEMENTED = ["counter_arrow",
                       "chu_ko_nu",
                       "panic_skill",
                       "fire_skill",
-                      "jeer",
+                      "jeer_skill",
                       "lure_skill",
                       "trymode",
                       "water_skill"]
@@ -54,7 +54,7 @@ def test_char(name, style, power, intel, pol, cha, cool, brave, skills):
 YAN_SKILLS = ["pincer_specialist", "perfect_defense", "water_skill", "empty_castle_skill", "drop_rocks", "counter_skill", "lure_skill"]
 JING_SKILLS = ["trymode", "counter_arrow", "fire_skill", "chu_ko_nu"]
 YOYO_SKILLS = ["cheer", "attack_supplies", "dash", "fire_skill", "panic_skill", "chaos"]
-HAN_SKILLS = ["sneak_attack", "dash", "jeer", "chaos_arrow", "headhunter"]
+HAN_SKILLS = ["sneak_attack", "dash", "jeer_skill", "chaos_arrow", "headhunter"]
 
 PC_ATTRS = [ # First Name Last Name, since we are from the future
   ("Yan Zhang", "$[3]$Yellow$[7]$ Lightning", 71, 80, 74, 60, 5, 4, YAN_SKILLS),
@@ -72,20 +72,20 @@ OTHER_ATTRS = [
   ("Liu Bei", "", 70, 81, 89, 100, 4, 5,
    ["cheer", "recruit_specialist"]), 
   ("Guan Yu", "War God", 98, 80, 53, 92, 6, 7,
-   ["water_skill", "study", "valor", "jeer"]),
+   ["water_skill", "study", "valor", "jeer_skill"]),
   ("Zhang Fei", "", 99, 18, 13, 22, 1, 7,
-   ["panic_skill", "charge", "jeer"]),
+   ["panic_skill", "charge", "jeer_skill"]),
   ("Huang Zhong", "", 90, 51, 42, 64, 4, 7,
    ["counter_arrow", "chaos_arrow", "fire_arrow"]),
   ("Jeanne D'Arc", "The $[1]$Rose$[7]$ of Versailles", 85, 85, 85, 85, 4, 5,
    ["lure_skill", "spy", "invent", "trade", "charge", "zeal", "critic", "wealth", "chaos"]),
   ("Ulysses S. Grant", "", 91, 51, 28, 62, 4, 4,
-   ["invent", "rally", "jeer", "drop_rocks", "perfect_defense"]),
+   ["invent", "rally", "jeer_skill", "drop_rocks", "perfect_defense"]),
   ("Wyatt Earp", "", 97, 83, 57, 80, 5, 7,
-   ["valor", "charge", "duel", "dash", "navy", "cheer", "jeer"]),
+   ["valor", "charge", "duel", "dash", "navy", "cheer", "jeer_skill"]),
   # need to fix stats
   ("Cao Cao", "The Usurper", 82, 93, 92, 97, 6, 5,
-   ["attack_supplies", "sneak_attack", "spy", "reversal", "aid", "scout", "dash", "repair", "riot", "rumor", "flood", "rally", "jeer", "sap", "zeal"]),
+   ["attack_supplies", "sneak_attack", "spy", "reversal", "aid", "scout", "dash", "repair", "riot", "rumor", "flood", "rally", "jeer_skill", "sap", "zeal"]),
   ("Zhuge Liang", "The Sleeping Dragon", 78, 100, 98, 85, 7, 3,
    ["chu_ko_nu", "fire_skill", "change_weather", "empty_castle_skill", "counter_skill", "chaos", "chart", "flood", "wile", "rumor", "reversal"]), #items  
   ("Albert Einstein", "Eureka", 4, 100, 83, 70, 5, 1,
@@ -120,7 +120,7 @@ def play(armies, debug=False, resize=False,
     losers = bat.losing_status()
     for l in [0, 1]:
       if losers[l]:
-        bat.battlescreen.yprint("{} is destroyed!".format(textutils.disp_army(armies[l])))
+        bat.battlescreen.yprint("{} is destroyed!".format(armies[l].color_name()))
     if any(losers):
       bat.battlescreen.pause_and_display(pause_str="The battle ends...")
       return 0

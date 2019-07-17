@@ -120,12 +120,34 @@ class BattleNarrator(Narrator):
                          templates={"ctarget_army":self.battle.armies[i]}, mode=["huddle"])
     self.view.yprint("", mode=["huddle"])
 
-  def narrate_commitment_guarantee(self, key, context):
-    """
-    Used to narrate the perfect rolls
-    """
-    self.view.disp_activated_narration(ROLLS[key]['short'], "guaranteed!", True)
-      
+  def narrate_march(self, context):
+    csource = context.csource
+    ctarget = context.ctarget
+    # if ctarget in csource.attacked_by:
+    if csource.attacked_by:
+      # this replication of logic is annoying; the right todo is to have the origional thing
+      # emit an event right here, and render at the beginning of that event as opposed to here
+      return
+    if ctarget.is_defended():
+      readytext = "$[2]$defended!$[7]$"
+    else:
+      readytext = ctarget.str_targetting()
+    self.view.yprint("{} ({}) marches into {} ({})".format(csource.color_name(),
+                                                           csource.str_targetting(),
+                                                           ctarget.color_name(),
+                                                           readytext), debug=True)
+
+  def narrate_indirect_raid(self, context):
+    csource = context.csource
+    ctarget = context.ctarget
+    if csource.attacked_by:
+      return
+    self.view.yprint("{} ({}) sneaks up on {} ({})".format(csource.color_name(),
+                                                           csource.str_targetting(),
+                                                           ctarget.color_name(),
+                                                           ctarget.str_targetting()),
+                     debug=True)
+
   def narrate_status(self, key, context):
     ctarget = context.ctarget
     stat_str = context['stat_str']
@@ -138,10 +160,12 @@ class BattleNarrator(Narrator):
       # use a default
       self.view.yprint(BattleNarrator.STATUS_DEFAULTS[key], templates=context)
 
-  def narrate_roll_success(self, key, success, context):
+  def narrate_roll_success(self, context, key, success, commitment_guarantee):
     """
     Narrates speeches that happen when a roll succeeds or fails.
     """
+    if commitment_guarantee:
+      self.view.disp_activated_narration(ROLLS[key]['short'], "guaranteed!", True)
     if success:
       narrator_str, narrate_text = get_one(ROLLS[key], "on_success_speech")
       if not self.view.automated:
@@ -155,7 +179,7 @@ class BattleNarrator(Narrator):
     if narrator_str and (narrator_str in context) and narrate_text:
       self.narrate_pair(context[narrator_str], narrate_text, context)
 
-  def narrate_roll_post_success(self, key, success, context):
+  def narrate_roll_post_success(self, context, key, success):
     """
     This is just a signifier that happens after the roll and the resolution.
     Ex: <MAD_SKILL> Success!

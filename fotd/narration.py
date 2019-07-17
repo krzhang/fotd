@@ -36,7 +36,10 @@ class BattleNarrator(Narrator):
     self.battle = battle
     self.battle.narrator = self
 
-  def unit_speech(self, unit, text, context):
+  def narrate_pair(self, unit, text, context):
+    """
+    If unit is a character, do a speech. Else do a straight narration
+    """
     # Han factor:
     if unit:
       if "Han" in unit.name and "Xu" in unit.name and random.random() < 0.50:
@@ -67,7 +70,11 @@ class BattleNarrator(Narrator):
       assert type(result) == list
       result_choice = random.choice(result)
       assert type(result_choice) == tuple and len(result_choice) == 2
-      self.unit_speech(context[result_choice[0]], result_choice[1], context)
+      if result_choice[0] is None: # straight narration
+        speaker = None
+      else:
+        speaker = context[result_choice[0]]
+      self.narrate_pair(speaker, result_choice[1], context)
     else:
       func = getattr(self, "narrate_" + event_name, None)
       if func is None:
@@ -147,7 +154,7 @@ class BattleNarrator(Narrator):
     else:
       narrator_str, narrate_text = get_one(ROLLS[key], "on_fail_speech")
     if narrator_str and (narrator_str in context) and narrate_text:
-      self.unit_speech(context[narrator_str], narrate_text, context)
+      self.narrate_pair(context[narrator_str], narrate_text, context)
 
   def narrate_roll_post_success(self, key, success, context):
     """
@@ -167,7 +174,7 @@ class BattleNarrator(Narrator):
       narration0 = (context["csource"], ins[0])
       if success:
         # no good comeback
-        narration1 = (context["ctarget"], "Uh, um...")
+        narration1 = (context["ctarget"], "...")
       else:
         narration1 = (context["ctarget"], ins[1])
     else:
@@ -175,13 +182,12 @@ class BattleNarrator(Narrator):
       narration0 = (context["csource"],
                     "You are a {}!".format(insults.random_diss()))
       if success:
-        narration1 = (context["ctarget"],
-                      "Uh, um...")
+        narration1 = (context["ctarget"], "...")
       else:
         narration1 = (context["ctarget"],
                       "Well, you are a {}!".format(insults.random_diss()))
-    self.unit_speech(narration0[0], narration0[1], context)
-    self.unit_speech(narration1[0], narration1[1], context)
+    self.narrate_pair(narration0[0], narration0[1], context)
+    self.narrate_pair(narration1[0], narration1[1], context)
     if not self.view.automated:
       # hack: move later
       graphics_asciimatics.render_jeer_tactic(narration0, narration1)
@@ -194,17 +200,6 @@ class BattleNarrator(Narrator):
     if key == "jeer_tactic":
       self._narrate_jeer(success, context)
     self.narrate_roll_success(key, success, context)
-
-  # def narrate_duel_consider(self, context):
-  #   acceptances = context['acceptances']
-  #   if acceptances[0]:
-  #     self.unit_speech(context['csource'], duel.get_duel_speech("challenge"), context)
-  #     if acceptances[1]:
-  #       self.unit_speech(context['ctarget'], duel.get_duel_speech("accept"), context)
-  #     else:
-  #       self.unit_speech(context['ctarget'], duel.get_duel_speech("deny"), context)
-  # def narrate_duel_consider(self, context):
-    
 
 ENTRANCES = [
   "It's a good day for a battle.",
@@ -329,6 +324,8 @@ ROLLS = {
 }
 
 EVENT_NARRATIONS = {
+  "action_already_used": [(None, "{csource} already engaged",)],
+  "physical_clash": [(None, "{csource} clashes against {ctarget}!")],
   "duel_challenged": [
     ('csource', "Is there no one to fight {csource}?"),
     ('csource', "Come {ctarget}, it is a good day for a fight."),
@@ -354,6 +351,9 @@ EVENT_NARRATIONS = {
     ('csource', "{ctarget}'s soldiers will now tremble at {csource}'s name."),
     ('csource', "Whew. That was a good warmup."),
     ('csource', "That was a close one."),
-  ]
+  ],
+  "panicked_order": [
+    (None, "{ctarget}'s unit is $[3]$panicked$[7]$ and $[4]$defends$[7]$, ignoring orders.")],
+  "provoked_order": [
+    (None, "{ctarget}'s unit is $[1]$provoked$[7]$ and $[1]$marches$[7]$, ignoring orders.")],
 }
-  

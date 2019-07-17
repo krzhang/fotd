@@ -191,13 +191,10 @@ def indirect_order(battle, context, bv, narrator):
   battle.place_event("indirect_raid", newcontext, "Q_MANUEVER")
 
 def panicked_order(battle, context, bv, narrator):
-  newcontext = context.copy({"stat_str":"panicked"})
-  narrator.narrate_status("on_order_override", newcontext)
+  #  could just call this order, though this way the narrator picks up this situation
   defense_order(battle, context, bv, narrator)
 
 def provoked_order(battle, context, bv, narrator):
-  newcontext = context.copy({"stat_str":"provoked"})
-  narrator.narrate_status("on_order_override", newcontext)
   attack_order(battle, context, bv, narrator)
 
 ############################################
@@ -239,7 +236,7 @@ def march(battle, context, bv, narrator):
   # if ctarget in csource.attacked_by:
   if csource.attacked_by:
     # currently, this never activates since the order phase doesn't change attacked_by...
-    bv.yprint("{csource} already engaged", templates=context, debug=True)
+    Event(battle, "action_already_used", context).activate()
     return
   if ctarget.is_defended():
     readytext = "$[2]$defended!$[7]$"
@@ -284,7 +281,7 @@ def indirect_raid(battle, context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
   if csource.attacked_by:
-    bv.yprint("{}'s sneaking up on {} was interrupted by {}!".format(csource, ctarget, csource.attacked_by[0]))
+    Event(battle, "action_already_used", context).activate()
     return
   bv.yprint("{} ({}) sneaks up on {} ({})".format(csource,
                                                          textutils.disp_unit_targetting(csource),
@@ -350,7 +347,7 @@ def duel_accepted(battle, context, bv, narrator):
     loser = context.csource
   newcontext = {"csource":winner, "ctarget":loser}
   if has_winner:
-    Event(battle, "duel_defeated", context).activate()
+    Event(battle, "duel_defeated", newcontext).activate()
 
 def duel_challenged(battle, context, bv, narrator):
   """
@@ -387,7 +384,6 @@ def arrow_strike(battle, context, bv, narrator):
 def physical_clash(battle, context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
-  bv.yprint("  {csource} clashes against {ctarget}!", templates=context)
   vulnerable = (csource.order == rps.FinalOrder('A')) and (ctarget.order == rps.FinalOrder('I'))
   Event(battle, "physical_strike", context.copy({"vulnerable":vulnerable})).activate()
   # bv.yprint("  %s able to launch retaliation" % ctarget) can die in the middle

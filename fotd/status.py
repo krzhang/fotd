@@ -57,13 +57,11 @@ STATUSES_BATTLE = {
   "panicked": {
     "eot":("remove_status_probabilistic", {"fizzle_prob":0.5}),
     "on_receive": "{ctarget}'s unit collapses into a chaotic {stat_viz} state!",
-    "on_order_override": "{ctarget}'s unit is $[3]$panicked$[7]$ and $[4]$defends$[7]$, ignoring orders.",
     "on_activation": "{ctarget} is $[3]$panicked!$[7]$! No action.",
     "on_remove": "{ctarget} regains control.",
   },
   "provoked": {
     "eot":("remove_status_probabilistic", {"fizzle_prob":0.25}),
-    "on_order_override": "{ctarget}'s unit is $[1]$provoked$[7]$ and $[1]$marches$[7]$, ignoring orders.",
     "on_receive": "{ctarget}'s units are {stat_viz}; they are angry and out of control!",
     "on_remove": "{ctarget} regains control.",
     "viz":"$[1]$provoked$[7]$",

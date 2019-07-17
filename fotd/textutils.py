@@ -195,6 +195,9 @@ def disp_skill(skill_str, success=None):
   """
   return "<" + colors.color_bool(success) + skills.skill_info(skill_str, "short") + "$[7]$>"
 
+def disp_hidden_skillcard():
+  return "<$[7,3]$?:??????$[7]$>"
+
 def disp_text_activation(any_str, success=None, upper=True):
   """
   to display an ``activated'' string (skill, skillcard, whatever) to give a decorated 
@@ -431,7 +434,7 @@ class BattleScreen(View):
     active_skillcards = [disp_skillcard(sc) for sc in unit.army.tableau.bulbed_by(unit)
                          if sc.visible_to(self.army)]
     invisible_count = len(unit.army.tableau.bulbed_by(unit)) - len(active_skillcards)
-    active_skillcards += ["<$[7,3]$?:??????$[7]$>"]*invisible_count 
+    active_skillcards += [disp_hidden_skillcard()]*invisible_count 
     if inactive_skillstr:
       sepstr = " | "
     else:
@@ -529,12 +532,12 @@ class BattleScreen(View):
     order_str = str(sc.order)
     # self.yprint("{} $[2,1]$|{}|$[7]$ ".format(disp_unit(unit), # also pretty, use somewhere else
     if sc.visible_to(self.army):
-      self.yprint("{}: {}! ".format(disp_unit(unit),
-                                    disp_skillcard(sc)) +
-                  skills.skillcard_info(sc_str, "on_bulb")[order_str],
+      self.yprint("{} {}: '".format(disp_skillcard(sc), disp_unit(unit)) +
+                  skills.skillcard_info(sc_str, "on_bulb")[order_str] + "'",
                   mode=["huddle"])
     else:
-      self.yprint("Scouts report that {} is planning skullduggery.".format(
+      self.yprint("{} Scouts report that {} is planning skullduggery.".format(
+        disp_hidden_skillcard(),
         disp_army(self.battle.armies[1-self.armyid])), mode=["huddle"])
 
   def disp_successful_scout(self, sc, armyid):
@@ -546,9 +549,9 @@ class BattleScreen(View):
     order_str = str(sc.order)
     # self.yprint("{} $[2,1]$|{}|$[7]$ ".format(disp_unit(unit), # also pretty, use somewhere else
     if self.armyid == armyid:
-      self.yprint("Scouts find that {} has prepped {}!".format(
-        disp_army(self.battle.armies[1-armyid]),
-        disp_skillcard(sc)), mode=["huddle"])
+      self.yprint("{} Scouts find one of {}'s prepped tactics!".format(
+        disp_skillcard(sc),
+        disp_army(self.battle.armies[1-armyid])), mode=["huddle"])
       
   def disp_duel(self, csource, ctarget, loser_history, health_history, damage_history):
     duelists = [csource, ctarget]

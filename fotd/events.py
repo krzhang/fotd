@@ -64,23 +64,14 @@ class Event():
       potential_panicker = getattr(self.context, PRIMARY_ACTOR_DICT[self.actor_type])
       if potential_panicker.has_unit_status("panicked"):
         self.battle.narrator.narrate_status("on_activation",
-                                            **{'ctarget':potential_panicker,
-                                               'stat_str':'panicked'})
+                                            contexts.Context({'ctarget':potential_panicker,
+                                                              'stat_str':'panicked'}))
         return
     # time to activate this event on the queue; note the event has its own context, battle, etc.
     results = self.event_func(self.battle,
                               self.context,
                               self.battle.battlescreen,
                               self.battle.narrator)
-
-  @classmethod
-  def gain_status(cls, battle, stat_str, context, ctarget):
-    """
-    Basically, nothing should call add_unit_status except for this, so all the handlers are there.
-    """
-    Event(battle, "receive_status", context=contexts.Context({"ctarget":ctarget,
-                                                              "stat_str":stat_str,
-                                                              "stat_viz":str(status.Status(stat_str))})).activate()
 
 def event_dict(event_name):
   return EVENTS[event_name]
@@ -175,8 +166,8 @@ def defense_order(battle, context, bv, narrator):
   ctarget.targetting = ("defending", ctarget)
   ctarget.move(battle.hqs[ctarget.army.armyid])
   bv.yprint("{}: staying put at {};".format(ctarget, context.ctarget.position), debug=True)
-  Event.gain_status(battle, "defended", context, ctarget)
-  
+  gain_status(battle, "defended", ctarget)
+
 def indirect_order(battle, context, bv, narrator):
   ctarget = context.ctarget
   ctarget.order = rps.FinalOrder('I')
@@ -196,12 +187,12 @@ def indirect_order(battle, context, bv, narrator):
 
 def panicked_order(battle, context, bv, narrator):
   newcontext = context.copy({"stat_str":"panicked"})
-  narrator.narrate_status("on_order_override", **newcontext.opt)
+  narrator.narrate_status("on_order_override", newcontext)
   defense_order(battle, context, bv, narrator)
 
 def provoked_order(battle, context, bv, narrator):
   newcontext = context.copy({"stat_str":"provoked"})
-  narrator.narrate_status("on_order_override", **newcontext.opt)
+  narrator.narrate_status("on_order_override", newcontext)
   attack_order(battle, context, bv, narrator)
 
 ############################################
@@ -346,7 +337,7 @@ def duel_consider(battle, context, bv, narrator):
   ctarget = context.ctarget
   acceptances, duel_data = duel.duel_commit(context, csource, ctarget)
   newcontext = context.copy({'acceptances':acceptances})
-  narrator.narrate_duel_consider(**newcontext.opt)
+  narrator.narrate_duel_consider(newcontext)
   if all(acceptances):
       Event(battle, "duel_accepted", newcontext).activate()
       
@@ -372,7 +363,7 @@ def arrow_strike(battle, context, bv, narrator):
 def physical_clash(battle, context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
-  bv.yprint("  {csource} clashes against {ctarget}!", templates=context.opt)
+  bv.yprint("  {csource} clashes against {ctarget}!", templates=context)
   vulnerable = (csource.order == rps.FinalOrder('A')) and (ctarget.order == rps.FinalOrder('I'))
   Event(battle, "physical_strike", context.copy({"vulnerable":vulnerable})).activate()
   # bv.yprint("  %s able to launch retaliation" % ctarget) can die in the middle
@@ -427,12 +418,6 @@ def receive_damage(battle, context, bv, narrator):
                                            "morale_change":-damage})).activate()
     Event(battle, "change_morale", contexts.Context({"ctarget_army":battle.armies[1-army.armyid],
                                            "morale_change":damage})).activate()
-
-def receive_status(battle, context, bv, narrator):
-  ctarget = context.ctarget
-  stat_str = context.stat_str
-  ctarget.add_unit_status(stat_str)
-  narrator.narrate_status("on_receive", **context.opt)
 
 def change_morale(battle, context, bv, narrator):
   ctarget_army = context.ctarget_army
@@ -502,19 +487,19 @@ def _roll_target_skill_tactic(battle, context, bv, narrator, roll_key, cchance):
   if (event_info(roll_key, 'event_type') == 'target-skill' and
       roll_key in skills.SKILLCARDS.keys() and  # hack to not include things like lure
       context.csource.army.commitment_bonus):
-    narrator.narrate_commitment_guarantee(roll_key, **context.opt)
+    narrator.narrate_commitment_guarantee(roll_key, context)
     new_chance = 1.1
   else:
     new_chance = cchance
   success = random.random() < new_chance # can replace with harder functions later
   # TODO cchance = calc_chance(target, skill) or something
-  narrator.narrate_roll(roll_key, success, **context.opt)
+  narrator.narrate_roll(roll_key, success, context)
   successful_targets = []
   if success:
     successful_targets.append(context.ctarget)
     if event_info(roll_key, "can_aoe"):
       successful_targets += _resolve_entanglement(battle, context, bv, narrator)
-  narrator.narrate_roll_post_success(roll_key, success, **context.opt)
+  narrator.narrate_roll_post_success(roll_key, success, context)
   return successful_targets
 
 def resolve_targetting_event(battle, context, bv, narrator, roll_key, cchance, success_func):
@@ -525,13 +510,13 @@ def resolve_targetting_event(battle, context, bv, narrator, roll_key, cchance, s
     # todo: can eventually get new kwords this way
     results.append((new_target, success_func(battle, new_context)))
   return results
-
+                          
 ##########################################
 # Targetting from skills -- no skillcard #
 ##########################################
 
 def _fire_arrow_success(battle, context): # eventually these should not be events...
-  Event.gain_status(battle, "burned", context, context.ctarget)  
+  gain_status(battle, "burned", context.ctarget)  
 
 def fire_arrow(battle, context, bv, narrator):
   if not battle.is_raining():
@@ -560,7 +545,7 @@ def counter_arrow(battle, context, bv, narrator):
 ##############
 
 def _fire_tactic_success(battle, context): # eventually these should not be events...
-  Event.gain_status(battle, "burned", context, context.ctarget)  
+  gain_status(battle, "burned", context.ctarget)  
 
 def fire_tactic(battle, context, bv, narrator):
   chance = 0.5
@@ -568,7 +553,7 @@ def fire_tactic(battle, context, bv, narrator):
   results = resolve_targetting_event(battle, context, bv, narrator, "fire_tactic", chance, _fire_tactic_success)
 
 def _jeer_tactic_success(battle, context):
-  Event.gain_status(battle, "provoked", context, context.ctarget)
+  gain_status(battle, "provoked", context.ctarget)
   
 def jeer_tactic(battle, context, bv, narrator):
   chance = 0.5
@@ -576,8 +561,8 @@ def jeer_tactic(battle, context, bv, narrator):
   results = resolve_targetting_event(battle, context, bv, narrator, "jeer_tactic", chance, _jeer_tactic_success)
 
 def _panic_tactic_success(battle, context):
-  Event.gain_status(battle, "panicked", context, context.ctarget)
-  
+  gain_status(battle, "panicked", context.ctarget)
+
 def panic_tactic(battle, context, bv, narrator):
   chance = 0.5
   context.skillcard.make_visible_to_all()
@@ -594,10 +579,29 @@ def flood_tactic(battle, context, bv, narrator):
   chance = 0.5
   context.skillcard.make_visible_to_all()
   results = resolve_targetting_event(battle, context, bv, narrator, "flood_tactic", chance, _flood_tactic_success)
+                          
+##########
+# Status #
+##########
 
-#######################################
-# Status Beginning/end of turn Events #
-#######################################
+def gain_status(battle, stat_str, ctarget):
+  """
+  nothing should call add_unit_status except for this, so all the handlers are there.
+  
+  This will call gain_status_event with the right context put in
+  """
+  newcontext = contexts.Context({'ctarget':ctarget, "stat_str":stat_str})
+  Event(battle, "gain_status_event", newcontext).activate()
+
+def gain_status_event(battle, context, bv, narrator):
+  """
+  Event called when a status is gained.
+  """
+  ctarget = context.ctarget
+  stat_str = context.stat_str
+  ctarget.add_unit_status(stat_str)
+  narrator.narrate_status("on_receive", context.copy(
+    {"stat_viz":status.Status(stat_str).stat_viz()}))
 
 def remove_status_probabilistic(battle, context, bv, narrator):
   """
@@ -612,10 +616,10 @@ def remove_status_probabilistic(battle, context, bv, narrator):
   fizzle_prob = context.fizzle_prob
   if (random.random() < fizzle_prob):
     context.ctarget.remove_unit_status(stat_str)
-    narrator.narrate_status("on_remove", **context.opt)
+    narrator.narrate_status("on_remove", context)
   else:
-    narrator.narrate_status("on_retain", **context.opt)
-  
+    narrator.narrate_status("on_retain", context)
+
 def burned_bot(battle, context, bv, narrator):
   ctarget = context.ctarget
   if battle.is_raining():
@@ -642,7 +646,7 @@ def burned_eot(battle, context, bv, narrator):
 ##########
 
 def _trymode_activation_success(battle, context):
-  Event.gain_status(battle, "trymode_activated", context, context.ctarget)
+  gain_status(battle, "trymode_activated", context.ctarget)
 
 def trymode_status_bot(battle, context, bv, narrator):
   ctarget = context.ctarget

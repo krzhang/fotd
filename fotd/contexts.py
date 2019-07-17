@@ -13,6 +13,12 @@ class Context(object):
     for o in opt:
       setattr(self, o, opt[o])
 
+  def __getitem__(self, key):
+    return self.opt[key]
+
+  def __contains__(self, key):
+    return key in self.opt
+  
   def copy(self, additional_opt):
     """Make a copy with the same battle context"""
     nopt = self.opt.copy()

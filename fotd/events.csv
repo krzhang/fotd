@@ -15,7 +15,6 @@ physical_clash,unit_double,target-general,False,True
 physical_strike,unit_double,target-general,False,True
 make_speech,unit_single,single-general,False,False
 receive_damage,unit_single,single-general,False,False
-receive_status,unit_single,single-general,False,False
 order_change,army_single,army-general,False,False
 change_morale,army_single,army-general,False,False
 order_yomi_win,army_single,army-general,False,False
@@ -27,6 +26,7 @@ jeer_tactic,unit_double ,target-skill,True,True
 lure_tactic,unit_double ,target-skill,False,True
 panic_tactic,unit_double ,target-skill,True,True
 flood_tactic,unit_double ,target-skill,True,True
+gain_status_event,unit_single,single-general,False,False
 remove_status_probabilistic,unit_single,status,False,False
 burned_bot,unit_single,status,False,False
 burned_eot,unit_single,status,False,False

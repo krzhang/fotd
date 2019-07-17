@@ -1,4 +1,4 @@
-from colors import Colors, ctext
+from colors import ctext
 import skills
 
 STATUSES = {}
@@ -12,14 +12,17 @@ class Status(object):
     # this allows us to e.g. remove
     return self.stat_str == other.stat_str
 
-  def __str__(self):  # todo: move out
-    if "viz" in STATUSES[self.stat_str]:
-      return STATUSES[self.stat_str]["viz"]
-    else:
-      return ctext(self.stat_str, Colors.FAILURE)
+  def __str__(self):
+    return self.stat_str
 
   def __repr__(self):
     return self.stat_str
+
+  def stat_viz(self):
+    if "viz" in STATUSES[self.stat_str]:
+      return STATUSES[self.stat_str]["viz"]
+    else:
+      return ctext(self.stat_str, "$[3]$")
 
   def is_skill(self):
     return self.stat_str in skills.SKILLS

@@ -26,8 +26,8 @@ class Narrator():
   def __init__(self, view):
     self.view = view
   
-  def chara_narrate(self, character, text, **context):
-    self.view.disp_chara_speech(character, text, **context)
+  def chara_narrate(self, character, text, context):
+    self.view.disp_chara_speech(character, text, context)
 
 class BattleNarrator(Narrator):
 
@@ -36,13 +36,13 @@ class BattleNarrator(Narrator):
     self.battle = battle
     self.battle.narrator = self
   
-  def unit_speech(self, unit, text, **context):
+  def unit_speech(self, unit, text, context):
     # Han factor:
     if unit:
       if "Han" in unit.name and "Xu" in unit.name and random.random() < 0.50:
-        self.chara_narrate(unit.character, "Bruh.", **context)
+        self.chara_narrate(unit.character, "Bruh.", context)
       else:
-        self.chara_narrate(unit.character, text, **context)
+        self.chara_narrate(unit.character, text, context)
     else:
       # straight narration
       self.view.yprint(text, templates=context)
@@ -83,15 +83,15 @@ class BattleNarrator(Narrator):
                            templates={"ctarget_army":self.battle.armies[i]}, mode=["huddle"])
     self.view.yprint("", mode=["huddle"])
 
-  def narrate_commitment_guarantee(self, key, **context):
+  def narrate_commitment_guarantee(self, key, context):
     """
     Used to narrate the perfect rolls
     """
     self.view.disp_activated_narration(ROLLS[key]['short'], "guaranteed!", True)
       
-  def narrate_status(self, key, **context):
-    ctarget = context["ctarget"]
-    stat_str = context["stat_str"]
+  def narrate_status(self, key, context):
+    ctarget = context.ctarget
+    stat_str = context['stat_str']
     if key in status.STATUSES[stat_str]:
       if status.STATUSES[stat_str][key] is None: # user says to not do anything
         return
@@ -101,7 +101,7 @@ class BattleNarrator(Narrator):
       # use a default
       self.view.yprint(BattleNarrator.STATUS_DEFAULTS[key], templates=context)
 
-  def narrate_roll_success(self, key, success, **context):
+  def narrate_roll_success(self, key, success, context):
     """
     Narrates speeches that happen when a roll succeeds or fails.
     """
@@ -111,14 +111,14 @@ class BattleNarrator(Narrator):
         if 'graphics_renderer' in ROLLS[key]:
           getattr(graphics_asciimatics, ROLLS[key]['graphics_renderer'])()
       if key == 'chu_ko_nu':
-        if random.random() < 0.5 and context['csource'].name == "Zhuge Liang":
+        if random.random() < 0.5 and context.csource.name == "Zhuge Liang":
           narrator_str = 'The name is a bit embarassing...'
     else:
       narrator_str, narrate_text = get_one(ROLLS[key], "on_fail_speech")
     if narrator_str and (narrator_str in context) and narrate_text:
-      self.unit_speech(context[narrator_str], narrate_text, **context)
+      self.unit_speech(context[narrator_str], narrate_text, context)
 
-  def narrate_roll_post_success(self, key, success, **context):
+  def narrate_roll_post_success(self, key, success, context):
     """
     This is just a signifier that happens after the roll and the resolution.
     Ex: <MAD_SKILL> Success!
@@ -128,7 +128,7 @@ class BattleNarrator(Narrator):
     if (not success) and ROLLS[key]['show_roll_failure']:
       self.view.disp_activated_narration(ROLLS[key]['short'], "", success)
       
-  def _narrate_jeer(self, success, **context):
+  def _narrate_jeer(self, success, context):
     # after rolling, always make 2 narrations
     if random.random() < 0.50:
       # monkey island style
@@ -149,29 +149,29 @@ class BattleNarrator(Narrator):
       else:
         narration1 = (context["ctarget"],
                       "Well, you are a {}!".format(insults.random_diss()))
-    self.unit_speech(narration0[0], narration0[1], **context)
-    self.unit_speech(narration1[0], narration1[1], **context)
+    self.unit_speech(narration0[0], narration0[1], context)
+    self.unit_speech(narration1[0], narration1[1], context)
     if not self.view.automated:
       # hack: move later
       graphics_asciimatics.render_jeer_tactic(narration0, narration1)
 
-  def narrate_roll(self, key, success, **context):
+  def narrate_roll(self, key, success, context):
     if "on_roll" in ROLLS[key] and ROLLS[key]["on_roll"]:  # need both so you don't format None
       # normal situation
       self.view.yprint(get_one(ROLLS[key], "on_roll"), templates=context)
       # self.view.disp_activated_narration(get_one(ROLLS[key], "short"), on_roll)
     if key == "jeer_tactic":
-      self._narrate_jeer(success, **context)
-    self.narrate_roll_success(key, success, **context)
+      self._narrate_jeer(success, context)
+    self.narrate_roll_success(key, success, context)
 
-  def narrate_duel_consider(self, **context):
+  def narrate_duel_consider(self, context):
     acceptances = context['acceptances']
     if acceptances[0]:
-      self.unit_speech(context['csource'], duel.get_duel_speech("challenge"), **context)
+      self.unit_speech(context['csource'], duel.get_duel_speech("challenge"), context)
       if acceptances[1]:
-        self.unit_speech(context['ctarget'], duel.get_duel_speech("accept"), **context)
+        self.unit_speech(context['ctarget'], duel.get_duel_speech("accept"), context)
       else:
-        self.unit_speech(context['ctarget'], duel.get_duel_speech("deny"), **context)
+        self.unit_speech(context['ctarget'], duel.get_duel_speech("deny"), context)
 
     
 ENTRANCES = [

@@ -315,6 +315,9 @@ CONVERT_TEMPLATES_DISPS = {
 }
 
 def convert_templates(templates):
+  """
+  templates: anything with a __getitem__ (so dictionaries, Contexts, etc.)
+  """
   newtemplates = {}
   for key in templates:
     if key in CONVERT_TEMPLATES_DISPS:
@@ -541,7 +544,7 @@ class BattleScreen(View):
       loser = csource
     newcontext = {"csource":winner, "ctarget":loser}
     if has_winner:
-      self.disp_speech(winner, duel.get_duel_speech('defeats'), **newcontext)
+      self.disp_chara_speech(winner.character, duel.get_duel_speech('defeats'), newcontext)
 
   def disp_damage(self, max_pos, oldsize, damage, dmgdata, dmglog):
     newsize = oldsize - damage
@@ -562,17 +565,13 @@ class BattleScreen(View):
       dmg_str = disp_damage_calc(*dmglog)
       self.yprint(dmg_str, debug=True)
 
-  def disp_chara_speech(self, chara, speech, **context):
+  def disp_chara_speech(self, chara, speech, context):
     """
     What to display when a character says something.
     """
     self.yprint("{}: '$[2]${}$[7]$'".format(disp_chara(chara), speech),
                 templates=context)
   
-  def disp_speech(self, unit, speech, **context):
-    """ What to display when a unit says something """
-    self.disp_chara_speech(unit.character, speech, **context)
-
   def disp_activated_narration(self, activated_text, other_str, success=None):
     """ 
     What to display when we want to make a narration involving a skill / skillcard

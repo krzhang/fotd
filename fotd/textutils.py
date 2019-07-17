@@ -279,7 +279,7 @@ def disp_unit_targetting(unit):
 
 def disp_unit_status_noskills(unit):
   """ string for the unit's statuses that do NOT include skills"""
-  return " ".join((str(s) for s in unit.unit_status if not s.is_skill()))
+  return " ".join((s.stat_viz() for s in unit.unit_status if not s.is_skill()))
 
 def disp_bar_morale(max_morale, cur_morale, last_turn_morale):
   if last_turn_morale > cur_morale:
@@ -406,7 +406,42 @@ class BattleScreen(View):
       form1,
       disp_army(self.battle.armies[1]),
       disp_bar_morale(10, self.battle.armies[1].morale, self.battle.armies[1].last_turn_morale))
-  
+
+  def _disp_unit_healthline(self, unit, side):
+    healthbar = disp_bar_day_tracker(battle_constants.ARMY_SIZE_MAX, unit.size_base, unit.last_turn_size, unit.size)
+    statuses = disp_unit_status_noskills(unit)
+    # charstr = "{} {} Hp:{} {}".format(healthbar, disp_cha_fullname(unit.character),
+    #                                   disp_unit_size(unit), statuses)
+    charstr = "{} {} {}".format(healthbar, disp_cha_fullname(unit.character), statuses)
+    # charstr = "{}".format(disp_cha_fullname(unit.character))
+    return charstr
+
+  def _disp_unit_skills(self, unit, side):
+    # inactive means skills that are not bulbed
+    inactive_skillist = [disp_skill(s.skill_str,
+                                    success=False)
+                         for s in unit.character.skills if
+                         not bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
+    inactive_skillstr = " ".join(inactive_skillist)
+    # 'passive' means skills that are used and are not bulbed, meaning they *are* active
+    active_skillist = [disp_text_activation(('*:' + s.short()),
+                                              success=True, upper=False)
+                       for s in unit.character.skills if
+                       bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
+    active_skillcards = [disp_skillcard(sc) for sc in unit.army.tableau.bulbed_by(unit)
+                         if sc.visible_to(self.army)]
+    invisible_count = len(unit.army.tableau.bulbed_by(unit)) - len(active_skillcards)
+    active_skillcards += ["<$[7,3]$?:??????$[7]$>"]*invisible_count 
+    if inactive_skillstr:
+      sepstr = " | "
+    else:
+      sepstr = "| "
+    # active_skillstr = sepstr + " ".join(active_skillist + active_skillcards)
+    active_skillstr = " ".join(active_skillist + active_skillcards)
+    # charstr = " "*2 + inactive_skillstr + active_skillstr
+    charstr = " "*2 + active_skillstr
+    return charstr
+
   def _disp_armies(self): # 17 lines
     battle = self.battle
     armies_buf = []
@@ -575,40 +610,6 @@ class BattleScreen(View):
       other_str = disp_text_activation(successtr, success)
     self.yprint(preamble + other_str)
 
-  def _disp_unit_healthline(self, unit, side):
-    healthbar = disp_bar_day_tracker(battle_constants.ARMY_SIZE_MAX, unit.size_base, unit.last_turn_size, unit.size)
-    statuses = disp_unit_status_noskills(unit)
-    # charstr = "{} {} Hp:{} {}".format(healthbar, disp_cha_fullname(unit.character),
-    #                                   disp_unit_size(unit), statuses)
-    charstr = "{} {} {}".format(healthbar, disp_cha_fullname(unit.character), statuses)
-    # charstr = "{}".format(disp_cha_fullname(unit.character))
-    return charstr
-
-  def _disp_unit_skills(self, unit, side):
-    # inactive means skills that are not bulbed
-    inactive_skillist = [disp_skill(s.skill_str,
-                                    success=False)
-                         for s in unit.character.skills if
-                         not bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
-    inactive_skillstr = " ".join(inactive_skillist)
-    # 'passive' means skills that are used and are not bulbed, meaning they *are* active
-    active_skillist = [disp_text_activation(('*:' + s.short()),
-                                              success=True, upper=False)
-                       for s in unit.character.skills if
-                       bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
-    active_skillcards = [disp_skillcard(sc) for sc in unit.army.tableau.bulbed_by(unit)
-                         if sc.visible_to(self.army)]
-    invisible_count = len(unit.army.tableau.bulbed_by(unit)) - len(active_skillcards)
-    active_skillcards += ["<$[7,3]$?:??????$[7]$>"]*invisible_count 
-    if inactive_skillstr:
-      sepstr = " | "
-    else:
-      sepstr = "| "
-    # active_skillstr = sepstr + " ".join(active_skillist + active_skillcards)
-    active_skillstr = " ".join(active_skillist + active_skillcards)
-    # charstr = " "*2 + inactive_skillstr + active_skillstr
-    charstr = " "*2 + active_skillstr
-    return charstr
 
   def disp_yomi_win(self, csource_army, ctarget_army, ycount, morale_dam, bet):
     if ycount > 1:

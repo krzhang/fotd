@@ -6,7 +6,7 @@ indirect_order,unit_single,order,False,False
 panicked_order,unit_single,order,False,False
 provoked_order,unit_single,order,False,False
 arrow_strike,unit_double,target-general,False,True
-duel_consider,unit_double,target-general,False,True
+duel_challenged,unit_double,target-general,False,True
 duel_accepted,unit_double,target-general,False,True
 engage,unit_double,target-general,False,True
 march,unit_double,target-general,False,True

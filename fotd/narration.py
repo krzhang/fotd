@@ -35,7 +35,7 @@ class BattleNarrator(Narrator):
     super().__init__(battleview)
     self.battle = battle
     self.battle.narrator = self
-  
+
   def unit_speech(self, unit, text, context):
     # Han factor:
     if unit:
@@ -47,6 +47,34 @@ class BattleNarrator(Narrator):
       # straight narration
       self.view.yprint(text, templates=context)
 
+  def notify(self, event, *args):
+    """
+    an event pinged us; 
+    1) first, we look in the dictionary.
+    2) If it says "None", do nothing
+    3) it better be a list of 2-tuples. Pick one randomly
+    5) if it's simply not there, see if we defined a function called narrate_[event_name], 
+       and run it
+    6) if it's none of these, pass
+    """
+    event_name = event.event_name
+    context = event.context
+    if event_name in EVENT_NARRATIONS:
+      # don't use dict.get() here since we do a different thing on the two possible Nones
+      result = EVENT_NARRATIONS[event_name]
+      if result is None:
+        pass
+      assert type(result) == list
+      result_choice = random.choice(result)
+      assert type(result_choice) == tuple and len(result_choice) == 2
+      self.unit_speech(context[result_choice[0]], result_choice[1], context)
+    else:
+      func = getattr(self, "narrate_" + event_name, None)
+      if func is None:
+        pass
+      else:
+        func(context, *args)
+      
   # the lack of symmetry here annoys me
 
   STATUS_DEFAULTS = {
@@ -167,16 +195,17 @@ class BattleNarrator(Narrator):
       self._narrate_jeer(success, context)
     self.narrate_roll_success(key, success, context)
 
-  def narrate_duel_consider(self, context):
-    acceptances = context['acceptances']
-    if acceptances[0]:
-      self.unit_speech(context['csource'], duel.get_duel_speech("challenge"), context)
-      if acceptances[1]:
-        self.unit_speech(context['ctarget'], duel.get_duel_speech("accept"), context)
-      else:
-        self.unit_speech(context['ctarget'], duel.get_duel_speech("deny"), context)
-
+  # def narrate_duel_consider(self, context):
+  #   acceptances = context['acceptances']
+  #   if acceptances[0]:
+  #     self.unit_speech(context['csource'], duel.get_duel_speech("challenge"), context)
+  #     if acceptances[1]:
+  #       self.unit_speech(context['ctarget'], duel.get_duel_speech("accept"), context)
+  #     else:
+  #       self.unit_speech(context['ctarget'], duel.get_duel_speech("deny"), context)
+  # def narrate_duel_consider(self, context):
     
+
 ENTRANCES = [
   "It's a good day for a battle.",
   "War... what is it good for?",
@@ -298,3 +327,33 @@ ROLLS = {
     "show_roll_failure": False,
   },
 }
+
+EVENT_NARRATIONS = {
+  "duel_challenged": [
+    ('csource', "Is there no one to fight {csource}?"),
+    ('csource', "Come {ctarget}, it is a good day for a fight."),
+    ('csource', "You are no match for me, {ctarget}."),
+    ('csource', "Let's dance, {ctarget}."),
+  ],
+  "duel_accepted": [
+    ('ctarget', "Ahaha, you asked for it!"),
+    ('ctarget', "I can beat you with my left hand, {csource}."),
+    ('ctarget', "I am surprised you dare to challenge me..."),
+    ('ctarget', "{csource}! Exactly who I am waiting for!"),
+    ('ctarget', "You know nothing, {csource}."),
+  ],
+  "duel_rejected": [
+    ('ctarget', "A good general does not rely on physical strength alone."),
+    ('ctarget', "Maybe another day, {csource}."),
+    ('ctarget', "Don't bring playground antics to the battlefield."),
+  ],
+  "duel_defeated": [
+    ('csource', "I bested {ctarget}."),
+    ('csource', "I have ninety-nine problems and {ctarget} was not one of them."),
+    ('csource', "Enemy down."),
+    ('csource', "{ctarget}'s soldiers will now tremble at {csource}'s name."),
+    ('csource', "Whew. That was a good warmup."),
+    ('csource', "That was a close one."),
+  ]
+}
+  

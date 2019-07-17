@@ -60,7 +60,7 @@ class Event():
     else:
       return actor_type
       
-  def activate(self):
+  def activate(self, *args):
     # death handler (should later be "availability" for retreats, etc.)
     # most events require actors who are alive; TODO: exceptions?
     if any([not self.context.opt[foo].is_present() for foo in ACTORS_DICT[self.get_actor_type()]]): #pylint:disable=blacklisted-name
@@ -74,11 +74,13 @@ class Event():
                                             contexts.Context({'ctarget':potential_panicker,
                                                               'stat_str':'panicked'}))
         return
+    # narrator handler
+    self.battle.narrator.notify(self, *args)
     # time to activate this event on the queue; note the event has its own context, battle, etc.
     self.event_func(self.battle,
                     self.context,
                     self.battle.battlescreen,
-                    self.battle.narrator)
+                    self.battle.narrator, *args)
 
 def event_info(event_name, key):
   """ Main auxilary function; gets a piece of info about an event type, and None otherwise."""
@@ -315,7 +317,10 @@ def engage(battle, context, bv, narrator):
       # import pdb; pdb.set_trace()
       newcontext = context.copy({'skillcard':sc})
       battle.place_event(sc.sc_str, newcontext, "Q_RESOLVE")
-  battle.place_event("duel_consider", context, "Q_RESOLVE")
+  if random.random() < battle_constants.DUEL_BASE_CHANCE:
+    acceptance, duel_data = duel.duel_commit(context, csource, ctarget)
+    if acceptance:
+      battle.place_event("duel_challenged", context, "Q_RESOLVE")
 
 #################
 # Resolve Phase #
@@ -333,17 +338,32 @@ def duel_accepted(battle, context, bv, narrator):
                                               "ctarget":duelists[i],
                                               "dmgdata":"",
                                               "dmglog":""})).activate()
+  # it's not always true there is a winner
+  has_winner = False
+  if healths[0] > 0 and healths[1] <= 0:
+    has_winner = True
+    winner = context.csource
+    loser = context.ctarget
+  elif healths[0] <= 0 and healths[1] > 0:
+    has_winner = True
+    winner = context.ctarget
+    loser = context.csource
+  newcontext = {"csource":winner, "ctarget":loser}
+  if has_winner:
+    Event(battle, "duel_defeated", context).activate()
 
-def duel_consider(battle, context, bv, narrator):
+def duel_challenged(battle, context, bv, narrator):
+  """
+  source already committed, so target sees if he/she is interested
+  """
   csource = context.csource
   ctarget = context.ctarget
-  acceptances, duel_data = duel.duel_commit(context, csource, ctarget)
-  newcontext = context.copy({'acceptances':acceptances})
-  narrator.narrate_duel_consider(newcontext)
-  if all(acceptances):
-    Event(battle, "duel_accepted", newcontext).activate()
+  acceptance, duel_data = duel.duel_commit(context, ctarget, csource)
+  # newcontext = context.copy({'acceptances':acceptances})
+  if acceptance:
+    Event(battle, "duel_accepted", context).activate()
   else:
-    Event(battle, "duel_rejected", newcontext).activate()
+    Event(battle, "duel_rejected", context).activate()
       
 def arrow_strike(battle, context, bv, narrator):
   csource = context.csource

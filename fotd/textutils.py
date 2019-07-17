@@ -531,20 +531,6 @@ class BattleScreen(View):
                                              bars[0],
                                              bars[1],
                                              disp_unit(ctarget)))
-    final_healths = health_history[-1]
-    # it's not always true there is a winner
-    has_winner = False
-    if final_healths[0] > 0 and final_healths[1] <= 0:
-      has_winner = True
-      winner = csource
-      loser = ctarget
-    elif final_healths[0] <= 0 and final_healths[1] > 0:
-      has_winner = True
-      winner = ctarget
-      loser = csource
-    newcontext = {"csource":winner, "ctarget":loser}
-    if has_winner:
-      self.disp_chara_speech(winner.character, duel.get_duel_speech('defeats'), newcontext)
 
   def disp_damage(self, max_pos, oldsize, damage, dmgdata, dmglog):
     newsize = oldsize - damage

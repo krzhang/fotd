@@ -198,6 +198,7 @@ class Battle():
     self._run_queue('Q_MANUEVER')
     self._run_queue('Q_RESOLVE')
     self._run_status_handlers("eot") # should be queue later
+    self.battlescreen.pause_and_display()
 
   def losing_status(self):
     losing = [False, False] # they can theoretically both lose

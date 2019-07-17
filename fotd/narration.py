@@ -72,8 +72,11 @@ class BattleNarrator(Narrator):
     for i in [0, 1]:
       order = self.battle.orders[i]
       # print both into the main event buffer and the huddle buffer
-      self.view.yprint(rps.order_info(str(order), "desc"),
-                       templates={"ctarget_army":self.battle.armies[i]}, mode=["console","huddle"])
+      order_str = rps.order_info(str(order), "desc")
+      if not self.battle.armies[i].commitment_bonus:
+        order_str = "Breaking formation, " + order_str 
+      self.view.yprint(order_str,
+                       templates={"ctarget_army":self.battle.armies[i]}, mode=["huddle"])
       if i == winner_id:
         if self.battle.armies[i].commitment_bonus:
           self.view.yprint("  " + rps.order_info(str(order), "commitment_bonus"),

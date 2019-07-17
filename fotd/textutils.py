@@ -207,7 +207,7 @@ def disp_text_activation(any_str, success=None, upper=True):
   return "<" + colors.color_bool(success) + " ".join(newstr.split("_")) + "$[7]$>"
 
 def disp_army(army):
-  return "$[{}]${}$[7]$".format(army.color, army.name)
+  return army.color_str()
 
 def disp_unit(unit):
   return disp_chara(unit.character)

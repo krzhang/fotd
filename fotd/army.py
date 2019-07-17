@@ -1,6 +1,5 @@
 import status
 import intelligence
-from textutils import disp_unit
 import rps
 
 class Unit(object):
@@ -24,8 +23,11 @@ class Unit(object):
     return hasattr(self, "character") and hasattr(other, "character") and self.character == other.character
 
   def __repr__(self):
-    return disp_unit(self)
+    return self.color_str()
 
+  def color_str(self):
+    return "$[{}]${}$[7]$".format(self.color, self.name)
+  
   def set_color(self, color):
     self.color = color
     self.character.color = color
@@ -131,8 +133,11 @@ class Army(object):
     self.commitment_bonus = False
     
   def __repr__(self):
-    return "Army({})".format(self.name)
+    return self.color_str()
 
+  def color_str(self):
+    return "$[{}]${}$[7]$".format(self.color, self.name)
+  
   def get_order(self):
     return self.order
 

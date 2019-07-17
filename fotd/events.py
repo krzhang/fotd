@@ -32,6 +32,7 @@ ACTORS_DICT = {
   "unit_single":["ctarget"],
   "army_single":["ctarget_army"],
   "unit_double":["csource", "ctarget"],
+  "none":[],
 }
 PRIMARY_ACTOR_DICT = {
   "unit_single":"ctarget",
@@ -48,40 +49,42 @@ class Event():
   def __init__(self, battle, event_name, context):
     self.battle = battle
     self.event_name = event_name
-    self.actor_type = EVENTS[event_name]["actor_type"]
-    self.event_func = globals()[event_name]
+    # this is so we don't have to write it for lots of functions
+    self.event_func = globals().get(event_name, (lambda x, y, z, w: None))
     self.context = context
 
+  def get_actor_type(self):
+    actor_type = event_info(self.event_name, "actor_type")
+    if actor_type is None:
+      return "none"  # this is so ACTORS_DICT returns correctly an empty list
+    else:
+      return actor_type
+      
   def activate(self):
-    edict = EVENTS[self.event_name]
     # death handler (should later be "availability" for retreats, etc.)
     # most events require actors who are alive; TODO: exceptions?
-    if any([not self.context.opt[foo].is_present() for foo in ACTORS_DICT[self.actor_type]]): #pylint:disable=blacklisted-name
+    if any([not self.context.opt[foo].is_present() for foo in ACTORS_DICT[self.get_actor_type()]]): #pylint:disable=blacklisted-name
       # TODO: exceptions for things like unit_destroyed or army_destroyed
       return
     # panic handler
     if event_info(self.event_name, "panic_blocked"):
-      potential_panicker = getattr(self.context, PRIMARY_ACTOR_DICT[self.actor_type])
+      potential_panicker = getattr(self.context, PRIMARY_ACTOR_DICT[self.get_actor_type()])
       if potential_panicker.has_unit_status("panicked"):
         self.battle.narrator.narrate_status("on_activation",
                                             contexts.Context({'ctarget':potential_panicker,
                                                               'stat_str':'panicked'}))
         return
     # time to activate this event on the queue; note the event has its own context, battle, etc.
-    results = self.event_func(self.battle,
-                              self.context,
-                              self.battle.battlescreen,
-                              self.battle.narrator)
-
-def event_dict(event_name):
-  return EVENTS[event_name]
+    self.event_func(self.battle,
+                    self.context,
+                    self.battle.battlescreen,
+                    self.battle.narrator)
 
 def event_info(event_name, key):
   """ Main auxilary function; gets a piece of info about an event type, and None otherwise."""
-  edict = event_dict(event_name)
-  if key in edict:
-    return edict[key]
-  return None
+  edict = EVENTS.get(event_name, None)
+  if edict:
+    return edict.get(key, None)
 
 #####################
 # Utility functions #
@@ -150,13 +153,13 @@ def attack_order(battle, context, bv, narrator):
   enemy = battle.armies[1-myarmyid]
   enemyunits = enemy.present_units()
   if not enemyunits: 
-    bv.yprint("No unit to attack!")
+    bv.yprint("No unit to attack!", mode=["huddle"])
     ctarget.targetting = ("defending", ctarget)
     return
   cnewsource = context.ctarget # new event
   cnewtarget = random.choice(enemyunits)
   cnewsource.targetting = ("marching", cnewtarget)
-  bv.yprint("{}: marching -> {};".format(cnewsource, cnewtarget), debug=True)
+  bv.yprint("{}: marching -> {};".format(cnewsource, cnewtarget), mode=["huddle"])
   newcontext = contexts.Context({"csource":cnewsource, "ctarget":cnewtarget})
   battle.place_event("march", newcontext, "Q_MANUEVER")
 
@@ -165,7 +168,7 @@ def defense_order(battle, context, bv, narrator):
   ctarget.order = rps.FinalOrder('D')
   ctarget.targetting = ("defending", ctarget)
   ctarget.move(battle.hqs[ctarget.army.armyid])
-  bv.yprint("{}: staying put at {};".format(ctarget, context.ctarget.position), debug=True)
+  bv.yprint("{}: staying put at {};".format(ctarget, context.ctarget.position), mode=["huddle"])
   gain_status(battle, "defended", ctarget)
 
 def indirect_order(battle, context, bv, narrator):
@@ -175,13 +178,13 @@ def indirect_order(battle, context, bv, narrator):
   enemy = battle.armies[1-myarmyid]
   enemyunits = enemy.present_units()
   if not enemyunits:
-    bv.yprint("No unit to target!")
+    bv.yprint("No unit to target!", mode=["huddle"])
     ctarget.targetting = ("defending", ctarget)
     return
   cnewsource = ctarget  # new event
   cnewtarget = random.choice(enemyunits)
   cnewsource.targetting = ("sneaking", cnewtarget)
-  bv.yprint("{}: sneaking -> {}; planning strategery".format(cnewsource, cnewtarget), debug=True)
+  bv.yprint("{}: sneaking -> {}; planning skullduggery".format(cnewsource, cnewtarget), mode=["huddle"])
   newcontext = contexts.Context({"csource":cnewsource, "ctarget":cnewtarget})
   battle.place_event("indirect_raid", newcontext, "Q_MANUEVER")
 
@@ -206,11 +209,7 @@ def order_change(battle, context, bv, narrator):
   """
   ctarget_army = context.ctarget_army
   morale_bet = context.morale_bet
-  bv.yprint("It was a feint. {ctarget_army} suddenly " +
-                        rps.order_info(ctarget_army.get_order(), "verb") + ".",
-                        templates={"ctarget_army":ctarget_army})
   ctarget_army.bet_morale_change = morale_bet
-  # Event("change_morale", context).activate() this cost is pretty high
 
 def order_yomi_win(battle, context, bv, narrator):
   csource_army = context.ctarget_army
@@ -237,16 +236,19 @@ def march(battle, context, bv, narrator):
   ctarget = context.ctarget
   # if ctarget in csource.attacked_by:
   if csource.attacked_by:
-    bv.yprint("{} engages {}, but they already engaged".format(csource, ctarget), debug=True)
+    # currently, this never activates since the order phase doesn't change attacked_by...
+    bv.yprint("{csource} already engaged", templates=context, debug=True)
     return
   if ctarget.is_defended():
     readytext = "$[2]$defended!$[7]$"
   else:
     readytext = textutils.disp_unit_targetting(ctarget)
-  bv.yprint("{} ({}) marches into {} ({})".format(csource,
-                                                      textutils.disp_unit_targetting(csource),
-                                                      ctarget,
-                                                      readytext), debug=True)
+  bv.yprint("{} ({}) marches into {} ({})".format(csource.color_str(),
+                                                  textutils.disp_unit_targetting(csource),
+                                                  ctarget.color_str(),
+                                                  readytext), debug=True)
+  ctarget.attacked_by.append(csource)
+  csource.attacked.append(ctarget)
   if ctarget.is_defended():
     Event(battle, "engage", context.clean_switch()).activate()
   else:
@@ -339,7 +341,9 @@ def duel_consider(battle, context, bv, narrator):
   newcontext = context.copy({'acceptances':acceptances})
   narrator.narrate_duel_consider(newcontext)
   if all(acceptances):
-      Event(battle, "duel_accepted", newcontext).activate()
+    Event(battle, "duel_accepted", newcontext).activate()
+  else:
+    Event(battle, "duel_rejected", newcontext).activate()
       
 def arrow_strike(battle, context, bv, narrator):
   csource = context.csource
@@ -381,8 +385,6 @@ def physical_strike(battle, context, bv, narrator):
     wording = "flanks"
   damage, damlog = _compute_physical_damage(csource, ctarget, multiplier=multiplier)
   dmgdata = (csource, ctarget, wording, damage)
-  ctarget.attacked_by.append(csource)
-  csource.attacked.append(ctarget)
   Event(battle, "receive_damage", contexts.Context({"damage":damage,
                                           "ctarget":ctarget,
                                           "dmgdata":dmgdata,

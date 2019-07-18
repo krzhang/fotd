@@ -181,20 +181,6 @@ class Battle():
       if any((not self.armies[i].is_present()) for i in [0, 1]):
         # TODO: replace with arbitary leave condition
         return
-      
-  def losing_status(self):
-    # TODO: update with events
-    losing = [False, False] # they can theoretically both lose
-    for i in [0, 1]:
-      if not self.armies[i].is_present():
-        self.battlescreen.yprint("{}'s units have all been defeated.".format(
-          self.armies[i].color_name()))
-        losing[i] = True
-      if self.armies[i].morale <= 0:
-        losing[i] = True
-        self.battlescreen.yprint("{} collapses due to catastrophic morale.".format(
-          self.armies[i].color_name()))
-    return tuple(losing)
   
   def take_turn(self):
     """
@@ -214,16 +200,12 @@ class Battle():
     self._run_queue('Q_MANUEVER')
     self._run_queue('Q_RESOLVE')
     self._run_status_handlers("eot") # should be queue later
-    losers = self.losing_status()
     for l in [0, 1]:
-      if losers[l]:
-        self.battlescreen.yprint("{ctarget} is destroyed!", templates={'ctarget':self.armies[l]})
-    if any(losers):
-      self.battlescreen.pause_and_display(pause_str="The battle ends...")
-      return True
-    else:
-      self.battlescreen.pause_and_display()
-      return False
+      if not self.armies[l].is_present():
+        self.battlescreen.pause_and_display(pause_str="The battle ends...")
+        return True
+    self.battlescreen.pause_and_display()
+    return False
     
   # exposed methods
   

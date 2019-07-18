@@ -18,6 +18,7 @@ class Unit(object):
     self.attacked_by = []
     self.position = None
     self.last_turn_size = None
+    self.present_state = 'PRESENT'
 
   def __eq__(self, other):
     return hasattr(self, "character") and hasattr(other, "character") and self.character == other.character
@@ -76,11 +77,12 @@ class Unit(object):
     newpos.add_unit(self)
     self.position = newpos
 
-  def leave_battle(self):
+  def leave_battle(self, state):
     if self.position:
       # could come here from None
       self.position.remove_unit(self)
     self.position = None
+    self.present_state = state
 
   def remove_unit_status(self, statstr):
     #import pdb; pdb.set_trace()
@@ -125,7 +127,7 @@ class Unit(object):
     return self.has_unit_status("defended")
 
   def is_present(self):
-    return self.size > 0 and self.character.health > 0
+    return self.present_state == 'PRESENT'
 
 class Army(object):
   def __init__(self, name, units, armyid, color, intelligence_type, morale):
@@ -150,6 +152,7 @@ class Army(object):
     self.formation = None
     self.order = None
     self.commitment_bonus = False
+    self.battle_lost = False
     
   def __repr__(self):
     return self.color_name()

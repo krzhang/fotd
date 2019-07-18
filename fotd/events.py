@@ -419,25 +419,44 @@ def receive_damage(battle, context, bv, narrator):
                                           ctarget.size, damage, dmgdata, dmglog)
   ctarget.size -= damage
   if ctarget.size <= 0:
-    ctarget.leave_battle() # TODO: eventually make into an event
-    army = ctarget.army
+    Event(battle, "unit_leave_battle", context).activate()
+
+def unit_leave_battle(battle, context, bv, narrator):
+  ctarget = context.ctarget
+  army = ctarget.army
+  if random.random() < 0.5:  # capture chance
+    state = 'CAPTURED'
+    Event(battle, "unit_captured", context).activate()
+  else:
+    state = 'ESCAPED'
+    Event(battle, "unit_escaped", context).activate()
+  ctarget.leave_battle(state) 
+  if not army.is_present():
+    Event(battle, "army_leave_battle", context={'ctarget_army':army}).activate()
+  else:
+    # compute morale change from leaving battle
     if ctarget.is_commander:
       damage = army.morale
     else:
       damage = 2
     Event(battle, "change_morale", contexts.Context({"ctarget_army":army,
-                                           "morale_change":-damage})).activate()
+                                                     "morale_change":-damage})).activate()
     Event(battle, "change_morale", contexts.Context({"ctarget_army":battle.armies[1-army.armyid],
-                                           "morale_change":damage})).activate()
+                                                     "morale_change":damage})).activate()
 
 def change_morale(battle, context, bv, narrator):
   ctarget_army = context.ctarget_army
+  if ctarget_army.morale <= 0:
+    return
   morale_change = context.morale_change
   newmorale = ctarget_army.morale + morale_change
   newmorale = min(newmorale, battle_constants.MORALE_MAX)
   newmorale = max(newmorale, battle_constants.MORALE_MIN)
   ctarget_army.morale = newmorale
-
+  if ctarget_army.morale <= 0:
+    Event(battle, "army_collapse_from_morale", context).activate()
+    for u in tuple(ctarget_army.present_units()):
+      Event(battle, "unit_leave_battle", contexts.Context({'ctarget':u})).activate()
 
 ################################
 # targetted Events from Skills #
@@ -607,7 +626,7 @@ def gain_status(battle, context, bv, narrator, stat_str):
     {"stat_str":stat_str, "stat_viz":status.Status(stat_str).stat_viz()}))
 
 def remove_status_probabilistic(battle, context, bv, narrator):
-  """
+  """ 
   context:
     status
     fizzle_prob

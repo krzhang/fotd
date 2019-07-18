@@ -54,11 +54,10 @@ class BattleNarrator(Narrator):
     """
     an event pinged us; 
     1) first, we look in the dictionary.
-    2) If it says "None", do nothing
-    3) it better be a list of 2-tuples. Pick one randomly
-    5) if it's simply not there, see if we defined a function called narrate_[event_name], 
+    2)   If it says "None", do nothing
+    3)   it better be a list of 2-tuples. Pick one randomly
+    4) Even on success, see if we defined a function called narrate_[event_name], 
        and run it
-    6) if it's none of these, pass
     """
     event_name = event.event_name
     context = event.context
@@ -75,12 +74,12 @@ class BattleNarrator(Narrator):
       else:
         speaker = context[result_choice[0]]
       self.narrate_pair(speaker, result_choice[1], context)
+    # always run the function if you have one
+    func = getattr(self, "narrate_" + event_name, None)
+    if func is None:
+      pass
     else:
-      func = getattr(self, "narrate_" + event_name, None)
-      if func is None:
-        pass
-      else:
-        func(context, *args)
+      func(context, *args)
       
   # the lack of symmetry here annoys me
 
@@ -224,6 +223,15 @@ class BattleNarrator(Narrator):
       self._narrate_jeer(success, context)
     self.narrate_roll_success(key, success, context)
 
+  # meta stuff: armies leaveing, etc.
+  
+  def narrate_unit_escaped(self, context):
+    self.view.yprint("{ctarget} escapes!", templates=context)
+
+  def narrate_unit_captured(self, context):
+    self.view.yprint("{ctarget} was captured!", templates=context)
+
+    
 ENTRANCES = [
   "It's a good day for a battle.",
   "War... what is it good for?",
@@ -233,17 +241,6 @@ ENTRANCES = [
   "I am a bit worried about {strong_opponent}, let's take caution.",
   "Well, it is time."
 ]
-
-WITHDRAWS = [
-  "Of the 36 tactics, running is the best one.",
-  "Seems we are bested, but we will pay it back later with interest.",
-  "Not going to stay around for a losing battle. Next time!",
-  "Win some, lose some."]
-
-CAPTURES = [ "Wow. That really happened.",
-            "Did not think I would be captured...",
-            "Win some, lose some.",
-            "I wasn't trying, so does it count?"]
 
 ROLLS = {
   "fire_tactic": {
@@ -347,7 +344,7 @@ ROLLS = {
 }
 
 EVENT_NARRATIONS = {
-  "action_already_used": [(None, "{csource} already engaged",)],
+  "action_already_used": [(None, "{csource} already engaged.",)],
   "physical_clash": [(None, "{csource} clashes against {ctarget}!")],
   "duel_challenged": [
     ('csource', "Is there no one to fight {csource}?"),
@@ -379,4 +376,19 @@ EVENT_NARRATIONS = {
     (None, "{ctarget}'s unit is $[3]$panicked$[7]$ and $[4]$defends$[7]$, ignoring orders.")],
   "provoked_order": [
     (None, "{ctarget}'s unit is $[1]$provoked$[7]$ and $[1]$marches$[7]$, ignoring orders.")],
+  # meta stuff
+  "unit_captured": [
+    ('ctarget', "Wow. That really happened."),
+    ('ctarget', "Did not think I would be captured..."),
+    ('ctarget', "I did not think this could happen to me!"),
+    ('ctarget', "Win some, lose some."),
+    ('ctarget', "I wasn't trying, so does it count?")],
+  "unit_escaped": [
+    ('ctarget', "Of the 36 tactics, running is the best one."),
+    ('ctarget', "Seems we are bested, but we will pay it back later with interest."),
+    ('ctarget', "Not going to stay around for a losing battle. Next time!"),
+    ('ctarget', "Win some, lose some.")],
+  "army_leave_battle": [(None, "{ctarget_army}'s units have all been defeated.")],
+  "army_collapse_from_morale": [(None, "{ctarget_army} collapses due to catastrophic morale.")],
 }
+

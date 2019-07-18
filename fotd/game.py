@@ -115,15 +115,7 @@ def play(armies, debug=False, resize=False,
   automated = (first_intelligence != 'INT_PLAYER') and (second_intelligence != 'INT_PLAYER')  
   bat = battle.Battle(armies[0], armies[1], debug_mode=debug, automated=automated)
   # graphics.Screen.wrapper(graphics.battle_screen, catch_interrupt = True, arguments=[bat])
-  while(True):
-    bat.take_turn()
-    losers = bat.losing_status()
-    for l in [0, 1]:
-      if losers[l]:
-        bat.battlescreen.yprint("{} is destroyed!".format(armies[l].color_name()))
-    if any(losers):
-      bat.battlescreen.pause_and_display(pause_str="The battle ends...")
-      return 0
+  bat.start_battle()
 
 def army_mysticsoft(armyid, color, aitype, num=4):
   PC_UNITS = [Unit(test_char(*args), 20, 10) for args in PC_ATTRS]  

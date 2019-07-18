@@ -140,8 +140,7 @@ class Army(object):
     for u in units:
       u.army = self
       u.set_color(color)
-    self.intelligence_type = intelligence_type
-    self.intelligence = intelligence.INTELLIGENCE_FROM_TYPE[intelligence_type]()
+    self.intelligence = intelligence.INTELLIGENCE_FROM_TYPE[intelligence_type](self)
     self.morale = morale
     self.last_turn_morale = morale
     # things to be linked later
@@ -179,5 +178,8 @@ class Army(object):
   def present_units(self):
     return tuple(u for u in self.units if u.is_present())
 
-  def str_estimate(self):
-    return sum([u.size for u in self.units], 0)
+  def state_viewed_by(self, army):
+    """
+    returns a view that the other army can use for AI purposes
+    """
+    return None

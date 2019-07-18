@@ -109,7 +109,7 @@ class Battle():
       self.armies[i].tableau.draw_cards()
       self.armies[i].tableau.scouted_by(self.armies[1-i])
     for i in [0, 1]:
-      self.armies[i].formation = self.armies[i].intelligence.get_formation(self, i)
+      self.armies[i].formation = self.armies[i].intelligence.get_formation(self)
     self.narrator.narrate_formations()
 
     # orders
@@ -118,7 +118,7 @@ class Battle():
       self.armies[i].tableau.scouted_by(self.armies[1-i])
 
     for i in [0, 1]:
-      self.armies[i].order = self.armies[i].intelligence.get_final(self, i)
+      self.armies[i].order = self.armies[i].intelligence.get_final(self)
       formation = self.formations[i]
       cost = rps.formation_info(str(formation), "morale_cost")[str(self.armies[i].order)]
       if cost:

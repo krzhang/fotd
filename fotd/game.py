@@ -115,7 +115,7 @@ def play(armies, debug=False, resize=False,
   automated = (first_intelligence != 'INT_PLAYER') and (second_intelligence != 'INT_PLAYER')  
   bat = battle.Battle(armies[0], armies[1], debug_mode=debug, automated=automated)
   # graphics.Screen.wrapper(graphics.battle_screen, catch_interrupt = True, arguments=[bat])
-  bat.start_battle()
+  return bat.start_battle()
 
 def army_mysticsoft(armyid, color, aitype, num=4):
   PC_UNITS = [Unit(test_char(*args), 20, 10) for args in PC_ATTRS]  
@@ -151,6 +151,19 @@ def test_duel(debug=False, resize=False,
     'csource':armies[0].units[0],
     'ctarget':armies[1].units[1]}), bat.battlescreen, bat.narrator)
   return 0
+
+def test_AI(debug=False, resize=False, first_intelligence="INT_AI_NORMAL",
+            second_intelligence="INT_AI_RANDOM", num_units=4, trials=100):
+  final_results = [0, 0]
+  for _ in range(trials):
+    armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence, num_units),
+            army_bizarro(1, Colours.MAGENTA, second_intelligence, num_units)]
+    bat = battle.Battle(armies[0], armies[1], debug_mode=False, automated=True)
+    results = bat.start_battle()
+    for j in [0,1]:
+      if results[j]:
+        final_results[j] += 1
+  return final_results
 
 if __name__ == "__main__":
   test(resize=True)

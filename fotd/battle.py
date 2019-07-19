@@ -48,6 +48,13 @@ class Battle():
     self.yomi_winner_id = -1
     self.yomi_list = []
 
+  def end_state(self):
+    wins = [None, None]
+    for i in [0,1]:
+      if self.armies[i].is_present():
+        wins[i] = True
+    return wins
+  
   @property
   def formations(self):
     return (self.armies[0].formation, self.armies[1].formation)
@@ -116,7 +123,6 @@ class Battle():
     for i in [0, 1]:
       self.armies[i].tableau.draw_cards()
       self.armies[i].tableau.scouted_by(self.armies[1-i])
-
     for i in [0, 1]:
       self.armies[i].order = self.armies[i].intelligence.get_final(self)
       formation = self.formations[i]
@@ -147,11 +153,11 @@ class Battle():
             additional_opt.update(func_list[1]) # additional arguments
             events.Event(self, event_name, ctxt.copy(additional_opt)).activate()  
 
-  def _send_orders_to_armies(self, orders):
+  def _send_orders_to_armies(self):
+    orders = self.orders
     orderlist = []
     for i in [0, 1]:
       order = orders[i]
-      formation = self.formations[i]
       bet = self.armies[i].bet_morale_change
       if bet:
         orderlist.append((0, "order_change",
@@ -171,16 +177,16 @@ class Battle():
                           contexts.Context(opt={"ctarget":u,
                                                 "order":order})))
     orderlist.sort(key=lambda x: x[0])
-    for o in orderlist:
+    for o in tuple(orderlist):
       self.place_event(o[1], o[2], 'Q_ORDER')
 
   def _run_queue(self, queue_name):
     while self.queues[queue_name]:
       event = self.queues[queue_name].pop()
       event.activate()
-      if any((not self.armies[i].is_present()) for i in [0, 1]):
-        # TODO: replace with arbitary leave condition
-        return
+      # if any((not self.armies[i].is_present()) for i in [0, 1]):
+      #   # TODO: replace with arbitary leave condition
+      #   return
   
   def take_turn(self):
     """
@@ -192,7 +198,7 @@ class Battle():
     self._get_formations_and_orders()
     # preloading events
     self._run_status_handlers("bot") # should be queue later
-    self._send_orders_to_armies(self.orders)
+    self._send_orders_to_armies()
     self._run_queue('Q_ORDER')
     for i in [0,1]:
       for u in self.armies[i].present_units():
@@ -213,4 +219,4 @@ class Battle():
     while(True):
       game_ended = self.take_turn()
       if game_ended:
-        return
+        return self.end_state()

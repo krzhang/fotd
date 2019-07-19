@@ -155,7 +155,7 @@ def attack_order(battle, context, bv, narrator):
   myarmyid = ctarget.army.armyid
   enemy = battle.armies[1-myarmyid]
   enemyunits = enemy.present_units()
-  if not enemyunits: 
+  if not enemyunits:
     bv.yprint("No unit to attack!", mode=["huddle"])
     ctarget.targetting = ("defending", ctarget)
     return

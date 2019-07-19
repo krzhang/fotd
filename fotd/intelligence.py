@@ -124,13 +124,26 @@ class ArtificialIntelligence(Intelligence):
     strat = choose_expert(bat)
     return rps.FinalOrder(np.random.choice(['A', 'D', 'I'], p=strat))
 
-class RandomIntelligence(Intelligence):
+class TrueRandomIntelligence(Intelligence):
 
   def get_formation(self, battle):
     return rps.FormationOrder(np.random.choice(['A','D','I']))
 
   def get_final(self, battle):
     return rps.FinalOrder(np.random.choice(['A','D','I']))
+  
+class RandomIntelligence(Intelligence):
+
+  def __init__(self, army):
+    super().__init__(army)
+    self.commit = None
+
+  def get_formation(self, battle):
+    self.commit = np.random.choice(['A','D','I'])
+    return rps.FormationOrder(self.commit)
+
+  def get_final(self, battle):
+    return rps.FinalOrder(self.commit)
 
 class RockIntelligence(Intelligence):
 
@@ -156,10 +169,11 @@ class ScissorsIntelligence(Intelligence):
   def get_final(self, battle):
     return rps.FinalOrder('I')
 
-INTELLIGENCE_FROM_TYPE = {'INT_AI_NORMAL': ArtificialIntelligence,
-                          'INT_PLAYER': PlayerIntelligence,
-                          'INT_AI_ROCK': RockIntelligence,
-                          'INT_AI_PAPER': PaperIntelligence,
-                          'INT_AI_SCISSORS': ScissorsIntelligence,
-                          'INT_AI_RANDOM': RandomIntelligence,
+INTELLIGENCE_FROM_TYPE = {'AI_WIP': ArtificialIntelligence,
+                          'PLAYER': PlayerIntelligence,
+                          'AI_ROCK': RockIntelligence,
+                          'AI_PAPER': PaperIntelligence,
+                          'AI_SCISSORS': ScissorsIntelligence,
+                          'AI_RANDOM': RandomIntelligence,
+                          'AI_TRUE_RANDOM': TrueRandomIntelligence,
                           }

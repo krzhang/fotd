@@ -130,18 +130,18 @@ def army_unknown(armyid, color, aitype, num=4):
   return Army("Enemy Unknown", random.sample(OTHER_UNITS, 4)[:num], armyid, color, aitype, 7)
     
 def test(debug=False, resize=False,
-         first_intelligence="INT_PLAYER",
-         second_intelligence="INT_AI_NORMAL", num_units=4):
+         first_intelligence="PLAYER",
+         second_intelligence="AI_WIP", num_units=4):
   armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence, num_units),
             army_bizarro(1, Colours.MAGENTA, second_intelligence, num_units)]
   return play(armies, debug, resize, first_intelligence, second_intelligence)
 
 def test_duel(debug=False, resize=False,
-         first_intelligence="INT_PLAYER",
-         second_intelligence="INT_AI_NORMAL"):
+         first_intelligence="PLAYER",
+         second_intelligence="AI_WIP"):
   armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence),
             army_bizarro(1, Colours.MAGENTA, second_intelligence)]
-  automated = (first_intelligence != 'INT_PLAYER') and (second_intelligence != 'INT_PLAYER')  
+  automated = (first_intelligence != 'PLAYER') and (second_intelligence != 'PLAYER')  
   bat = battle.Battle(armies[0], armies[1], debug_mode=debug, automated=automated)
   armies[0].units[0].health = 100
   armies[1].units[1].health = 100  
@@ -152,8 +152,8 @@ def test_duel(debug=False, resize=False,
     'ctarget':armies[1].units[1]}), bat.battlescreen, bat.narrator)
   return 0
 
-def test_AI(debug=False, resize=False, first_intelligence="INT_AI_NORMAL",
-            second_intelligence="INT_AI_RANDOM", num_units=4, trials=100):
+def test_AI(debug=False, resize=False, first_intelligence="AI_WIP",
+            second_intelligence="AI_RANDOM", num_units=4, trials=100):
   final_results = [0, 0]
   for _ in range(trials):
     armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence, num_units),

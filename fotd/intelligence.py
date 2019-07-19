@@ -1,7 +1,7 @@
 import random
 
 import numpy as np
-
+import nashpy
 import rps
 import skills
 from mathutils import normalize
@@ -53,7 +53,7 @@ class ArtificialIntelligence(Intelligence):
     """
     evaluate the state of armyid, which could be self or someone else, by the strengths of
     the 3 stacks and the army strengths.
-
+  
     should use army.state_viewed_by
     """
     parmy = army.present_units()
@@ -63,15 +63,16 @@ class ArtificialIntelligence(Intelligence):
         skstr = sk.skill_str
         if skstr in skills.SKILLS:
           priors += np.array(skills.SKILLS[skstr]["ai_eval"])
-
+  
     #  army strength adds to attack
     opposing_army = battle.armies[1-army.armyid]
     priors += np.array([1, 0, 0])*(self.army_power_estimate(army) -
                                    self.army_power_estimate(opposing_army))
-
+  
     # formation adds to attack
     priors += self.formation_to_priors(army.formation, opposing_army.formation)
     return priors
+
   
   def expert_commitment(self, battle):
     """
@@ -89,11 +90,11 @@ class ArtificialIntelligence(Intelligence):
       elif str(formation) == 'I':
         base_vec = np.array([0,0,1])
       if rps.BEATS[str(formation)] == str(opp_formation):
-        base_vec *= 300
+        base_vec *= 80
       elif str(formation) == str(opp_formation):
-        base_vec *= 200
+        base_vec *= 40
       else:
-        base_vec *= 100
+        base_vec *= 20
       return base_vec
     
     priors = self.evaluate_state(battle, self.army)
@@ -109,12 +110,6 @@ class ArtificialIntelligence(Intelligence):
     battle.battlescreen.yprint("AI uses yomi 1", mode=['huddle'])
     battle.battlescreen.yprint("AI evaluates own strength (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*priors), mode=['huddle'])
     return priors
-
-  def _counter(self, strat):
-    """
-    a strategy is a list
-    """
-    return np.array(list(strat[2:]) + list(strat[:2]))
   
   def expert_yomi_2(self, bat):
     """
@@ -123,7 +118,7 @@ class ArtificialIntelligence(Intelligence):
     bat.battlescreen.yprint("AI uses yomi 2", mode=['huddle'])
     player_priors = self.evaluate_state(bat, bat.armies[1-self.army.armyid])
     bat.battlescreen.yprint("  AI evaluates player's strength (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*player_priors), mode=['huddle'])
-    counters = self._counter(player_priors)
+    counters = counter_strat(player_priors)
     bat.battlescreen.yprint("  AI counterpicks    (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters), mode=['huddle'])
     return counters
 
@@ -134,9 +129,9 @@ class ArtificialIntelligence(Intelligence):
     self_priors_to_enemy = self.evaluate_state(bat, self.army) # eventually disguise; right now info is leaking
     bat.battlescreen.yprint("AI uses yomi 3", mode=['huddle'])
     bat.battlescreen.yprint("  AI evaluates player evaluating AI (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*self_priors_to_enemy), mode=['huddle'])
-    enemy_counters = self._counter(self_priors_to_enemy)
+    enemy_counters = counter_strat(self_priors_to_enemy)
     bat.battlescreen.yprint("  AI evaluates player's counterpick (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*enemy_counters), mode=['huddle'])
-    counters_to_counters = self._counter(enemy_counters)
+    counters_to_counters = counter_strat(enemy_counters)
     bat.battlescreen.yprint("  AI counterpick (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters_to_counters), mode=['huddle'])
     return counters_to_counters
 
@@ -157,7 +152,7 @@ class ArtificialIntelligence(Intelligence):
     choose_expert = np.random.choice([
       self.expert_yomi_1,
       self.expert_yomi_2,
-      self.expert_yomi_3], p=[0.7,0.2,0.1])
+      self.expert_yomi_3], p=[0.6,0.3,0.1])
     strat = choose_expert(bat)
     strat += self.expert_commitment(bat)
     m = min(strat)
@@ -219,4 +214,15 @@ INTELLIGENCE_FROM_TYPE = {'AI_WIP': ArtificialIntelligence,
                           'AI_SCISSORS': ScissorsIntelligence,
                           'AI_RANDOM': RandomIntelligence,
                           'AI_TRUE_RANDOM': TrueRandomIntelligence,
+                          'AI_NASH': NashIntelligence,
                           }
+
+##################################
+# Utility functions everyone has #
+##################################
+
+def counter_strat(strat):
+  """
+  returns the strategy to counter another strategy, both given as lists
+  """
+  return np.array(list(strat[2:]) + list(strat[:2]))

@@ -25,7 +25,7 @@ class Narrator():
 
   def __init__(self, view):
     self.view = view
-  
+
   def chara_narrate(self, character, text, context):
     self.view.disp_chara_speech(character, text, context)
 
@@ -80,7 +80,7 @@ class BattleNarrator(Narrator):
       pass
     else:
       func(context, *args)
-      
+
   # the lack of symmetry here annoys me
 
   STATUS_DEFAULTS = {

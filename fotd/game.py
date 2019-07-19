@@ -107,12 +107,12 @@ OTHER_ATTRS = [
 # add: CaoRen + stonewall/iron wall
 
 def play(armies, debug=False, resize=False,
-         first_intelligence="INT_PLAYER",
-         second_intelligence="INT_AI_NORMAL"):
+         first_intelligence="PLAYER",
+         second_intelligence="AI_WIP"):
   if resize:
     print("\x1b[8;24;80t")
     # print ("\x1b[8;{};80t".format(textutils.BATTLE_SCREEN.max_screen_len))
-  automated = (first_intelligence != 'INT_PLAYER') and (second_intelligence != 'INT_PLAYER')  
+  automated = (first_intelligence != 'PLAYER') and (second_intelligence != 'PLAYER')  
   bat = battle.Battle(armies[0], armies[1], debug_mode=debug, automated=automated)
   # graphics.Screen.wrapper(graphics.battle_screen, catch_interrupt = True, arguments=[bat])
   return bat.start_battle()

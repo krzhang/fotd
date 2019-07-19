@@ -28,15 +28,23 @@ class PlayerIntelligence(Intelligence):
 
 class ArtificialIntelligence(Intelligence):
 
-  def formation_to_priors(self, formation):
+  def formation_to_priors(self, formation, opp_formation):
     if not formation:
       return np.array([0,0,0])
-    elif str(formation) == 'A':
-      return np.array([20,0,0])
-    elif str(formation) == 'D':
-      return np.array([0,20,0])
-    elif str(formation) == 'I':
-      return np.array([0,0,20])
+    else:
+      if str(formation) == 'A':
+        base_vec = np.array([1,0,0])
+      elif str(formation) == 'D':
+        base_vec = np.array([0,1,0])
+      elif str(formation) == 'I':
+        base_vec = np.array([0,0,1])
+      if rps.BEATS[str(formation)] == str(opp_formation):
+        base_vec *= 160
+      elif str(formation) == str(opp_formation):
+        base_vec *= 80
+      else:
+        base_vec *= 20
+      return base_vec
 
   def army_power_estimate(self, army):
     return sum([u.size for u in army.present_units()], 0)
@@ -62,12 +70,36 @@ class ArtificialIntelligence(Intelligence):
                                    self.army_power_estimate(opposing_army))
 
     # formation adds to attack
-    priors += self.formation_to_priors(army.formation)
-    m = min(priors)
-    if m < 0:
-      priors += np.array([1-m, 1-m, 1-m])
-      assert min(priors) > 0
-    return normalize(priors)
+    priors += self.formation_to_priors(army.formation, opposing_army.formation)
+    return priors
+  
+  def expert_commitment(self, battle):
+    """
+    advises playing your own state
+    """
+    formation = self.army.formation
+    opp_formation = battle.armies[1-self.army.armyid].formation
+    if not formation:
+      return np.array([0,0,0])
+    else:
+      if str(formation) == 'A':
+        base_vec = np.array([1,0,0])
+      elif str(formation) == 'D':
+        base_vec = np.array([0,1,0])
+      elif str(formation) == 'I':
+        base_vec = np.array([0,0,1])
+      if rps.BEATS[str(formation)] == str(opp_formation):
+        base_vec *= 300
+      elif str(formation) == str(opp_formation):
+        base_vec *= 200
+      else:
+        base_vec *= 100
+      return base_vec
+    
+    priors = self.evaluate_state(battle, self.army)
+    battle.battlescreen.yprint("AI uses yomi 1", mode=['huddle'])
+    battle.battlescreen.yprint("AI evaluates own strength (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*priors), mode=['huddle'])
+    return priors
 
   def expert_yomi_1(self, battle):
     """
@@ -76,7 +108,7 @@ class ArtificialIntelligence(Intelligence):
     priors = self.evaluate_state(battle, self.army)
     battle.battlescreen.yprint("AI uses yomi 1", mode=['huddle'])
     battle.battlescreen.yprint("AI evaluates own strength (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*priors), mode=['huddle'])
-    return 
+    return priors
 
   def _counter(self, strat):
     """
@@ -112,17 +144,28 @@ class ArtificialIntelligence(Intelligence):
     choose_expert = np.random.choice([
       self.expert_yomi_1,
       self.expert_yomi_2,
-      self.expert_yomi_3], p=[0.5,0.3,0.2])
-    strat = choose_expert(bat)
-    return rps.FormationOrder(np.random.choice(['A', 'D', 'I'], p=strat))
+      self.expert_yomi_3], p=[0.6,0.3,0.1])
+    strat = choose_expert(bat)    
+    m = min(strat)
+    if m < 0:
+      strat += np.array([1-m, 1-m, 1-m])
+      assert min(strat) > 0
+    nstrat =  normalize(strat)
+    return rps.FormationOrder(np.random.choice(['A', 'D', 'I'], p=nstrat))
 
   def get_final(self, bat):
     choose_expert = np.random.choice([
       self.expert_yomi_1,
       self.expert_yomi_2,
-      self.expert_yomi_3], p=[0.5,0.3,0.2])
+      self.expert_yomi_3], p=[0.7,0.2,0.1])
     strat = choose_expert(bat)
-    return rps.FinalOrder(np.random.choice(['A', 'D', 'I'], p=strat))
+    strat += self.expert_commitment(bat)
+    m = min(strat)
+    if m < 0:
+      strat += np.array([1-m, 1-m, 1-m])
+      assert min(strat) > 0
+    nstrat = normalize(strat)
+    return rps.FinalOrder(np.random.choice(['A', 'D', 'I'], p=nstrat))
 
 class TrueRandomIntelligence(Intelligence):
 

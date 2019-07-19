@@ -219,6 +219,7 @@ def order_yomi_win(battle, context, bv, narrator):
   morale_dam = ctarget_army.bet_morale_change + ycount 
   Event(battle, "change_morale", contexts.Context({"ctarget_army":csource_army, # winning army
                                              "morale_change":ycount})).activate()
+  # definitely need this
   Event(battle, "change_morale", contexts.Context({"ctarget_army":ctarget_army, # losing army
                                              "morale_change":-morale_dam})).activate()
   # must put after to show the difference

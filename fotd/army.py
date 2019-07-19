@@ -26,6 +26,9 @@ class Unit(object):
   def __repr__(self):
     return self.color_name()
 
+  def copy(self):
+    return Unit(self.character, self.size, self.speed)
+  
   def color_name(self):
     return "$[{}]${}$[7]$".format(self.color, self.name)
 
@@ -144,7 +147,6 @@ class Army(object):
     self.morale = morale
     self.last_turn_morale = morale
     # things to be linked later
-    self.turn_status = {} # status for each turn; yomi edge, formation bonus, etc.
     self.yomi_edge = None # used in battles to see if RPS was won
     self.battle = None
     self.formation_bonus = 1.0
@@ -156,6 +158,22 @@ class Army(object):
   def __repr__(self):
     return self.color_name()
 
+  def copy(self, armyid, intelligence_type='AI_RANDOM'):
+    tarmy =  Army(self,
+                  self.name + "_copy",
+                  [u.copy() for u in self.units],
+                  armyid,
+                  self.color,
+                  intelligence_type,
+                  self.morale)
+    tarmy.yomi_edge = self.yomi_edge
+    tarmy.formation_bonus = self.formation_bonus
+    tarmy.formation = self.formation
+    tarmy.order = self.order
+    tarmy.commitment_bonus = self.commitment_bonus
+    tarmy.battle_lost = self.battle_lost
+    return tarmy
+  
   def color_name(self):
     return "$[{}]${}$[7]$".format(self.color, self.name)
   

@@ -46,9 +46,6 @@ class ArtificialIntelligence(Intelligence):
         base_vec *= 20
       return base_vec
 
-  def army_power_estimate(self, army):
-    return sum([u.size for u in army.present_units()], 0)
-
   def evaluate_state(self, battle, army):
     """
     evaluate the state of armyid, which could be self or someone else, by the strengths of
@@ -162,6 +159,34 @@ class ArtificialIntelligence(Intelligence):
     nstrat = normalize(strat)
     return rps.FinalOrder(np.random.choice(['A', 'D', 'I'], p=nstrat))
 
+class NashIntelligence(Intelligence):
+
+  def get_matrix(self, battle):
+    matrix = np.array([[0,0,0], [0,0,0],[0,0,0]])
+    for i, mystrat in enumerate(['A','D','I']):
+      for j, otherstrat in enumerate(['A','D','I']):
+        strat_strs = [mystrat, otherstrat]
+        tempbattle = battle.imaginary_copy(self.army.armyid)
+        init_eval = battle_edge_estimate(tempbattle, 0)  # your army is 0 in this tempbattle
+        for k in [0,1]:
+          tempbattle.armies[k].order = rps.FinalOrder(strat_strs[k])
+        tempbattle.resolve_orders()
+        post_eval = battle_edge_estimate(tempbattle, 0)
+        matrix[i][j] = post_eval - init_eval
+        battle.battlescreen.yprint("{} vs {}: edge {}".format(mystrat, otherstrat, matrix[i][j]), mode=['huddle'])
+    return matrix
+  
+  def get_formation(self, battle):
+    return rps.FormationOrder(np.random.choice(['A','D','I']))
+
+  def get_final(self, battle):
+    mat = self.get_matrix(battle)
+    game = nashpy.game(mat)
+    equilibria = game.support_enumeration()
+    strat = next(equilibria)
+    battle.battlescreen.yprint("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['huddle'])
+    return rps.FinalOrder(np.random.choice(['A','D','I']), p=strat)
+  
 class TrueRandomIntelligence(Intelligence):
 
   def get_formation(self, battle):
@@ -221,8 +246,17 @@ INTELLIGENCE_FROM_TYPE = {'AI_WIP': ArtificialIntelligence,
 # Utility functions everyone has #
 ##################################
 
+def army_power_estimate(army):
+  if army.morale == 0:
+    return 0
+  return sum([u.size for u in army.present_units()], 0) + army.morale*5
+
+def battle_edge_estimate(battle, armyid):
+  return army_power_estimate(battle.armies[armyid]) - army_power_estimate(battle.armies[1-armyid])
+
 def counter_strat(strat):
   """
   returns the strategy to counter another strategy, both given as lists
   """
   return np.array(list(strat[2:]) + list(strat[:2]))
+

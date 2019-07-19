@@ -107,30 +107,28 @@ OTHER_ATTRS = [
 # add: CaoRen + stonewall/iron wall
 
 def play(armies, debug=False, resize=False,
-         first_intelligence="PLAYER",
-         second_intelligence="AI_WIP"):
+         first_intelligence="PLAYER", second_intelligence="AI_WIP"):
   if resize:
     print("\x1b[8;24;80t")
     # print ("\x1b[8;{};80t".format(textutils.BATTLE_SCREEN.max_screen_len))
-  automated = (first_intelligence != 'PLAYER') and (second_intelligence != 'PLAYER')  
+  automated = (first_intelligence != 'PLAYER') and (second_intelligence != 'PLAYER')
   bat = battle.Battle(armies[0], armies[1], debug_mode=debug, automated=automated)
   # graphics.Screen.wrapper(graphics.battle_screen, catch_interrupt = True, arguments=[bat])
   return bat.start_battle()
 
-def army_mysticsoft(armyid, color, aitype, num=4):
-  PC_UNITS = [Unit(test_char(*args), 20, 10) for args in PC_ATTRS]  
-  return Army("Mysticsoft", PC_UNITS[:num], armyid, color, aitype, 7)
+def army_mysticsoft(armyid, color, aitype, num=4,morale=7,size=20):
+  PC_UNITS = [Unit(test_char(*args), size, 10) for args in PC_ATTRS]
+  return Army("Mysticsoft", PC_UNITS[:num], armyid, color, aitype, morale)
 
-def army_bizarro(armyid, color, aitype, num=4):
-  BIZARRO_UNITS = [Unit(test_char(*args), 20, 10) for args in BIZARRO_ATTRS]
-  return Army("Mysterioussoft", BIZARRO_UNITS[:num], armyid, color, aitype, 7)
+def army_bizarro(armyid, color, aitype, num=4,morale=7,size=20):
+  BIZARRO_UNITS = [Unit(test_char(*args), size, 10) for args in BIZARRO_ATTRS]
+  return Army("Mysterioussoft", BIZARRO_UNITS[:num], armyid, color, aitype, morale)
 
-def army_unknown(armyid, color, aitype, num=4):
-  OTHER_UNITS = [Unit(test_char(*args), 20, 10) for args in BIZARRO_ATTRS + OTHER_ATTRS]
-  return Army("Enemy Unknown", random.sample(OTHER_UNITS, 4)[:num], armyid, color, aitype, 7)
+def army_unknown(armyid, color, aitype, num=4,morale=7,size=20):
+  OTHER_UNITS = [Unit(test_char(*args), size, 10) for args in BIZARRO_ATTRS + OTHER_ATTRS]
+  return Army("Enemy Unknown", random.sample(OTHER_UNITS, 4)[:num], armyid, color, aitype, morale)
     
-def test(debug=False, resize=False,
-         first_intelligence="PLAYER",
+def test(debug=False, resize=False, first_intelligence="PLAYER",
          second_intelligence="AI_WIP", num_units=4):
   armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence, num_units),
             army_bizarro(1, Colours.MAGENTA, second_intelligence, num_units)]
@@ -141,7 +139,7 @@ def test_duel(debug=False, resize=False,
          second_intelligence="AI_WIP"):
   armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence),
             army_bizarro(1, Colours.MAGENTA, second_intelligence)]
-  automated = (first_intelligence != 'PLAYER') and (second_intelligence != 'PLAYER')  
+  automated = (first_intelligence != 'PLAYER') and (second_intelligence != 'PLAYER')
   bat = battle.Battle(armies[0], armies[1], debug_mode=debug, automated=automated)
   armies[0].units[0].health = 100
   armies[1].units[1].health = 100  
@@ -153,11 +151,14 @@ def test_duel(debug=False, resize=False,
   return 0
 
 def test_AI(debug=False, resize=False, first_intelligence="AI_WIP",
-            second_intelligence="AI_RANDOM", num_units=4, trials=100):
+            second_intelligence="AI_RANDOM",
+            morales = (7,7),
+            sizes = (20, 20),
+            num_units=4, trials=100):
   final_results = [0, 0]
   for _ in range(trials):
-    armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence, num_units),
-            army_bizarro(1, Colours.MAGENTA, second_intelligence, num_units)]
+    armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence, num_units, size=sizes[0], morale=morales[0]),
+            army_bizarro(1, Colours.MAGENTA, second_intelligence, num_units, size=sizes[1], morale=morales[1])]
     bat = battle.Battle(armies[0], armies[1], debug_mode=False, automated=True)
     results = bat.start_battle()
     for j in [0,1]:

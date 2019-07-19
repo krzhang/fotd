@@ -231,7 +231,13 @@ class BattleNarrator(Narrator):
   def narrate_unit_captured(self, context):
     self.view.yprint("{ctarget} was captured!", templates=context)
 
-    
+  def narrate_turn_end(self, context):
+    game_end = context['game_end']
+    if game_end:
+      self.view.pause_and_display(pause_str="The battle ends...")
+    else:
+      self.view.pause_and_display()
+
 ENTRANCES = [
   "It's a good day for a battle.",
   "War... what is it good for?",

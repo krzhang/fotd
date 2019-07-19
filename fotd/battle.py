@@ -48,6 +48,15 @@ class Battle():
     self.yomi_winner_id = -1
     self.yomi_list = []
 
+  def imaginary_copy(self, povid):
+    """
+    creates an imaginary battle, used for mid-battle strategizing
+    """
+    return Battle(self.armies[povid].copy(0),
+                  self.armies[1-povid].copy(1),
+                  debug_mode=False,
+                  automated=True)
+    
   def end_state(self):
     wins = [None, None]
     for i in [0,1]:
@@ -125,6 +134,9 @@ class Battle():
       self.armies[i].tableau.scouted_by(self.armies[1-i])
     for i in [0, 1]:
       self.armies[i].order = self.armies[i].intelligence.get_final(self)
+
+  def _handle_yomi(self):
+    for i in [0, 1]:
       formation = self.formations[i]
       cost = rps.formation_info(str(formation), "morale_cost")[str(self.armies[i].order)]
       if cost:
@@ -187,15 +199,13 @@ class Battle():
       # if any((not self.armies[i].is_present()) for i in [0, 1]):
       #   # TODO: replace with arbitary leave condition
       #   return
-  
-  def take_turn(self):
+
+  def resolve_orders(self):
     """
-    The main function which takes one turn of this battle.
-    returns whether the battle is over
+    The battle logic that happens after logic is selected.
+    Is public because AI also uses it to run mental simulations
     """
-    # formations
-    self._init_day()
-    self._get_formations_and_orders()
+    self._handle_yomi()
     # preloading events
     self._run_status_handlers("bot") # should be queue later
     self._send_orders_to_armies()
@@ -206,13 +216,22 @@ class Battle():
     self._run_queue('Q_MANUEVER')
     self._run_queue('Q_RESOLVE')
     self._run_status_handlers("eot") # should be queue later
+    game_end = False
     for l in [0, 1]:
       if not self.armies[l].is_present():
-        self.battlescreen.pause_and_display(pause_str="The battle ends...")
-        return True
-    self.battlescreen.pause_and_display()
-    return False
+        game_end = True
+    events.Event(self, "turn_end", {"game_end":game_end}).activate()
+    return game_end
     
+  def take_turn(self):
+    """
+    The main function which takes one turn of this battle.
+    returns whether the battle is over
+    """
+    # formations
+    self._init_day()
+    self._get_formations_and_orders()
+    return self.resolve_orders()
   # exposed methods
   
   def start_battle(self):

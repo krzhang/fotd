@@ -141,7 +141,9 @@ class Battle():
       formation = self.formations[i]
       cost = rps.formation_info(str(formation), "morale_cost")[str(self.armies[i].order)]
       if cost:
-        self.armies[i].bet_morale_change = cost
+        events.Event(self, "order_change",
+                     contexts.Context({"ctarget_army":self.armies[i],
+                                       "morale_bet":cost})).activate()
       else:
         self.armies[i].commitment_bonus = True
 
@@ -149,8 +151,12 @@ class Battle():
     self.yomis = (rps.beats(self.orders[0], self.orders[1]),
                   rps.beats(self.orders[1], self.orders[0]))
     self.yomi_list.append(self.yomis)
+    if self.yomi_winner_id in [0,1]:
+      events.Event(self, "order_yomi_win",
+                   contexts.Context({"ctarget_army":self.armies[self.yomi_winner_id]}))
     self.narrator.narrate_orders(self.yomi_winner_id)
 
+    
   def _run_status_handlers(self, func_key):
     for i in [1, 0]:
       # originally these were in lists; the problem is you can change these lists, so make copies
@@ -171,14 +177,6 @@ class Battle():
     orderlist = []
     for i in [0, 1]:
       order = orders[i]
-      bet = self.armies[i].bet_morale_change
-      if bet:
-        orderlist.append((0, "order_change",
-                          contexts.Context({"ctarget_army":self.armies[i],
-                                            "morale_bet":bet})))
-      if self.yomi_winner_id == i:
-        orderlist.append((0, "order_yomi_win",
-                          contexts.Context({"ctarget_army":self.armies[i]})))
       for u in self.armies[i].present_units():
         speed = u.speed + random.uniform(-3, 3)
         if order == 'D':

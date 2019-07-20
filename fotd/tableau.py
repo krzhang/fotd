@@ -51,13 +51,30 @@ class Tableau():
   The 'card game' part of the battle state: skillcards, skillcards, hands, etc. and visibility
   each side has a tableau
   """
-  def __init__(self, battle, army):
-    self.battle = battle
-    self.bv = battle.battlescreen
+  def __init__(self, army):
     self.army = army
-    self.armyid = army.armyid
-    army.tableau = self
-    self.sc_dict = None
+    self.sc_dict = {}
+
+  def copy(self, newarmy):
+    """
+    make a copy with a different perspective armyid
+    """
+    newtab = Tableau(newarmy)
+    newtab.sc_dict = self.sc_dict.copy()
+    return newtab
+
+  @property
+  def battle(self):
+    return self.army.battle
+
+  @property
+  def armyid(self):
+    return self.army.armyid
+
+  @property
+  def bv(self):
+    # remove later
+    return self.battle.battlescreen
   
   def clear(self):
     """

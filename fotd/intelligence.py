@@ -63,8 +63,8 @@ class ArtificialIntelligence(Intelligence):
   
     #  army strength adds to attack
     opposing_army = battle.armies[1-army.armyid]
-    priors += np.array([1, 0, 0])*(self.army_power_estimate(army) -
-                                   self.army_power_estimate(opposing_army))
+    priors += np.array([1, 0, 0])*(army_power_estimate(army) -
+                                   army_power_estimate(opposing_army))
   
     # formation adds to attack
     priors += self.formation_to_priors(army.formation, opposing_army.formation)
@@ -163,17 +163,17 @@ class NashIntelligence(Intelligence):
 
   def get_matrix(self, battle):
     matrix = np.array([[0,0,0], [0,0,0],[0,0,0]])
-    for i, mystrat in enumerate(['A','D','I']):
-      for j, otherstrat in enumerate(['A','D','I']):
-        strat_strs = [mystrat, otherstrat]
-        tempbattle = battle.imaginary_copy(self.army.armyid)
-        init_eval = battle_edge_estimate(tempbattle, 0)  # your army is 0 in this tempbattle
+    for i, strat0 in enumerate(['A','D','I']):
+      for j, strat1 in enumerate(['A','D','I']):
+        strat_strs = [strat0, strat1]
+        tempbattle = battle.imaginary_copy()
+        init_eval = battle_edge_estimate(tempbattle, 0)  
         for k in [0,1]:
           tempbattle.armies[k].order = rps.FinalOrder(strat_strs[k])
         tempbattle.resolve_orders()
         post_eval = battle_edge_estimate(tempbattle, 0)
         matrix[i][j] = post_eval - init_eval
-        battle.battlescreen.yprint("{} vs {}: edge {}".format(mystrat, otherstrat, matrix[i][j]), mode=['huddle'])
+        battle.battlescreen.yprint("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]), mode=['huddle'])
     return matrix
   
   def get_formation(self, battle):
@@ -181,11 +181,11 @@ class NashIntelligence(Intelligence):
 
   def get_final(self, battle):
     mat = self.get_matrix(battle)
-    game = nashpy.game(mat)
-    equilibria = game.support_enumeration()
-    strat = next(equilibria)
+    tgame = nashpy.Game(mat)
+    equilibrium = next(tgame.vertex_enumeration())
+    strat = np.round(equilibrium[self.army.armyid], 3)
     battle.battlescreen.yprint("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['huddle'])
-    return rps.FinalOrder(np.random.choice(['A','D','I']), p=strat)
+    return rps.FinalOrder(np.random.choice(['A','D','I'], p=strat))
   
 class TrueRandomIntelligence(Intelligence):
 

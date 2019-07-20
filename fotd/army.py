@@ -154,15 +154,16 @@ class Army(object):
     self.order = None
     self.commitment_bonus = False
     self.battle_lost = False
+    self.tableau = None
+    self.bet_morale_change = 0
     
   def __repr__(self):
     return self.color_name()
 
-  def copy(self, armyid, intelligence_type='AI_RANDOM'):
-    tarmy =  Army(self,
-                  self.name + "_copy",
-                  [u.copy() for u in self.units],
-                  armyid,
+  def copy(self, intelligence_type='AI_RANDOM'):
+    tarmy = Army(self.name + "_copy",
+                  [u.copy() for u in self.present_units()],
+                  self.armyid,
                   self.color,
                   intelligence_type,
                   self.morale)
@@ -172,6 +173,10 @@ class Army(object):
     tarmy.order = self.order
     tarmy.commitment_bonus = self.commitment_bonus
     tarmy.battle_lost = self.battle_lost
+    tarmy.tableau = self.tableau.copy(tarmy)
+    tarmy.bet_morale_change = self.bet_morale_change
+    # need to also run things from battle.init_day; messy
+    tarmy.tableau.clear()
     return tarmy
   
   def color_name(self):

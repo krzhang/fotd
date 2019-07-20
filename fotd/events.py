@@ -360,7 +360,7 @@ def arrow_strike(battle, context, bv, narrator):
   wording = "shoots"
   if "vulnerable" in context.opt and context.vulnerable:
     multiplier = 2
-    wording = "mows"
+    wording = "heavily shoots"
   damage, dmglog = _compute_arrow_damage(csource, ctarget, multiplier=multiplier)
   dmgdata = (csource, ctarget, wording, damage)
   Event(battle, "receive_damage", contexts.Context({"damage":damage,
@@ -392,7 +392,7 @@ def physical_strike(battle, context, bv, narrator):
   wording = "hits"
   if "vulnerable" in context.opt and context.vulnerable:
     multiplier = 2
-    wording = "flanks"
+    wording = "heavily hits"
   damage, damlog = _compute_physical_damage(csource, ctarget, multiplier=multiplier)
   dmgdata = (csource, ctarget, wording, damage)
   Event(battle, "receive_damage", contexts.Context({"damage":damage,

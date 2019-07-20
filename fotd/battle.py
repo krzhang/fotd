@@ -24,7 +24,7 @@ class Battle():
     self.armies = [army1, army2]
     for a in self.armies:
       a.battle = self
-      a.tableau = tableau.Tableau(self, a)
+      a.tableau = tableau.Tableau(a)
       for u in a.units:
         for s in u.character.skills:
           u.add_unit_status(s.skill_str)
@@ -35,7 +35,6 @@ class Battle():
       a.commander.add_unit_status("is_commander")
     self.hqs = [positions.Position(self, self.armies[i].commander, i) for i in [0, 1]]
     self.dynamic_positions = []
-    self.morale_diff = 0
     # 5 queues
     self.queues = {}
     for qname in battle_constants.QUEUE_NAMES:
@@ -48,15 +47,22 @@ class Battle():
     self.yomi_winner_id = -1
     self.yomi_list = []
 
-  def imaginary_copy(self, povid):
+  def imaginary_copy(self):
     """
     creates an imaginary battle, used for mid-battle strategizing
     """
-    return Battle(self.armies[povid].copy(0),
-                  self.armies[1-povid].copy(1),
+    bat = Battle(self.armies[0].copy(),
+                  self.armies[1].copy(),
                   debug_mode=False,
                   automated=True)
-    
+    bat.order_history = self.order_history
+    bat.date = self.date
+    bat.weather = self.weather
+    bat.yomis = self.yomis
+    bat.yomi_winner_id = self.yomi_winner_id
+    bat.yomi_list = self.yomi_list
+    return bat
+  
   def end_state(self):
     wins = [None, None]
     for i in [0,1]:

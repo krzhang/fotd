@@ -271,7 +271,7 @@ INTELLIGENCE_FROM_TYPE = {'AI_WIP': ArtificialIntelligence,
                           'AI_RANDOM': RandomIntelligence,
                           'AI_TRUE_RANDOM': TrueRandomIntelligence,
                           'AI_NASH': NashIntelligence,
-                          'AI_COMMITER': CommitterIntelligence,
+                          'AI_COMMITTER': CommitterIntelligence,
                           }
 
 ##################################

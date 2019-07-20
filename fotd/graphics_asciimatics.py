@@ -235,20 +235,20 @@ class Speak(Sprite):
             **kwargs)
 
 
-class InteractiveArrow(Arrow):
-    def __init__(self, screen):
-        """
-        See :py:obj:`.Sprite` for details.
-        """
-        super(InteractiveArrow, self).__init__(
-            screen,
-            path=KeyboardController(
-                screen, screen.width // 2, screen.height // 2),
-            colour=Screen.COLOUR_GREEN)
+# class InteractiveArrow(Arrow):
+#     def __init__(self, screen):
+#         """
+#         See :py:obj:`.Sprite` for details.
+#         """
+#         super(InteractiveArrow, self).__init__(
+#             screen,
+#             path=KeyboardController(
+#                 screen, screen.width // 2, screen.height // 2),
+#             colour=Screen.COLOUR_GREEN)
 
-    def say(self, text):
-        self._scene.add_effect(
-            Speak(self._screen, self._scene, self._path, text, delete_count=50))
+#     def say(self, text):
+#         self._scene.add_effect(
+#             Speak(self._screen, self._scene, self._path, text, delete_count=50))
 
 
 class CrossHairs(Sprite):

@@ -81,14 +81,6 @@ class BattleNarrator(Narrator):
     else:
       func(context, *args)
 
-  # the lack of symmetry here annoys me
-
-  STATUS_DEFAULTS = {
-    "on_receive":"{ctarget} is now {stat_str}",
-    "on_remove":"{ctarget} is no longer {stat_str}",
-    "on_retain":"{ctarget} is still {stat_str}",
-  }
-
   def narrate_formation_input_completed(self, context):
     self.view.yprint("", mode=["huddle"])
     for i in [0, 1]:
@@ -154,18 +146,50 @@ class BattleNarrator(Narrator):
                                                            ctarget.str_targetting()),
                      debug=True)
 
-  def narrate_status(self, key, context):
-    ctarget = context.ctarget
-    stat_str = context['stat_str']
+  ################
+  # Status Stuff #
+  ################
+  STATUS_DEFAULTS = {
+    "on_receive":"{ctarget} is now {stat_str}",
+    "on_remove":"{ctarget} is no longer {stat_str}",
+    "on_retain":"{ctarget} is still {stat_str}",
+  }
+
+  def narrate_activate_status(self, context, stat_str):
+    # not sure if used outside of panick
+    self.narrate_status("on_activation", context, stat_str)
+
+  def narrate_gain_status(self, context, stat_str):
+    self.narrate_status("on_receive", context, stat_str)
+    
+  def narrate_remove_status(self, context, stat_str):
+    self.narrate_status("on_remove", context, stat_str)
+    
+  def narrate_retain_status(self, context, stat_str):
+    self.narrate_status("on_retain", context, stat_str)
+
+  def narrate_status(self, key, context, stat_str):
+    """
+    Expects:
+      ctarget: a unit
+    this intercepts the context and puts in 'stat_viz' and routes the narration to
+    text in status.py, since it's more structured
+    """
+    newcontext = context.copy(
+      {"stat_str":stat_str, "stat_viz":status.Status(stat_str).stat_viz()})
     if key in status.STATUSES[stat_str]:
       if status.STATUSES[stat_str][key] is None: # user says to not do anything
         return
       else:
-        self.view.yprint(status.status_info(stat_str, key), templates=context)
+        self.view.yprint(status.status_info(stat_str, key), templates=newcontext)
     else:
       # use a default
-      self.view.yprint(BattleNarrator.STATUS_DEFAULTS[key], templates=context)
+      self.view.yprint(BattleNarrator.STATUS_DEFAULTS[key], templates=newcontext)
 
+  ###################
+  # Targetted Rolls #
+  ###################
+  
   def narrate_roll_success(self, context, key, success, commitment_guarantee):
     """
     Narrates speeches that happen when a roll succeeds or fails.

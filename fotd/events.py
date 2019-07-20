@@ -70,9 +70,8 @@ class Event():
     if event_info(self.event_name, "panic_blocked"):
       potential_panicker = getattr(self.context, PRIMARY_ACTOR_DICT[self.get_actor_type()])
       if potential_panicker.has_unit_status("panicked"):
-        self.battle.narrator.narrate_status("on_activation",
-                                            contexts.Context({'ctarget':potential_panicker,
-                                                              'stat_str':'panicked'}))
+        Event(self.battle, "activate_status",
+              contexts.Context({'ctarget':potential_panicker})).activate('panicked')
         return
     # narrator handler
     self.battle.narrator.notify(self, *args)
@@ -604,8 +603,8 @@ def gain_status(battle, context, bv, narrator, stat_str):
   """
   ctarget = context.ctarget
   ctarget.add_unit_status(stat_str)
-  narrator.narrate_status("on_receive", context.copy(
-    {"stat_str":stat_str, "stat_viz":status.Status(stat_str).stat_viz()}))
+  # narrator.narrate_status("on_receive", context.copy(
+  #   {"stat_str":stat_str, "stat_viz":status.Status(stat_str).stat_viz()}))
 
 def remove_status_probabilistic(battle, context, bv, narrator):
   """ 
@@ -620,12 +619,9 @@ def remove_status_probabilistic(battle, context, bv, narrator):
   fizzle_prob = context.fizzle_prob
   if (random.random() < fizzle_prob):
     context.ctarget.remove_unit_status(stat_str)
-    narrator.narrate_status("on_remove", context)
-    # TODO: use this form. Too tired now
-    # Event(battle, "remove_status", context).activate()
+    Event(battle, "remove_status", context).activate(stat_str)
   else:
-    # Event(battle, "retain_status", context).activate()
-    narrator.narrate_status("on_retain", context)
+    Event(battle, "retain_status", context).activate(stat_str)
 
 def burned_bot(battle, context, bv, narrator):
   ctarget = context.ctarget

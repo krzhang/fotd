@@ -268,15 +268,8 @@ def indirect_raid(battle, context, bv, narrator):
     return
   Event(battle, "engage", context).activate()
   # tactic 1: raid
-  vulnerable = False
-  if ctarget.targetting[0] == "defending": # TODO: replace by order check?
-    bv.yprint("  {} is caught unawares by the indirect approach!".format(ctarget), debug=True)
-    vulnerable = True
-  elif ctarget.targetting[0] == "marching":
-    bv.yprint("  {}'s marching soldiers are vigilant!".format(ctarget), debug=True)
-  battle.place_event("arrow_strike",
-                             context.copy({"vulnerable":vulnerable}),
-                             "Q_RESOLVE")
+  vulnerable = bool(ctarget.order==rps.FinalOrder('D'))
+  battle.place_event("arrow_strike", context.copy({"vulnerable":vulnerable}), "Q_RESOLVE")
 
 def engage(battle, context, bv, narrator):
   """
@@ -342,7 +335,6 @@ def duel_challenged(battle, context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
   acceptance, duel_data = duel.duel_commit(context, ctarget, csource)
-  # newcontext = context.copy({'acceptances':acceptances})
   if acceptance:
     Event(battle, "duel_accepted", context).activate()
   else:
@@ -605,7 +597,7 @@ def flood_tactic(battle, context, bv, narrator):
   chance = 0.5
   context.skillcard.make_visible_to_all()
   results = resolve_targetting_event(battle, context, bv, narrator, "flood_tactic", chance, _flood_tactic_success)
-                          
+
 ##########
 # Status #
 ##########

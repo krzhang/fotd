@@ -33,7 +33,12 @@ class Unit(object):
     self.character = None
     
   def copy(self):
-    return Unit(self.character.copy(), self.size, self.speed)
+    newunit = Unit(self.character.copy(), self.size, self.speed)
+    newunit.present_state = self.present_state
+    newunit.attacked = self.attacked
+    newunit.attacked_by = self.attacked_by
+    newunit.position = self.position
+    return newunit
   
   def color_name(self):
     return "$[{}]${}$[7]$".format(self.color, self.name)

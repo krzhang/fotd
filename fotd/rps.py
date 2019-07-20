@@ -135,4 +135,5 @@ def orders_to_winning_armyid(orders):
   if BEATS[str(x)] == str(y):
     return 0
   else:
+    assert BEATS[str(y)] == str(x)
     return 1

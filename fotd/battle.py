@@ -123,6 +123,8 @@ class Battle():
       self.armies[i].tableau.clear()
       for u in self.armies[i].present_units():
         u.move(self.hqs[u.army.armyid])
+        u.attacked = []
+        u.attacked_by = []
         u.targetting = None
         # TODO: same here
         u.last_turn_size = u.size
@@ -130,18 +132,21 @@ class Battle():
     self.dynamic_positions = []
   
   def _get_formations_and_orders(self):
-    for i in [0, 1]:
+    ids = [0, 1]
+    for i in ids:
       self.armies[i].tableau.draw_cards()
       self.armies[i].tableau.scouted_by(self.armies[1-i])
-    for i in [0, 1]:
+    for i in ids:
       self.armies[i].formation = self.armies[i].intelligence.get_formation(self)
     self.narrator.narrate_formations()
 
     # orders
-    for i in [0, 1]:
+    for i in ids:
       self.armies[i].tableau.draw_cards()
       self.armies[i].tableau.scouted_by(self.armies[1-i])
-    for i in [0, 1]:
+    for i in ids:
+      # this is currently bad if player is second-player, because you can see the output
+      # of the AI orders
       self.armies[i].order = self.armies[i].intelligence.get_final(self)
 
   def _handle_yomi(self):
@@ -154,12 +159,13 @@ class Battle():
         self.armies[i].commitment_bonus = True
 
     self.yomi_winner_id = rps.orders_to_winning_armyid(self.orders) # -1 if None
-    self.yomis = (rps.beats(self.orders[0], self.orders[1]), rps.beats(self.orders[1], self.orders[0]))
+    self.yomis = (rps.beats(self.orders[0], self.orders[1]),
+                  rps.beats(self.orders[1], self.orders[0]))
     self.yomi_list.append(self.yomis)
     self.narrator.narrate_orders(self.yomi_winner_id)
 
   def _run_status_handlers(self, func_key):
-    for i in [0, 1]:
+    for i in [1, 0]:
       # originally these were in lists; the problem is you can change these lists, so make copies
       for unit in tuple(self.armies[i].units):
         for sta in tuple(unit.unit_status):
@@ -187,9 +193,6 @@ class Battle():
         orderlist.append((0, "order_yomi_win",
                           contexts.Context({"ctarget_army":self.armies[i]})))
       for u in self.armies[i].present_units():
-        u.attacked = []
-        u.attacked_by = []
-        u.targetting = None
         speed = u.speed + random.uniform(-3, 3)
         if order == 'D':
           speed += 2.7

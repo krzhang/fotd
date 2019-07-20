@@ -192,6 +192,9 @@ class Army(object):
     tarmy.tableau.clear()
     return tarmy
 
+  def other_army(self):
+    return self.battle.armies[1-self.armyid]
+  
   def hook(self, battle):
     self.battle = battle
 

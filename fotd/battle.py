@@ -31,7 +31,6 @@ class Battle():
     for qname in battle_constants.QUEUE_NAMES:
       self.queues[qname] = deque()
     # other stuff
-    self.order_history = []
     self.date = 0
     self.weather = None
     self.yomis = None
@@ -57,7 +56,6 @@ class Battle():
                   self.armies[1].copy(),
                   debug_mode=False,
                   automated=True)
-    bat.order_history = self.order_history
     bat.date = self.date
     bat.weather = self.weather
     bat.yomis = self.yomis
@@ -120,11 +118,13 @@ class Battle():
       self.armies[i].order = None
       self.armies[i].formation_bonus = 1.0
       self.armies[i].commitment_bonus = False
+      # TODO: this is only helpful for view, so let view handle it
       self.armies[i].last_turn_morale = self.armies[i].morale
       self.armies[i].tableau.clear()
       for u in self.armies[i].present_units():
         u.move(self.hqs[u.army.armyid])
         u.targetting = None
+        # TODO: same here
         u.last_turn_size = u.size
     assert all((p.is_empty() for p in self.dynamic_positions))
     self.dynamic_positions = []
@@ -153,7 +153,6 @@ class Battle():
       else:
         self.armies[i].commitment_bonus = True
 
-    self.order_history.append(self.orders)
     self.yomi_winner_id = rps.orders_to_winning_armyid(self.orders) # -1 if None
     self.yomis = (rps.beats(self.orders[0], self.orders[1]), rps.beats(self.orders[1], self.orders[0]))
     self.yomi_list.append(self.yomis)
@@ -193,7 +192,7 @@ class Battle():
         u.targetting = None
         speed = u.speed + random.uniform(-3, 3)
         if order == 'D':
-          speed += 7
+          speed += 2.7
         orderlist.append((speed, "order_received",
                           contexts.Context(opt={"ctarget":u,
                                                 "order":order})))

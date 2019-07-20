@@ -152,8 +152,7 @@ def attack_order(battle, context, bv, narrator):
   """
   ctarget = context.ctarget
   ctarget.order = rps.FinalOrder('A')
-  myarmyid = ctarget.army.armyid
-  enemy = battle.armies[1-myarmyid]
+  enemy = ctarget.army.other_army()
   enemyunits = enemy.present_units()
   if not enemyunits:
     bv.yprint("No unit to attack!", mode=["huddle"])
@@ -213,10 +212,10 @@ def order_change(battle, context, bv, narrator):
 
 def order_yomi_win(battle, context, bv, narrator):
   csource_army = context.ctarget_army
-  ctarget_army = battle.armies[1-csource_army.armyid]
+  ctarget_army = csource_army.other_army()
   ycount = csource_army.get_yomi_count()
   bet_bool = bool(ctarget_army.bet_morale_change > 0)
-  morale_dam = ctarget_army.bet_morale_change + ycount 
+  morale_dam = ctarget_army.bet_morale_change + ycount
   Event(battle, "change_morale", contexts.Context({"ctarget_army":csource_army, # winning army
                                              "morale_change":ycount})).activate()
   # definitely need this
@@ -320,14 +319,6 @@ def duel_accepted(battle, context, bv, narrator):
   ourduel = duel.Duel(context, bv, narrator, duelists)
   # the Duel also gets the renderer and thus 
   healths = ourduel.resolve()
-  for i in [0, 1]:
-    if healths[i] <= 0:
-      bv.yprint("{ctarget} collapses; unit retreats!", templates={"ctarget":duelists[i]}, debug=True)
-      Event(battle, "receive_damage", contexts.Context({"damage":duelists[i].size,
-                                                        "ctarget":duelists[i],
-                                                        "dmgtype":"lost_duel",
-                                                        "dmgdata":"",
-                                                        "dmglog":""})).activate()
   # it's not always true there is a winner
   has_winner = False
   if healths[0] > 0 and healths[1] <= 0:
@@ -341,6 +332,18 @@ def duel_accepted(battle, context, bv, narrator):
   newcontext = {"csource":winner, "ctarget":loser}
   if has_winner:
     Event(battle, "duel_defeated", newcontext).activate()
+  x = [0,1]
+  # this shuffle is important; in the case of a double-ko of e.g. commanders, we do not want to
+  # favor the first player collapsing first
+  random.shuffle(x)
+  for i in x:
+    if healths[i] <= 0:
+      bv.yprint("{ctarget} collapses; unit retreats!", templates={"ctarget":duelists[i]}, debug=True)
+      Event(battle, "receive_damage", contexts.Context({"damage":duelists[i].size,
+                                                        "ctarget":duelists[i],
+                                                        "dmgtype":"lost_duel",
+                                                        "dmgdata":"",
+                                                        "dmglog":""})).activate()
 
 def duel_challenged(battle, context, bv, narrator):
   """
@@ -444,7 +447,7 @@ def unit_leave_battle(battle, context, bv, narrator):
       damage = 2
     Event(battle, "change_morale", contexts.Context({"ctarget_army":army,
                                                      "morale_change":-damage})).activate()
-    Event(battle, "change_morale", contexts.Context({"ctarget_army":battle.armies[1-army.armyid],
+    Event(battle, "change_morale", contexts.Context({"ctarget_army":army.other_army(),
                                                      "morale_change":damage})).activate()
 
 def change_morale(battle, context, bv, narrator):

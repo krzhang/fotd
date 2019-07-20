@@ -62,7 +62,7 @@ class ArtificialIntelligence(Intelligence):
           priors += np.array(skills.SKILLS[skstr]["ai_eval"])
   
     #  army strength adds to attack
-    opposing_army = battle.armies[1-army.armyid]
+    opposing_army = army.other_army()
     priors += np.array([1, 0, 0])*(army_power_estimate(army) -
                                    army_power_estimate(opposing_army))
   
@@ -76,7 +76,7 @@ class ArtificialIntelligence(Intelligence):
     advises playing your own state
     """
     formation = self.army.formation
-    opp_formation = battle.armies[1-self.army.armyid].formation
+    opp_formation = self.army.other_army().formation
     if not formation:
       return np.array([0,0,0])
     else:
@@ -212,7 +212,7 @@ class TrueRandomIntelligence(Intelligence):
 
   def get_final(self, battle):
     return rps.FinalOrder(np.random.choice(['A','D','I']))
-  
+
 class RandomIntelligence(Intelligence):
 
   def __init__(self, army):
@@ -225,6 +225,19 @@ class RandomIntelligence(Intelligence):
 
   def get_final(self, battle):
     return rps.FinalOrder(self.commit)
+  
+class CommitterIntelligence(ArtificialIntelligence):
+
+  def __init__(self, army):
+    super().__init__(army)
+    self.commit = None
+
+  def get_formation(self, battle):
+    self.commit = super().get_formation(battle)
+    return self.commit
+
+  def get_final(self, battle):
+    return self.commit
 
 class RockIntelligence(Intelligence):
 
@@ -258,6 +271,7 @@ INTELLIGENCE_FROM_TYPE = {'AI_WIP': ArtificialIntelligence,
                           'AI_RANDOM': RandomIntelligence,
                           'AI_TRUE_RANDOM': TrueRandomIntelligence,
                           'AI_NASH': NashIntelligence,
+                          'AI_COMMITER': CommitterIntelligence,
                           }
 
 ##################################

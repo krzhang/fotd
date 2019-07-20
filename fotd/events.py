@@ -211,7 +211,8 @@ def order_yomi_win(battle, context, bv, narrator):
   Event(battle, "change_morale", contexts.Context({"ctarget_army":ctarget_army, # losing army
                                              "morale_change":-morale_dam})).activate()
   # must put after to show the difference
-  bv.disp_yomi_win(csource_army, ctarget_army, ycount, morale_dam, bet_bool)
+  Event(battle, "yomi_morale_changed", contexts.Context({})).activate(
+    csource_army, ctarget_army, ycount, morale_dam, bet_bool)
 
 ##################
 # Manuever Phase #
@@ -314,7 +315,6 @@ def duel_accepted(battle, context, bv, narrator):
   random.shuffle(x)
   for i in x:
     if healths[i] <= 0:
-      #bv.yprint("{ctarget} collapses; unit retreats!", templates={"ctarget":duelists[i]}, debug=True)
       Event(battle, "receive_damage", contexts.Context({"damage":duelists[i].size,
                                                         "ctarget":duelists[i],
                                                         "dmgtype":"lost_duel",
@@ -392,12 +392,8 @@ def physical_strike(battle, context, bv, narrator):
 def receive_damage(battle, context, bv, narrator):
   ctarget = context.ctarget
   damage = context.damage
-  dmgdata = context.dmgdata
   if damage >= ctarget.size:
     damage = ctarget.size
-  dmglog = context.dmglog or None
-  bv.disp_damage(battle_constants.ARMY_SIZE_MAX,
-                                          ctarget.size, damage, dmgdata, dmglog)
   ctarget.size -= damage
   if ctarget.size <= 0:
     Event(battle, "unit_leave_battle", context).activate()
@@ -411,7 +407,7 @@ def unit_leave_battle(battle, context, bv, narrator):
   else:
     state = 'ESCAPED'
     Event(battle, "unit_escaped", context).activate()
-  ctarget.leave_battle(state) 
+  ctarget.leave_battle(state)
   if not army.is_present():
     Event(battle, "army_leave_battle", context={'ctarget_army':army}).activate()
   else:
@@ -641,7 +637,7 @@ def burned_eot(battle, context, bv, narrator):
     damage = random.choice(range(damdice))
     dmgdata = (None, ctarget, "burned", damage)
     Event(battle, "receive_damage", context.copy(
-      {"damage":damage, "dmgdata":dmgdata, "dmglog":""})).activate()
+      {"damage":damage, "dmgdata":dmgdata, "dmgtype":'fire', "dmglog":""})).activate()
     Event(battle, "remove_status_probabilistic", context.copy({"fizzle_prob": 0.5})).activate()
 
 ##########

@@ -372,27 +372,6 @@ class BattleScreen(View):
                                              bars[1],
                                              ctarget.color_name()))
 
-  def disp_damage(self, max_pos, oldsize, damage, dmgdata, dmglog):
-    newsize = oldsize - damage
-    hpbar = disp_bar_single_hit(battle_constants.ARMY_SIZE_MAX, oldsize, newsize)
-    if not dmgdata:
-      ndmgstr = " "
-    elif dmgdata[0]: # this means there is a source; janky
-      ndmgstr = "{} {} {} ".format(dmgdata[0].color_name(),
-                                   dmgdata[2],
-                                   dmgdata[1].color_name())
-    else:
-      # this means a single target: "I got burned"
-      ndmgstr = "{} is {} ".format(dmgdata[1].color_name(), dmgdata[2])
-    fdmgstr = ndmgstr + hpbar + " {} -> {} ({} damage)".format(
-      oldsize, newsize, colors.color_damage(damage))
-    if newsize == 0:
-      fdmgstr += "; " + ctext("DESTROYED!", Colors.FAILURE)
-    self.yprint(fdmgstr)
-    if dmglog:
-      dmg_str = disp_damage_calc(*dmglog)
-      self.yprint(dmg_str, debug=True)
-
   def disp_chara_speech(self, chara, speech, context):
     """
     What to display when a character says something.
@@ -417,22 +396,6 @@ class BattleScreen(View):
       other_str = disp_text_activation(successtr, success)
     self.yprint(preamble + other_str)
 
-
-  def disp_yomi_win(self, csource_army, ctarget_army, ycount, morale_dam, bet):
-    if ycount > 1:
-      combostr1 = "$[2,1]$+{} morale$[7]$ from combo".format(ycount)
-    else:
-      combostr1 = "$[2,1]$+1 morale$[7]$"
-    if bet:
-      combostr2 = "$[1]$-{} morale$[7]$ from order change".format(morale_dam)
-    else:
-      combostr2 = "$[1]$-1 morale$[7]$"
-    self.yprint("{} ({}) outread {} ({})!".format(csource_army.color_name(),
-                                                  combostr1,
-                                                  ctarget_army.color_name(),
-                                                  combostr2))
-
-      
   def input_battle_order(self, order_type, armyid):
     """
     Input a list of orders. The orders are objects (probably rps.Order()) with 

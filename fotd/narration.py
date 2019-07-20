@@ -1,10 +1,14 @@
 import random
 
+import battle_constants
 import duel
 import insults
 import rps
 import status
 import graphics_asciimatics
+from colors import ctext, Colors
+import colors
+from battleview import disp_bar_single_hit, disp_damage_calc
 
 def get_one(dictionary, key):
   """
@@ -80,7 +84,48 @@ class BattleNarrator(Narrator):
       pass
     else:
       func(context, *args)
+      
+  ########    
+  # Misc #
+  ########
 
+  def narrate_disp_damage(self, context):
+    ctarget = context['ctarget']
+    dmgdata = context['dmgdata']
+    dmglog = context['dmglog']
+    dmgtype = context['dmgtype']
+    oldsize = context['ctarget'].size
+    damage = context['damage']
+    if damage >= ctarget.size:
+      damage = ctarget.size
+
+    newsize = oldsize - damage
+    hpbar = disp_bar_single_hit(battle_constants.ARMY_SIZE_MAX, oldsize, newsize)
+    if not dmgdata:
+      ndmgstr = " "
+    elif dmgdata[0]: # this means there is a source; janky
+      ndmgstr = "{} {} {} ".format(dmgdata[0].color_name(),
+                                   dmgdata[2],
+                                   dmgdata[1].color_name())
+    else:
+      # this means a single target: "I got burned"
+      ndmgstr = "{} is {} ".format(dmgdata[1].color_name(), dmgdata[2])
+    fdmgstr = ndmgstr + hpbar + " {} -> {} ({} damage)".format(
+      oldsize, newsize, colors.color_damage(damage))
+    if newsize == 0:
+      if dmgtype == 'duel_defeated':
+        fdmgstr += "; " + ctext("OUTDUELED!", Colors.FAILURE)
+      else:
+        fdmgstr += "; " + ctext("DESTROYED!", Colors.FAILURE)
+    self.view.yprint(fdmgstr)
+    if dmglog:
+      dmg_str = disp_damage_calc(*dmglog)
+      self.view.yprint(dmg_str, debug=True)
+
+
+  ###############
+  # Order stuff #
+  ###############
   def narrate_formation_input_completed(self, context):
     self.view.yprint("", mode=["huddle"])
     for i in [0, 1]:
@@ -145,6 +190,21 @@ class BattleNarrator(Narrator):
                                                            ctarget.color_name(),
                                                            ctarget.str_targetting()),
                      debug=True)
+
+  def narrate_yomi_morale_changed(self, context, source_army, target_army, ycount, morale_dam,
+                                  bet):
+    if ycount > 1:
+      combostr1 = "$[2,1]$+{} morale$[7]$ from combo".format(ycount)
+    else:
+      combostr1 = "$[2,1]$+1 morale$[7]$"
+    if bet:
+      combostr2 = "$[1]$-{} morale$[7]$ from order change".format(morale_dam)
+    else:
+      combostr2 = "$[1]$-1 morale$[7]$"
+    self.view.yprint("{} ({}) outread {} ({})!".format(source_army.color_name(),
+                                                       combostr1,
+                                                       target_army.color_name(),
+                                                       combostr2))
 
   ################
   # Status Stuff #

@@ -169,8 +169,7 @@ def defense_order(battle, context, bv, narrator):
   ctarget = context.ctarget
   ctarget.order = rps.FinalOrder('D')
   ctarget.targetting = ("defending", ctarget)
-  ctarget.move(battle.hqs[ctarget.army.armyid])
-  bv.yprint("{}: staying put at {};".format(ctarget, context.ctarget.position), mode=["huddle"])
+  bv.yprint("{}: staying put;".format(ctarget), mode=["huddle"])
   Event(battle, "gain_status", context).activate("defended")
 
 def indirect_order(battle, context, bv, narrator):
@@ -247,8 +246,6 @@ def march(battle, context, bv, narrator):
     Event(battle, "engage", context).activate()
   converging = bool(ctarget.targetting[1] == csource) # if other ctarget is coming towards you
   if ctarget.is_defended():
-    assert ctarget.position == battle.hqs[ctarget.army.armyid] # meeting at hq
-    csource.move(ctarget.position)
     bv.yprint("  %s able to launch defensive arrow volley" % ctarget, debug=True)
     battle.place_event("arrow_strike", context.clean_switch(), "Q_RESOLVE")
     if random.random() < 0.5:
@@ -256,9 +253,6 @@ def march(battle, context, bv, narrator):
       battle.place_event("arrow_strike", context, "Q_RESOLVE")
     battle.place_event("physical_clash", context.clean_switch(), "Q_RESOLVE")
   else:
-    newpos = battle.make_position(ctarget)
-    csource.move(newpos)
-    ctarget.move(newpos)
     if random.random() < 0.5:
       bv.yprint("  %s able to launch offensive arrow volley" % csource, debug=True)
       battle.place_event("arrow_strike", context, "Q_RESOLVE")
@@ -481,7 +475,7 @@ def _resolve_entanglement(battle, context, bv, narrator):
   ctarget = context.ctarget
   base_entanglement_chance = 0.1
   additional_activations = []
-  possible_aoe = tuple([u for u in context.ctarget.position.units[ctarget.army.armyid] if u != ctarget])
+  possible_aoe = tuple([u for u in context.ctarget.army.present_units() if u != ctarget])
   # eventually make it just the people who are in position
   lure_candidates = tuple(lc for lc in
                            tuple(battle.armies[csource.army.armyid].present_units())

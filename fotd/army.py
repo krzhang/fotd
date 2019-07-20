@@ -17,7 +17,6 @@ class Unit(object):
     self.targetting = None
     self.attacked = [] # enemies attacked in a turn
     self.attacked_by = []
-    self.position = None
     self.last_turn_size = None
     self.present_state = 'PRESENT'
 
@@ -29,7 +28,6 @@ class Unit(object):
 
   def unhook(self):
     self.army = None
-    self.position = None
     self.character = None
     
   def copy(self):
@@ -37,7 +35,6 @@ class Unit(object):
     newunit.present_state = self.present_state
     newunit.attacked = self.attacked
     newunit.attacked_by = self.attacked_by
-    newunit.position = self.position
     return newunit
   
   def color_name(self):
@@ -84,18 +81,7 @@ class Unit(object):
   def get_order(self):
     return self.army.order
 
-  def move(self, newpos):
-    if self.position:
-      # could come here from None
-      self.position.remove_unit(self)
-    newpos.add_unit(self)
-    self.position = newpos
-
   def leave_battle(self, state):
-    if self.position:
-      # could come here from None
-      self.position.remove_unit(self)
-    self.position = None
     self.present_state = state
 
   def remove_unit_status(self, statstr):

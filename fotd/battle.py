@@ -12,7 +12,6 @@ import skills
 import status
 import tableau
 import battle_constants
-import positions
 import weather
 
 class Battle():
@@ -24,8 +23,6 @@ class Battle():
     self.armies = [army1, army2]
     for a in self.armies:
       a.hook(self)
-    self.hqs = [positions.Position(self, self.armies[i].commander, i) for i in [0, 1]]
-    self.dynamic_positions = []
     # 5 queues
     self.queues = {}
     for qname in battle_constants.QUEUE_NAMES:
@@ -40,8 +37,6 @@ class Battle():
 
   def close(self):
     self.queues = []
-    self.dynamic_positions = []
-    self.hqs = []
     for a in self.armies:
       a.unhook()
     self.armies = []
@@ -56,7 +51,6 @@ class Battle():
                   self.armies[1].copy(),
                   debug_mode=False,
                   automated=True)
-    bat.hqs = self.
     bat.date = self.date
     bat.weather = self.weather
     bat.yomis = self.yomis
@@ -93,11 +87,6 @@ class Battle():
   def is_hot(self):
     return self.weather.text == "hot"
 
-  def make_position(self, ctarget):
-    newpos = positions.Position(self, ctarget) # meeting in the field
-    self.dynamic_positions.append(newpos)
-    return newpos
-
   ########################
   # Turn logic functions #
   ########################
@@ -123,14 +112,11 @@ class Battle():
       self.armies[i].last_turn_morale = self.armies[i].morale
       self.armies[i].tableau.clear()
       for u in self.armies[i].present_units():
-        u.move(self.hqs[u.army.armyid])
         u.attacked = []
         u.attacked_by = []
         u.targetting = None
         # TODO: same here
         u.last_turn_size = u.size
-    assert all((p.is_empty() for p in self.dynamic_positions))
-    self.dynamic_positions = []
   
   def _get_formations_and_orders(self):
     ids = [0, 1]

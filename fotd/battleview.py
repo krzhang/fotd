@@ -309,10 +309,10 @@ class BattleScreen(View):
     # blits status
     if self.automated:
       return
-    if self.order_buf:
-      self._render_and_pause_order()
     if self.huddle_buf:
       self._render_and_pause_huddle()
+    if self.order_buf:
+      self._render_and_pause_order()
     clear_screen()
     ar = self._disp_armies() 
     st = self._disp_statline() 

@@ -68,9 +68,9 @@ STATUSES_BATTLE = {
   },
   "defended": {
     "eot":("remove_status_probabilistic", {"fizzle_prob":1.1}), # round up for floating error
-    # "on_receive": "{target} is now {stat_viz} against standard tactics",
+    # "on_receive": "{ctarget}: staying put, {stat_viz};",
     "on_receive": None,
-    "on_remove": None
+    "on_remove": None,
   },
   "is_commander": {
     "viz":"$[3]$commander$[7]$",
@@ -78,7 +78,8 @@ STATUSES_BATTLE = {
   "trymode_activated": {
     # "eot":[],
     "on_receive": "{ctarget} is actually trying now; they are brimming with power.",    
-    "on_remove": None
+    "on_remove": None,
+    "viz":"$[2,1]$tRyInG$[7]$",
   },
   "received_physical_attack": {
     "eot":("remove_status_probabilistic", {"fizzle_prob":1.1}),

@@ -4,7 +4,7 @@ import random
 
 from narration import BattleNarrator
 from battleview import BattleScreen
-import contexts
+from contexts import Context
 from events import Event
 import rps
 import status
@@ -92,7 +92,7 @@ class Battle():
     # common knowledge: later take out
     self.date += 1
     self.weather = weather.random_weather()
-    self.yomi_winner = -1
+    self.yomi_winner_id = -1
     self.yomis = None
     # setup stuff
     for i in [0, 1]:
@@ -119,7 +119,7 @@ class Battle():
       self.armies[i].tableau.scouted_by(self.armies[1-i])
     for i in ids:
       self.armies[i].formation = self.armies[i].intelligence.get_formation(self)
-    self.narrator.narrate_formations()
+    Event(self, "formation_input_completed", Context({})).activate()
 
     # orders
     for i in ids:
@@ -129,16 +129,20 @@ class Battle():
       # this is currently bad if player is second-player, because you can see the output
       # of the AI orders
       self.armies[i].order = self.armies[i].intelligence.get_final(self)
-
+    # TODO: can add events here that trigger refreshes, etc.
+    
   def _handle_yomi(self):
     for i in [0, 1]:
       formation = self.formations[i]
       cost = rps.formation_info(str(formation), "morale_cost")[str(self.armies[i].order)]
       if cost:
+        self.armies[i].bet_morale_change = cost
+        self.armies[i].commitment_bonus = False
         Event(self, "order_change",
-              contexts.Context({"ctarget_army":self.armies[i],
+              Context({"ctarget_army":self.armies[i],
                                 "morale_bet":cost})).activate()
       else:
+        self.armies[i].bet_morale_change = 0
         self.armies[i].commitment_bonus = True
 
     self.yomi_winner_id = rps.orders_to_winning_armyid(self.orders) # -1 if None
@@ -147,16 +151,15 @@ class Battle():
     self.yomi_list.append(self.yomis)
     if self.yomi_winner_id in [0,1]:
       Event(self, "order_yomi_win",
-            contexts.Context({"ctarget_army":self.armies[self.yomi_winner_id]}))
-    self.narrator.narrate_orders(self.yomi_winner_id)
-
+            Context({"ctarget_army":self.armies[self.yomi_winner_id]}))
+    Event(self, "order_yomi_completed", Context({})).activate(self.yomi_winner_id)
     
   def _run_status_handlers(self, func_key):
     for i in [1, 0]:
       # originally these were in lists; the problem is you can change these lists, so make copies
       for unit in tuple(self.armies[i].units):
         for sta in tuple(unit.unit_status):
-          ctxt = contexts.Context({"ctarget":unit})
+          ctxt = Context({"ctarget":unit})
           ss = sta.stat_str
           func_list = status.status_info(ss, func_key)
           if func_list: # found a function (func_name, kwargs)
@@ -164,7 +167,7 @@ class Battle():
             event_name = func_list[0]
             additional_opt = {"stat_str":ss}
             additional_opt.update(func_list[1]) # additional arguments
-            Event(self, event_name, ctxt.copy(additional_opt)).activate()  
+            Event(self, event_name, ctxt.copy(additional_opt)).activate()
 
   def _send_orders_to_armies(self):
     orders = self.orders
@@ -175,9 +178,7 @@ class Battle():
         speed = u.speed + random.uniform(-3, 3)
         if order == 'D':
           speed += 2.7
-        orderlist.append((speed, "order_received",
-                          contexts.Context(opt={"ctarget":u,
-                                                "order":order})))
+        orderlist.append((speed, "order_received", Context(opt={"ctarget":u, "order":order})))
     orderlist.sort(key=lambda x: x[0])
     for o in tuple(orderlist):
       Event(self, o[1], o[2]).defer('Q_ORDER')

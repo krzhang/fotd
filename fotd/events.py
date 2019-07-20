@@ -162,13 +162,11 @@ def attack_order(battle, context, bv, narrator):
   enemy = ctarget.army.other_army()
   enemyunits = enemy.present_units()
   if not enemyunits:
-    bv.yprint("No unit to attack!", mode=['order_phase'])
     ctarget.targetting = ("defending", ctarget)
     return
   cnewsource = context.ctarget # new event
   cnewtarget = random.choice(enemyunits)
   cnewsource.targetting = ("marching", cnewtarget)
-  bv.yprint("{}: marching -> {};".format(cnewsource, cnewtarget), mode=['order_phase'])
   newcontext = contexts.Context({"csource":cnewsource, "ctarget":cnewtarget})
   Event(battle, "march", newcontext).defer("Q_MANUEVER")
 
@@ -176,7 +174,6 @@ def defense_order(battle, context, bv, narrator):
   ctarget = context.ctarget
   ctarget.order = rps.FinalOrder('D')
   ctarget.targetting = ("defending", ctarget)
-  bv.yprint("{}: staying put;".format(ctarget), mode=['order_phase'])
   Event(battle, "gain_status", context).activate("defended")
 
 def indirect_order(battle, context, bv, narrator):
@@ -184,13 +181,11 @@ def indirect_order(battle, context, bv, narrator):
   ctarget.order = rps.FinalOrder('I')
   enemyunits = ctarget.army.other_army().present_units()
   if not enemyunits:
-    bv.yprint("No unit to target!", mode=['order_phase'])
     ctarget.targetting = ("defending", ctarget)
     return
   cnewsource = ctarget  # new event
   cnewtarget = random.choice(enemyunits)
   cnewsource.targetting = ("sneaking", cnewtarget)
-  bv.yprint("{}: sneaking -> {}; planning skullduggery".format(cnewsource, cnewtarget), mode=['order_phase'])
   newcontext = contexts.Context({"csource":cnewsource, "ctarget":cnewtarget})
   Event(battle, "indirect_raid", newcontext).defer("Q_MANUEVER")
 
@@ -204,15 +199,6 @@ def provoked_order(battle, context, bv, narrator):
 ############################################
 # Meta events about the orders themeselves #
 ############################################
-
-def order_change(battle, context, bv, narrator):
-  """
-  When an order changes, if it happens to lose the Yomi, then the cost of the morale is
-  'bet' and will be removed if the opponent out-Yomi's you.
-  """
-  ctarget_army = context.ctarget_army
-  morale_bet = context.morale_bet
-  ctarget_army.bet_morale_change = morale_bet
 
 def order_yomi_win(battle, context, bv, narrator):
   csource_army = context.ctarget_army
@@ -295,6 +281,7 @@ def engage(battle, context, bv, narrator):
       Event(battle, sc.sc_str, newcontext).defer("Q_RESOLVE")
   if random.random() < battle_constants.DUEL_BASE_CHANCE:
     if battle.imaginary:
+      # we want to control the variance in imagined scenarios
       return
     acceptance, duel_data = duel.duel_commit(context, csource, ctarget)
     if acceptance:
@@ -328,7 +315,7 @@ def duel_accepted(battle, context, bv, narrator):
   random.shuffle(x)
   for i in x:
     if healths[i] <= 0:
-      bv.yprint("{ctarget} collapses; unit retreats!", templates={"ctarget":duelists[i]}, debug=True)
+      #bv.yprint("{ctarget} collapses; unit retreats!", templates={"ctarget":duelists[i]}, debug=True)
       Event(battle, "receive_damage", contexts.Context({"damage":duelists[i].size,
                                                         "ctarget":duelists[i],
                                                         "dmgtype":"lost_duel",

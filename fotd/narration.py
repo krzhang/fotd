@@ -89,7 +89,7 @@ class BattleNarrator(Narrator):
     "on_retain":"{ctarget} is still {stat_str}",
   }
 
-  def narrate_formations(self):
+  def narrate_formation_input_completed(self, context):
     self.view.yprint("", mode=["huddle"])
     for i in [0, 1]:
       form = self.battle.formations[i]
@@ -102,7 +102,7 @@ class BattleNarrator(Narrator):
     # self.view.pause_and_display()
     # self.view._flush()  # so we don't see formations again next time
 
-  def narrate_orders(self, winner_id):
+  def narrate_order_yomi_completed(self, context, winner_id):
     self.view.yprint("", mode=["huddle"])
     for i in [0, 1]:
       order = self.battle.orders[i]
@@ -123,8 +123,10 @@ class BattleNarrator(Narrator):
   def narrate_march(self, context):
     csource = context.csource
     ctarget = context.ctarget
+    self.view.yprint("{csource}: marching -> {ctarget};", templates=context, mode=['order_phase'])
     # if ctarget in csource.attacked_by:
     if csource.attacked_by:
+      self.view.yprint("  [cancelled by attack]", mode=['order_phase'])
       # this replication of logic is annoying; the right todo is to have the origional thing
       # emit an event right here, and render at the beginning of that event as opposed to here
       return
@@ -136,11 +138,15 @@ class BattleNarrator(Narrator):
                                                            csource.str_targetting(),
                                                            ctarget.color_name(),
                                                            readytext), debug=True)
+  def narrate_defense_order(self, context):
+    self.view.yprint("{ctarget}: staying put;", templates=context, mode=['order_phase'])
 
   def narrate_indirect_raid(self, context):
     csource = context.csource
     ctarget = context.ctarget
+    self.view.yprint("{csource}: sneaking -> {ctarget};", templates=context, mode=['order_phase'])
     if csource.attacked_by:
+      self.view.yprint("  [cancelled by attack]", mode=['order_phase'])
       return
     self.view.yprint("{} ({}) sneaks up on {} ({})".format(csource.color_name(),
                                                            csource.str_targetting(),
@@ -164,13 +170,16 @@ class BattleNarrator(Narrator):
     """
     Narrates speeches that happen when a roll succeeds or fails.
     """
+    if "on_roll" in ROLLS[key] and ROLLS[key]["on_roll"]:  # need both so you don't format None
+      # normal situation
+      self.view.yprint(get_one(ROLLS[key], "on_roll"), templates=context)
+      # self.view.disp_activated_narration(get_one(ROLLS[key], "short"), on_roll)
+    if key == "jeer_tactic":
+      self._narrate_jeer(success, context)
     if commitment_guarantee:
       self.view.disp_activated_narration(ROLLS[key]['short'], "guaranteed!", True)
     if success:
       narrator_str, narrate_text = get_one(ROLLS[key], "on_success_speech")
-      if not self.view.automated:
-        if 'graphics_renderer' in ROLLS[key]:
-          getattr(graphics_asciimatics, ROLLS[key]['graphics_renderer'])()
       if key == 'chu_ko_nu':
         if random.random() < 0.5 and context.csource.name == "Zhuge Liang":
           narrator_str = 'The name is a bit embarassing...'
@@ -178,6 +187,8 @@ class BattleNarrator(Narrator):
       narrator_str, narrate_text = get_one(ROLLS[key], "on_fail_speech")
     if narrator_str and (narrator_str in context) and narrate_text:
       self.narrate_pair(context[narrator_str], narrate_text, context)
+    if success and not self.view.automated and 'graphics_renderer' in ROLLS[key]:
+        getattr(graphics_asciimatics, ROLLS[key]['graphics_renderer'])()
 
   def narrate_roll_post_success(self, context, key, success):
     """
@@ -214,15 +225,6 @@ class BattleNarrator(Narrator):
     if not self.view.automated:
       # hack: move later
       graphics_asciimatics.render_jeer_tactic(narration0, narration1)
-
-  def narrate_roll(self, key, success, context):
-    if "on_roll" in ROLLS[key] and ROLLS[key]["on_roll"]:  # need both so you don't format None
-      # normal situation
-      self.view.yprint(get_one(ROLLS[key], "on_roll"), templates=context)
-      # self.view.disp_activated_narration(get_one(ROLLS[key], "short"), on_roll)
-    if key == "jeer_tactic":
-      self._narrate_jeer(success, context)
-    self.narrate_roll_success(key, success, context)
 
   # meta stuff: armies leaveing, etc.
   

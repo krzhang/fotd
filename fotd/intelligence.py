@@ -171,7 +171,8 @@ class NashIntelligence(ArtificialIntelligence):
           for k in [0,1]:
             tempbattle.armies[k].formation = rps.FormationOrder(strat_strs[k])
           init_eval = battle_edge_estimate(tempbattle, 0)
-          tempbattle._get_orders() # need to do 2 phases
+          # simulate the rest of the turn; should get orders and then resolve them
+          tempbattle._get_orders()
           tempbattle.resolve_orders()
           post_eval = battle_edge_estimate(tempbattle, 0)
           matrix[i][j] += post_eval - init_eval

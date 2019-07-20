@@ -83,6 +83,13 @@ class Event():
                       self.battle.battlescreen,
                       self.battle.narrator, *args)
 
+  def defer(self, queue_name, args=[]):
+    """
+    used when we want to make a new event on a queue of our choice 
+    we pop from right, so we should place left.
+    """
+    self.battle.queues[queue_name].appendleft((self, args))
+
 def event_info(event_name, key):
   """ Main auxilary function; gets a piece of info about an event type, and None otherwise."""
   edict = EVENTS.get(event_name, None)
@@ -163,7 +170,7 @@ def attack_order(battle, context, bv, narrator):
   cnewsource.targetting = ("marching", cnewtarget)
   bv.yprint("{}: marching -> {};".format(cnewsource, cnewtarget), mode=['order_phase'])
   newcontext = contexts.Context({"csource":cnewsource, "ctarget":cnewtarget})
-  battle.place_event("march", newcontext, "Q_MANUEVER")
+  Event(battle, "march", newcontext).defer("Q_MANUEVER")
 
 def defense_order(battle, context, bv, narrator):
   ctarget = context.ctarget
@@ -185,7 +192,7 @@ def indirect_order(battle, context, bv, narrator):
   cnewsource.targetting = ("sneaking", cnewtarget)
   bv.yprint("{}: sneaking -> {}; planning skullduggery".format(cnewsource, cnewtarget), mode=['order_phase'])
   newcontext = contexts.Context({"csource":cnewsource, "ctarget":cnewtarget})
-  battle.place_event("indirect_raid", newcontext, "Q_MANUEVER")
+  Event(battle, "indirect_raid", newcontext).defer("Q_MANUEVER")
 
 def panicked_order(battle, context, bv, narrator):
   #  could just call this order, though this way the narrator picks up this situation
@@ -232,7 +239,7 @@ def march(battle, context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
   if csource.attacked_by:
-    battle.place_event("action_already_used", context, 'Q_RESOLVE')
+    Event(battle, "action_already_used", context).defer('Q_RESOLVE')
     return
   ctarget.attacked_by.append(csource)
   csource.attacked.append(ctarget)
@@ -243,33 +250,33 @@ def march(battle, context, bv, narrator):
   converging = bool(ctarget.targetting[1] == csource) # if other ctarget is coming towards you
   if ctarget.is_defended():
     bv.yprint("  %s able to launch defensive arrow volley" % ctarget, debug=True)
-    battle.place_event("arrow_strike", context.clean_switch(), "Q_RESOLVE")
+    Event(battle,"arrow_strike", context.clean_switch()).defer("Q_RESOLVE")
     if random.random() < 0.5:
       bv.yprint("  %s able to launch offensive arrow volley" % csource, debug=True)
-      battle.place_event("arrow_strike", context, "Q_RESOLVE")
-    battle.place_event("physical_clash", context.clean_switch(), "Q_RESOLVE")
+      Event(battle, "arrow_strike", context).defer("Q_RESOLVE")
+    Event(battle, "physical_clash", context.clean_switch()).defer("Q_RESOLVE")
   else:
     if random.random() < 0.5:
       bv.yprint("  %s able to launch offensive arrow volley" % csource, debug=True)
-      battle.place_event("arrow_strike", context, "Q_RESOLVE")
+      Event(battle, "arrow_strike", context).defer("Q_RESOLVE")
     # defense doesn't have time to shoot arrows, unless they were coming in this direction
     if converging:
       if random.random() < 0.5:
         bv.yprint("  %s able to launch defensive arrow volley" % ctarget, debug=True)
-        battle.place_event("arrow_strike", context.clean_switch(), "Q_RESOLVE")
+        Event(battle, "arrow_strike", context.clean_switch()).defer("Q_RESOLVE")
     # need logic for when 2 attackers rush into each other
-    battle.place_event("physical_clash", context, "Q_RESOLVE")
+    Event(battle, "physical_clash", context).defer("Q_RESOLVE")
 
 def indirect_raid(battle, context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
   if csource.attacked_by:
-    battle.place_event("action_already_used", context, 'Q_RESOLVE')
+    Event(battle, "action_already_used", context).defer('Q_RESOLVE')
     return
   Event(battle, "engage", context).activate()
   # tactic 1: raid
   vulnerable = bool(ctarget.order==rps.FinalOrder('D'))
-  battle.place_event("arrow_strike", context.copy({"vulnerable":vulnerable}), "Q_RESOLVE")
+  Event(battle, "arrow_strike", context.copy({"vulnerable":vulnerable})).defer("Q_RESOLVE")
 
 def engage(battle, context, bv, narrator):
   """
@@ -285,13 +292,13 @@ def engage(battle, context, bv, narrator):
     if sc.order == csource.order and battle.yomi_winner_id == army.armyid:
       # import pdb; pdb.set_trace()
       newcontext = context.copy({'skillcard':sc})
-      battle.place_event(sc.sc_str, newcontext, "Q_RESOLVE")
+      Event(battle, sc.sc_str, newcontext).defer("Q_RESOLVE")
   if random.random() < battle_constants.DUEL_BASE_CHANCE:
     if battle.imaginary:
       return
     acceptance, duel_data = duel.duel_commit(context, csource, ctarget)
     if acceptance:
-      battle.place_event("duel_challenged", context, "Q_RESOLVE")
+      Event(battle, "duel_challenged", context).defer("Q_RESOLVE")
 
 #################
 # Resolve Phase #

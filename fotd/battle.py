@@ -3,14 +3,11 @@ from collections import deque
 import random
 
 from narration import BattleNarrator
-import textutils
 from battleview import BattleScreen
 import contexts
-import events
+from events import Event
 import rps
-import skills
 import status
-import tableau
 import battle_constants
 import weather
 
@@ -74,12 +71,9 @@ class Battle():
   def orders(self):
     return (self.armies[0].order, self.armies[1].order)
     
-  def place_event(self, event_type, context, queue_name):
-    """
-    used when we want to make a new event on a queue of our choice 
-    we pop from right, so we should place left.
-    """
-    self.queues[queue_name].appendleft(events.Event(self, event_type, context))
+  # def place_event(self, event_type, context, queue_name, args=[]):
+  #   self.queues[queue_name].appendleft((Event(self, event_type, context),
+  #                                       args))
 
   def is_raining(self):
     return self.weather.text == "raining"
@@ -141,9 +135,9 @@ class Battle():
       formation = self.formations[i]
       cost = rps.formation_info(str(formation), "morale_cost")[str(self.armies[i].order)]
       if cost:
-        events.Event(self, "order_change",
-                     contexts.Context({"ctarget_army":self.armies[i],
-                                       "morale_bet":cost})).activate()
+        Event(self, "order_change",
+              contexts.Context({"ctarget_army":self.armies[i],
+                                "morale_bet":cost})).activate()
       else:
         self.armies[i].commitment_bonus = True
 
@@ -152,8 +146,8 @@ class Battle():
                   rps.beats(self.orders[1], self.orders[0]))
     self.yomi_list.append(self.yomis)
     if self.yomi_winner_id in [0,1]:
-      events.Event(self, "order_yomi_win",
-                   contexts.Context({"ctarget_army":self.armies[self.yomi_winner_id]}))
+      Event(self, "order_yomi_win",
+            contexts.Context({"ctarget_army":self.armies[self.yomi_winner_id]}))
     self.narrator.narrate_orders(self.yomi_winner_id)
 
     
@@ -170,7 +164,7 @@ class Battle():
             event_name = func_list[0]
             additional_opt = {"stat_str":ss}
             additional_opt.update(func_list[1]) # additional arguments
-            events.Event(self, event_name, ctxt.copy(additional_opt)).activate()  
+            Event(self, event_name, ctxt.copy(additional_opt)).activate()  
 
   def _send_orders_to_armies(self):
     orders = self.orders
@@ -186,12 +180,12 @@ class Battle():
                                                 "order":order})))
     orderlist.sort(key=lambda x: x[0])
     for o in tuple(orderlist):
-      self.place_event(o[1], o[2], 'Q_ORDER')
+      Event(self, o[1], o[2]).defer('Q_ORDER')
 
   def _run_queue(self, queue_name):
     while self.queues[queue_name]:
-      event = self.queues[queue_name].pop()
-      event.activate()
+      event, args = self.queues[queue_name].pop()
+      event.activate(*args)
 
   def resolve_orders(self):
     """
@@ -213,7 +207,7 @@ class Battle():
     for i in [0, 1]:
       if not self.armies[i].is_present():
         game_end = True
-    events.Event(self, "turn_end", {"game_end":game_end}).activate()
+    Event(self, "turn_end", {"game_end":game_end}).activate()
     return game_end
     
   def take_turn(self):

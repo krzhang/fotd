@@ -640,9 +640,9 @@ def burned_eot(battle, context, bv, narrator):
       {"damage":damage, "dmgdata":dmgdata, "dmgtype":'fire', "dmglog":""})).activate()
     Event(battle, "remove_status_probabilistic", context.copy({"fizzle_prob": 0.5})).activate()
 
-##########
-# Skills #
-##########
+################
+# Other Skills #
+################
 
 def _trymode_activation_success(battle, context):
   Event(battle, "gain_status", context).activate("trymode_activated")

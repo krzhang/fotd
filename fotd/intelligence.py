@@ -161,16 +161,42 @@ class ArtificialIntelligence(Intelligence):
 
 class NashIntelligence(ArtificialIntelligence):
 
-  def get_matrix(self, battle):
+  def get_formation_matrix(self, battle):
     matrix = np.array([[0,0,0], [0,0,0],[0,0,0]])
     for i, strat0 in enumerate(['A','D','I']):
       for j, strat1 in enumerate(['A','D','I']):
         strat_strs = [strat0, strat1]
         for _ in range(3):
-          tempbattle = battle.imaginary_copy()
+          tempbattle = battle.imaginary_copy("AI_RANDOM_COMMITTER")
+          for k in [0,1]:
+            tempbattle.armies[k].formation = rps.FormationOrder(strat_strs[k])
+          init_eval = battle_edge_estimate(tempbattle, 0)
+          tempbattle._get_orders() # need to do 2 phases
+          tempbattle.resolve_orders()
+          post_eval = battle_edge_estimate(tempbattle, 0)
+          matrix[i][j] += post_eval - init_eval
+        battle.battlescreen.yprint("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]), mode=['AI'])
+    return matrix
+
+  def get_formation(self, battle):
+    mat = self.get_formation_matrix(battle)
+    rstrats0, rstrats1, _ = williams_solve_old(mat.tolist(), 100)
+    strats = [normalize(rstrats0), normalize(rstrats1)]
+    strat = strats[self.army.armyid]
+    battle.battlescreen.yprint("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}".format(*(strats[0] + strats[1])), mode=['AI'])
+    battle.battlescreen.yprint("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['AI'])
+    return rps.FormationOrder(np.random.choice(['A','D','I'], p=strat))
+  
+  def get_final_matrix(self, battle):
+    matrix = np.array([[0,0,0], [0,0,0],[0,0,0]])
+    for i, strat0 in enumerate(['A','D','I']):
+      for j, strat1 in enumerate(['A','D','I']):
+        strat_strs = [strat0, strat1]
+        for _ in range(3):
+          tempbattle = battle.imaginary_copy("AI_RANDOM_RANDOM")
           for k in [0,1]:
             tempbattle.armies[k].order = rps.FinalOrder(strat_strs[k])
-          init_eval = battle_edge_estimate(tempbattle, 0)  
+          init_eval = battle_edge_estimate(tempbattle, 0)
           tempbattle.resolve_orders()
           post_eval = battle_edge_estimate(tempbattle, 0)
           matrix[i][j] += post_eval - init_eval
@@ -178,7 +204,7 @@ class NashIntelligence(ArtificialIntelligence):
     return matrix
   
   def get_final(self, battle):
-    mat = self.get_matrix(battle)
+    mat = self.get_final_matrix(battle)
     rstrats0, rstrats1, _ = williams_solve_old(mat.tolist(), 100)
     strats = [normalize(rstrats0), normalize(rstrats1)]
     strat = strats[self.army.armyid]
@@ -224,9 +250,9 @@ class RandomIntelligence(Intelligence):
     return rps.FormationOrder(self.commit)
 
   def get_final(self, battle):
-    return rps.FinalOrder(self.commit)
+    return rps.FinalOrder(str(self.army.formation))
   
-class CommitterIntelligence(ArtificialIntelligence):
+class HeuCommitter(ArtificialIntelligence):
 
   def __init__(self, army):
     super().__init__(army)
@@ -237,7 +263,12 @@ class CommitterIntelligence(ArtificialIntelligence):
     return self.commit
 
   def get_final(self, battle):
-    return self.commit
+    return rps.FinalOrder(str(self.army.formation))
+
+class NashCommitter(NashIntelligence):
+
+  def get_final(self, battle):
+    return rps.FinalOrder(str(self.army.formation))
 
 class RockIntelligence(Intelligence):
 
@@ -263,15 +294,16 @@ class ScissorsIntelligence(Intelligence):
   def get_final(self, battle):
     return rps.FinalOrder('I')
 
-INTELLIGENCE_FROM_TYPE = {'AI_WIP': ArtificialIntelligence,
+INTELLIGENCE_FROM_TYPE = {'AI_HEU_HEU': ArtificialIntelligence,
                           'PLAYER': PlayerIntelligence,
                           'AI_ROCK': RockIntelligence,
                           'AI_PAPER': PaperIntelligence,
                           'AI_SCISSORS': ScissorsIntelligence,
-                          'AI_RANDOM': RandomIntelligence,
-                          'AI_TRUE_RANDOM': TrueRandomIntelligence,
-                          'AI_NASH': NashIntelligence,
-                          'AI_COMMITTER': CommitterIntelligence,
+                          'AI_RANDOM_COMMITTER': RandomIntelligence,
+                          'AI_RANDOM_RANDOM': TrueRandomIntelligence,
+                          'AI_NASH_NASH': NashIntelligence,
+                          'AI_HEU_COMMITTER': HeuCommitter,
+                          'AI_NASH_COMMITTER': NashCommitter,
                           }
 
 ##################################

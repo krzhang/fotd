@@ -165,7 +165,7 @@ class Army(object):
   def __repr__(self):
     return self.color_name()
 
-  def copy(self, intelligence_type='AI_RANDOM'):
+  def copy(self, intelligence_type):
     tarmy = Army(self.name + "_copy",
                   [u.copy() for u in self.present_units()],
                   self.armyid,

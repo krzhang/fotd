@@ -40,12 +40,12 @@ class Battle():
     self.narrator = None
     self.battlescreen = None
     
-  def imaginary_copy(self):
+  def imaginary_copy(self, intelligence_type):
     """
     creates an imaginary battle, used for mid-battle strategizing
     """
-    bat = Battle(self.armies[0].copy(),
-                  self.armies[1].copy(),
+    bat = Battle(self.armies[0].copy(intelligence_type),
+                  self.armies[1].copy(intelligence_type),
                   debug_mode=False,
                   automated=True)
     bat.date = self.date
@@ -112,7 +112,7 @@ class Battle():
         # TODO: same here
         u.last_turn_size = u.size
   
-  def _get_formations_and_orders(self):
+  def _get_formations(self):
     ids = [0, 1]
     for i in ids:
       self.armies[i].tableau.draw_cards()
@@ -121,6 +121,8 @@ class Battle():
       self.armies[i].formation = self.armies[i].intelligence.get_formation(self)
     Event(self, "formation_input_completed", Context({})).activate()
 
+  def _get_orders(self):
+    ids = [0, 1]
     # orders
     for i in ids:
       self.armies[i].tableau.draw_cards()
@@ -218,7 +220,8 @@ class Battle():
     """
     # formations
     self._init_day()
-    self._get_formations_and_orders()
+    self._get_formations()
+    self._get_orders()
     return self.resolve_orders()
   # exposed methods
   

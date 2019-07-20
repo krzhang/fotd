@@ -1,6 +1,7 @@
 import status
 import intelligence
 import rps
+import tableau
 
 class Unit(object):
   def __init__(self, character, size, speed):
@@ -26,8 +27,13 @@ class Unit(object):
   def __repr__(self):
     return self.color_name()
 
+  def unhook(self):
+    self.army = None
+    self.position = None
+    self.character = None
+    
   def copy(self):
-    return Unit(self.character, self.size, self.speed)
+    return Unit(self.character.copy(), self.size, self.speed)
   
   def color_name(self):
     return "$[{}]${}$[7]$".format(self.color, self.name)
@@ -143,6 +149,13 @@ class Army(object):
     for u in units:
       u.army = self
       u.set_color(color)
+      for s in u.character.skills:
+        u.add_unit_status(s.skill_str)
+          # crazy bug here because add_unit_status will just run the constructor to
+          # blah_STATUS without the associatied string, creating a status that's not from a
+          # skillstring
+          # u.unit_status.append(status.Status.FromSkillName(s.skill_str))
+    self.commander.add_unit_status("is_commander")
     self.intelligence = intelligence.INTELLIGENCE_FROM_TYPE[intelligence_type](self)
     self.morale = morale
     self.last_turn_morale = morale
@@ -154,7 +167,7 @@ class Army(object):
     self.order = None
     self.commitment_bonus = False
     self.battle_lost = False
-    self.tableau = None
+    self.tableau = tableau.Tableau(self)
     self.bet_morale_change = 0
     
   def __repr__(self):
@@ -178,7 +191,17 @@ class Army(object):
     # need to also run things from battle.init_day; messy
     tarmy.tableau.clear()
     return tarmy
-  
+
+  def hook(self, battle):
+    self.battle = battle
+
+  def unhook(self):
+    self.tableau.unhook()
+    self.tableau = None
+    self.battle = None
+    for u in self.units:
+      u.unhook()
+    
   def color_name(self):
     return "$[{}]${}$[7]$".format(self.color, self.name)
   

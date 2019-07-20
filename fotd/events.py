@@ -305,6 +305,8 @@ def engage(battle, context, bv, narrator):
       newcontext = context.copy({'skillcard':sc})
       battle.place_event(sc.sc_str, newcontext, "Q_RESOLVE")
   if random.random() < battle_constants.DUEL_BASE_CHANCE:
+    if battle.imaginary:
+      return
     acceptance, duel_data = duel.duel_commit(context, csource, ctarget)
     if acceptance:
       battle.place_event("duel_challenged", context, "Q_RESOLVE")

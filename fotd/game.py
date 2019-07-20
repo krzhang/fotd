@@ -166,5 +166,12 @@ def test_AI(debug=False, resize=False, first_intelligence="AI_WIP",
         final_results[j] += 1
   return final_results
 
+def test_AI_all(debug=False, resize=False, trials=100):
+  ai_strs = ['AI_ROCK', 'AI_PAPER', 'AI_SCISSORS', 'AI_RANDOM', 'AI_TRUE_RANDOM', 'AI_WIP', 'AI_NASH']
+  for i in ai_strs:
+    for j in ai_strs:
+      results = test_AI(first_intelligence=i, second_intelligence=j, trials=trials)
+      print("{} vs {}: {}".format(i, j, results))
+
 if __name__ == "__main__":
   test(resize=True)

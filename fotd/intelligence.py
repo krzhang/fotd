@@ -179,10 +179,30 @@ class NashIntelligence(ArtificialIntelligence):
   
   def get_final(self, battle):
     mat = self.get_matrix(battle)
-    tgame = nashpy.Game(mat)
-    equilibrium = next(tgame.vertex_enumeration())
-    strat = np.round(equilibrium[self.army.armyid], 3)
+    rstrats0, rstrats1, _ = williams_solve_old(mat.tolist(), 100)
+    strats = [normalize(rstrats0), normalize(rstrats1)]
+    strat = strats[self.army.armyid]
+    battle.battlescreen.yprint("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}".format(*(strats[0] + strats[1])), mode=['huddle'])
     battle.battlescreen.yprint("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['huddle'])
+    # bestvals = [None, None]
+    # beststrats = [None, None]
+    # for eq in tgame.vertex_enumeration():
+    #   val0 = np.matmul(np.matmul(eq[0], tgame.payoff_matrices[0]), np.array([1,1,1]).T)
+    #   if not bestvals[0] or val0 > bestvals[0]:
+    #     bestvals[0] = val0
+    #     beststrats[0] = eq[0]
+    #   val1 = np.matmul(np.matmul(np.array([1, 1, 1]), tgame.payoff_matrices[0]), eq[1].T)
+    #   if not bestvals[1] or val1 < bestvals[1]:
+    #     bestvals[1] = val1
+    #     beststrats[1] = eq[1]
+    # for i in [0,1]:
+    #   if beststrats[i] is None:
+    #     beststrats[i] = np.array([1,1,1])
+    # strat0 = normalize(beststrats[0])
+    # strat1 = normalize(beststrats[1])
+    # strat = normalize(beststrats[self.army.armyid])
+    # battle.battlescreen.yprint("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}".format(*(strat0 + strat1)), mode=['huddle'])
+    # battle.battlescreen.yprint("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['huddle'])
     return rps.FinalOrder(np.random.choice(['A','D','I'], p=strat))
   
 class TrueRandomIntelligence(Intelligence):
@@ -244,10 +264,65 @@ INTELLIGENCE_FROM_TYPE = {'AI_WIP': ArtificialIntelligence,
 # Utility functions everyone has #
 ##################################
 
+''' 
+[Game theory payoff matrix solver « Python recipes « ActiveState Code](http://code.activestate.com/recipes/496825-game-theory-payoff-matrix-solver/)
+- changed for numpy
+
+Approximate the strategy oddments for 2 person zero-sum games of perfect information.
+
+Applies the iterative solution method described by J.D. Williams in his classic
+book, The Compleat Strategyst, ISBN 0-486-25101-2.   See chapter 5, page 180 for details. '''
+
+from operator import add, neg
+
+def williams_solve(payoff_matrix, iterations=100):
+  'Return the oddments (mixed strategy ratios) for a given payoff matrix'
+  transpose = payoff_matrix.T
+  numrows = len(payoff_matrix)
+  numcols = len(transpose)
+  row_cum_payoff = np.array([0] * numrows)
+  col_cum_payoff = np.array([0] * numcols)
+  colpos = range(numcols)
+  rowpos = map(neg, range(numrows))
+  colcnt = np.array([0] * numcols)
+  rowcnt = np.array([0] * numrows)
+  active = 0
+  for _ in range(iterations):
+    rowcnt[active] += 1
+    col_cum_payoff = payoff_matrix[active] + col_cum_payoff
+    active = min([u for u in zip(col_cum_payoff, colpos)])[1]
+    colcnt[active] += 1
+    row_cum_payoff += transpose[active]
+    active = -max([u for u in zip(row_cum_payoff, rowpos)])[1]
+  value_of_game = (max(row_cum_payoff) + min(col_cum_payoff)) / 2.0 / iterations
+  return rowcnt, colcnt, value_of_game
+
+def williams_solve_old(payoff_matrix, iterations=100):
+  'Return the oddments (mixed strategy ratios) for a given payoff matrix'
+  transpose = [u for u in zip(*payoff_matrix)]
+  numrows = len(payoff_matrix)
+  numcols = len(transpose)
+  row_cum_payoff = [0] * numrows
+  col_cum_payoff = [0] * numcols
+  colpos = [c for c in range(numcols)]
+  rowpos = [r for r in map(neg, range(numrows))]
+  colcnt = [0] * numcols
+  rowcnt = [0] * numrows
+  active = 0
+  for i in range(iterations):
+    rowcnt[active] += 1        
+    col_cum_payoff = [t for t in map(add, payoff_matrix[active], col_cum_payoff)]
+    active = min([u for u in zip(col_cum_payoff, colpos)])[1]
+    colcnt[active] += 1       
+    row_cum_payoff = [t for t in map(add, transpose[active], row_cum_payoff)]
+    active = -max([u for u in zip(row_cum_payoff, rowpos)])[1]
+  value_of_game = (max(row_cum_payoff) + min(col_cum_payoff)) / 2.0 / iterations
+  return rowcnt, colcnt, value_of_game
+  
 def army_power_estimate(army):
   if army.morale == 0:
     return 0
-  return sum([u.size for u in army.present_units()], 0) + army.morale*5
+  return sum([u.size for u in army.present_units()], 0) + army.morale*6
 
 def battle_edge_estimate(battle, armyid):
   return army_power_estimate(battle.armies[armyid]) - army_power_estimate(battle.armies[1-armyid])

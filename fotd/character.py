@@ -17,6 +17,7 @@ class Character(object):
     self.cha_base = cha
     self.coolness_base = coolness
     self.bravery_base = bravery
+    self.skillstrs = skillstrs
     self.skills = [skills.Skill(s) for s in skillstrs]
     self.health = 100
     self.items = []
@@ -32,6 +33,9 @@ class Character(object):
       setattr(self, s, getattr(self, STAT_BASES[s]))
     # do items stuff
 
+  def copy(self):
+    return Character(self.name, self.title, self.power_base, self.intel_base, self.pol_base, self.cha_base, self.coolness_base, self.bravery_base, self.skillstrs.copy(), self.gender)
+    
   def equip(self, item):
     self.items.append(item)
     self.calc_attributes()

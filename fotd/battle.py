@@ -23,16 +23,7 @@ class Battle():
     self.narrator = BattleNarrator(self, self.battlescreen)
     self.armies = [army1, army2]
     for a in self.armies:
-      a.battle = self
-      a.tableau = tableau.Tableau(a)
-      for u in a.units:
-        for s in u.character.skills:
-          u.add_unit_status(s.skill_str)
-          # crazy bug here because add_unit_status will just run the constructor to
-          # blah_STATUS without the associatied string, creating a status that's not from a
-          # skillstring
-          # u.unit_status.append(status.Status.FromSkillName(s.skill_str))
-      a.commander.add_unit_status("is_commander")
+      a.hook(self)
     self.hqs = [positions.Position(self, self.armies[i].commander, i) for i in [0, 1]]
     self.dynamic_positions = []
     # 5 queues
@@ -46,7 +37,18 @@ class Battle():
     self.yomis = None
     self.yomi_winner_id = -1
     self.yomi_list = []
+    self.imaginary = False
 
+  def close(self):
+    self.queues = []
+    self.dynamic_positions = []
+    self.hqs = []
+    for a in self.armies:
+      a.unhook()
+    self.armies = []
+    self.narrator = None
+    self.battlescreen = None
+    
   def imaginary_copy(self):
     """
     creates an imaginary battle, used for mid-battle strategizing
@@ -61,6 +63,7 @@ class Battle():
     bat.yomis = self.yomis
     bat.yomi_winner_id = self.yomi_winner_id
     bat.yomi_list = self.yomi_list
+    bat.imaginary = True
     return bat
   
   def end_state(self):
@@ -188,7 +191,7 @@ class Battle():
         u.attacked = []
         u.attacked_by = []
         u.targetting = None
-        speed = u.speed + random.randint(-3, 3)
+        speed = u.speed + random.uniform(-3, 3)
         if order == 'D':
           speed += 7
         orderlist.append((speed, "order_received",
@@ -244,4 +247,6 @@ class Battle():
     while(True):
       game_ended = self.take_turn()
       if game_ended:
-        return self.end_state()
+        state = self.end_state()
+        self.close()
+        return state

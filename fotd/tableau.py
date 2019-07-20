@@ -55,6 +55,9 @@ class Tableau():
     self.army = army
     self.sc_dict = {}
 
+  def unhook(self):
+    self.army = None
+    
   def copy(self, newarmy):
     """
     make a copy with a different perspective armyid

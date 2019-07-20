@@ -159,26 +159,24 @@ class ArtificialIntelligence(Intelligence):
     nstrat = normalize(strat)
     return rps.FinalOrder(np.random.choice(['A', 'D', 'I'], p=nstrat))
 
-class NashIntelligence(Intelligence):
+class NashIntelligence(ArtificialIntelligence):
 
   def get_matrix(self, battle):
     matrix = np.array([[0,0,0], [0,0,0],[0,0,0]])
     for i, strat0 in enumerate(['A','D','I']):
       for j, strat1 in enumerate(['A','D','I']):
         strat_strs = [strat0, strat1]
-        tempbattle = battle.imaginary_copy()
-        init_eval = battle_edge_estimate(tempbattle, 0)  
-        for k in [0,1]:
-          tempbattle.armies[k].order = rps.FinalOrder(strat_strs[k])
-        tempbattle.resolve_orders()
-        post_eval = battle_edge_estimate(tempbattle, 0)
-        matrix[i][j] = post_eval - init_eval
+        for _ in range(3):
+          tempbattle = battle.imaginary_copy()
+          for k in [0,1]:
+            tempbattle.armies[k].order = rps.FinalOrder(strat_strs[k])
+          init_eval = battle_edge_estimate(tempbattle, 0)  
+          tempbattle.resolve_orders()
+          post_eval = battle_edge_estimate(tempbattle, 0)
+          matrix[i][j] += post_eval - init_eval
         battle.battlescreen.yprint("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]), mode=['huddle'])
     return matrix
   
-  def get_formation(self, battle):
-    return rps.FormationOrder(np.random.choice(['A','D','I']))
-
   def get_final(self, battle):
     mat = self.get_matrix(battle)
     tgame = nashpy.Game(mat)

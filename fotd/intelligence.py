@@ -95,8 +95,8 @@ class ArtificialIntelligence(Intelligence):
       return base_vec
     
     priors = self.evaluate_state(battle, self.army)
-    battle.battlescreen.yprint("AI uses yomi 1", mode=['huddle'])
-    battle.battlescreen.yprint("AI evaluates own strength (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*priors), mode=['huddle'])
+    battle.battlescreen.yprint("AI uses yomi 1", mode=['AI'])
+    battle.battlescreen.yprint("AI evaluates own strength (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*priors), mode=['AI'])
     return priors
 
   def expert_yomi_1(self, battle):
@@ -104,19 +104,19 @@ class ArtificialIntelligence(Intelligence):
     advises playing your own state
     """
     priors = self.evaluate_state(battle, self.army)
-    battle.battlescreen.yprint("AI uses yomi 1", mode=['huddle'])
-    battle.battlescreen.yprint("AI evaluates own strength (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*priors), mode=['huddle'])
+    battle.battlescreen.yprint("AI uses yomi 1", mode=['AI'])
+    battle.battlescreen.yprint("AI evaluates own strength (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*priors), mode=['AI'])
     return priors
   
   def expert_yomi_2(self, bat):
     """
     advises outreading the enemy's state
     """
-    bat.battlescreen.yprint("AI uses yomi 2", mode=['huddle'])
+    bat.battlescreen.yprint("AI uses yomi 2", mode=['AI'])
     player_priors = self.evaluate_state(bat, bat.armies[1-self.army.armyid])
-    bat.battlescreen.yprint("  AI evaluates player's strength (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*player_priors), mode=['huddle'])
+    bat.battlescreen.yprint("  AI evaluates player's strength (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*player_priors), mode=['AI'])
     counters = counter_strat(player_priors)
-    bat.battlescreen.yprint("  AI counterpicks    (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters), mode=['huddle'])
+    bat.battlescreen.yprint("  AI counterpicks    (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters), mode=['AI'])
     return counters
 
   def expert_yomi_3(self, bat):
@@ -124,12 +124,12 @@ class ArtificialIntelligence(Intelligence):
     advises outreading opponent who is reading you
     """
     self_priors_to_enemy = self.evaluate_state(bat, self.army) # eventually disguise; right now info is leaking
-    bat.battlescreen.yprint("AI uses yomi 3", mode=['huddle'])
-    bat.battlescreen.yprint("  AI evaluates player evaluating AI (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*self_priors_to_enemy), mode=['huddle'])
+    bat.battlescreen.yprint("AI uses yomi 3", mode=['AI'])
+    bat.battlescreen.yprint("  AI evaluates player evaluating AI (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*self_priors_to_enemy), mode=['AI'])
     enemy_counters = counter_strat(self_priors_to_enemy)
-    bat.battlescreen.yprint("  AI evaluates player's counterpick (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*enemy_counters), mode=['huddle'])
+    bat.battlescreen.yprint("  AI evaluates player's counterpick (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*enemy_counters), mode=['AI'])
     counters_to_counters = counter_strat(enemy_counters)
-    bat.battlescreen.yprint("  AI counterpick (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters_to_counters), mode=['huddle'])
+    bat.battlescreen.yprint("  AI counterpick (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters_to_counters), mode=['AI'])
     return counters_to_counters
 
   def get_formation(self, bat):
@@ -174,7 +174,7 @@ class NashIntelligence(ArtificialIntelligence):
           tempbattle.resolve_orders()
           post_eval = battle_edge_estimate(tempbattle, 0)
           matrix[i][j] += post_eval - init_eval
-        battle.battlescreen.yprint("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]), mode=['huddle'])
+        battle.battlescreen.yprint("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]), mode=['AI'])
     return matrix
   
   def get_final(self, battle):
@@ -182,8 +182,8 @@ class NashIntelligence(ArtificialIntelligence):
     rstrats0, rstrats1, _ = williams_solve_old(mat.tolist(), 100)
     strats = [normalize(rstrats0), normalize(rstrats1)]
     strat = strats[self.army.armyid]
-    battle.battlescreen.yprint("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}".format(*(strats[0] + strats[1])), mode=['huddle'])
-    battle.battlescreen.yprint("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['huddle'])
+    battle.battlescreen.yprint("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}".format(*(strats[0] + strats[1])), mode=['AI'])
+    battle.battlescreen.yprint("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['AI'])
     # bestvals = [None, None]
     # beststrats = [None, None]
     # for eq in tgame.vertex_enumeration():
@@ -201,8 +201,8 @@ class NashIntelligence(ArtificialIntelligence):
     # strat0 = normalize(beststrats[0])
     # strat1 = normalize(beststrats[1])
     # strat = normalize(beststrats[self.army.armyid])
-    # battle.battlescreen.yprint("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}".format(*(strat0 + strat1)), mode=['huddle'])
-    # battle.battlescreen.yprint("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['huddle'])
+    # battle.battlescreen.yprint("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}".format(*(strat0 + strat1)), mode=['AI'])
+    # battle.battlescreen.yprint("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['AI'])
     return rps.FinalOrder(np.random.choice(['A','D','I'], p=strat))
   
 class TrueRandomIntelligence(Intelligence):

@@ -8,7 +8,7 @@ def _winning_chance_estimate(context, source, target):
   s_str *= random.uniform(1.0, 1.2) # ego boost
   return s_str/(t_str + s_str)
 
-def duel_commit(context, source, target):
+def duel_commit_old(context, source, target):
   """ 
   gives 2 commitment values for if the source would want to duel target
   """
@@ -26,6 +26,40 @@ def duel_commit(context, source, target):
   ratio = evwin/(evwin + evloss)
   acceptance = bool(random.random() < ratio)
   dueldata = (winning_chance_estimate, gains_estimate, losses_estimate, ratio)
+  return acceptance, dueldata
+
+def duel_commit(context, source, target):
+  """ 
+  gives 2 commitment values for if the source would want to duel target
+  """
+  actors = [source, target]
+  errors = [5,0]  # arrogance
+  acceptance = False
+  dueldata = None
+  winning_chance_estimate = _winning_chance_estimate(context, source, target)
+  desperation_multiplier = 1.0
+  if source.army.morale <= 2 or source.size <= 5:
+    errors[0] += 5  # desperation
+  if target.is_commander():
+    gains_estimate = sum([u.size for u in target.army.present_units()])
+  else:
+    gains_estimate = target.size
+  if source.is_commander():
+    losses_estimate = sum([u.size for u in source.army.present_units()])
+  else:
+    losses_estimate = source.size
+  total_gains = 0
+  for i in range(2):
+    imaginary_duel = Duel(context, None, None, actors, errors)
+    healths = imaginary_duel.resolve()
+    if healths[1] <= 0:  # won in your mind
+      total_gains += gains_estimate
+    else:
+      total_gains -= losses_estimate
+
+  if total_gains >= 0:
+    acceptance = True
+  dueldata = (gains_estimate, losses_estimate, total_gains)
   return acceptance, dueldata
 
 # DUEL_SPEECHES = {
@@ -62,11 +96,11 @@ def duel_commit(context, source, target):
 
 class Duel():
 
-  def __init__(self, context, bv, narrator, duelists):
+  def __init__(self, context, bv, narrator, duelists, errors=(0,0)):
     self.context = context
     self.bv = bv
-    self.narrator = narrator # us this for text mode / separate from graphics mode
     self.duelists = duelists
+    self.errors = errors # error in power calculation from ego, etc.
 
   def resolve(self):
     healths = [20, 20]
@@ -74,7 +108,7 @@ class Duel():
     loser_history = [None]
     damage_history = []
     while (healths[0] > 0 and healths[1] > 0):
-      powers = [self.duelists[0].character.power, self.duelists[1].character.power]
+      powers = [self.duelists[i].character.power + self.errors[i] for i in [0,1]]
       first_win = random.random() < powers[0]/(powers[0] + powers[1])
       if first_win:
         loser = 1
@@ -85,5 +119,7 @@ class Duel():
       healths[loser] -= damage
       damage_history.append(damage)
       health_history.append(tuple(healths))
-    self.bv.disp_duel(self.duelists[0], self.duelists[1], loser_history, health_history, damage_history)
+    if self.bv:
+      # could be None, for thinking mode
+      self.bv.disp_duel(self.duelists[0], self.duelists[1], loser_history, health_history, damage_history)
     return healths

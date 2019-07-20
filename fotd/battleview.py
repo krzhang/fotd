@@ -125,6 +125,7 @@ class BattleScreen(View):
     super().__init__(automated=automated)
     self.console_buf = []
     self.huddle_buf = []
+    self.order_buf = []
     self.max_screen_len = 24
     self.max_armies_len = 17
     self.max_stat_len = 3
@@ -134,10 +135,12 @@ class BattleScreen(View):
     self.debug_mode = self.battle.debug_mode
     self.armyid = armyid
     # self.army = self.battle.armies[armyid]
+    self.view_AI = False
 
   def _flush(self):
     self.console_buf = []
     self.huddle_buf = []
+    self.order_buf = []
     
   @property
   def army(self):
@@ -280,10 +283,34 @@ class BattleScreen(View):
     _ = read_single_keypress()[0]
     self.huddle_buf = []
 
+  def _disp_order_header(self):
+    self.yprint("order phase playout",
+                mode=["order_phase"])
+    self.yprint(disp_hrule(), mode=["order_phase"])
+    self.order_buf = self.order_buf[-2:] + self.order_buf[:-2]  # such a hack
+
+  def _render_and_pause_order(self):
+    """
+    order phase
+    """
+    clear_screen()
+    self._disp_order_header()
+    for y, li in enumerate(self.order_buf):
+      print(self._render(li))
+    while (y < self.max_screen_len-2):
+      print("")
+      y += 1
+    print(self._render(self._disp_footerline(pause_str=PAUSE_STRS["MORE_STR"])),
+          end="", flush=True)
+    _ = read_single_keypress()[0]
+    self.order_buf = []
+    
   def render_all(self, pause_str=None):
     # blits status
     if self.automated:
       return
+    if self.order_buf:
+      self._render_and_pause_order()
     if self.huddle_buf:
       self._render_and_pause_huddle()
     clear_screen()
@@ -453,7 +480,12 @@ class BattleScreen(View):
     for m in mode:
       if m == "console":
         self.print_line(converted_text)
-      else:
-        assert m == "huddle"
+      elif m == "huddle":
         self.huddle_buf.append(converted_text)
+      elif m == 'order_phase':
+        self.order_buf.append(converted_text)
+      else:
+        assert m == 'AI'
+        if self.view_AI:
+          self.huddle_buf.append(converted_text)
     logging.info(text)

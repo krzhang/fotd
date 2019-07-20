@@ -155,13 +155,13 @@ def attack_order(battle, context, bv, narrator):
   enemy = ctarget.army.other_army()
   enemyunits = enemy.present_units()
   if not enemyunits:
-    bv.yprint("No unit to attack!", mode=["huddle"])
+    bv.yprint("No unit to attack!", mode=['order_phase'])
     ctarget.targetting = ("defending", ctarget)
     return
   cnewsource = context.ctarget # new event
   cnewtarget = random.choice(enemyunits)
   cnewsource.targetting = ("marching", cnewtarget)
-  bv.yprint("{}: marching -> {};".format(cnewsource, cnewtarget), mode=["huddle"])
+  bv.yprint("{}: marching -> {};".format(cnewsource, cnewtarget), mode=['order_phase'])
   newcontext = contexts.Context({"csource":cnewsource, "ctarget":cnewtarget})
   battle.place_event("march", newcontext, "Q_MANUEVER")
 
@@ -169,23 +169,21 @@ def defense_order(battle, context, bv, narrator):
   ctarget = context.ctarget
   ctarget.order = rps.FinalOrder('D')
   ctarget.targetting = ("defending", ctarget)
-  bv.yprint("{}: staying put;".format(ctarget), mode=["huddle"])
+  bv.yprint("{}: staying put;".format(ctarget), mode=['order_phase'])
   Event(battle, "gain_status", context).activate("defended")
 
 def indirect_order(battle, context, bv, narrator):
   ctarget = context.ctarget
   ctarget.order = rps.FinalOrder('I')
-  myarmyid = ctarget.army.armyid
-  enemy = battle.armies[1-myarmyid]
-  enemyunits = enemy.present_units()
+  enemyunits = ctarget.army.other_army().present_units()
   if not enemyunits:
-    bv.yprint("No unit to target!", mode=["huddle"])
+    bv.yprint("No unit to target!", mode=['order_phase'])
     ctarget.targetting = ("defending", ctarget)
     return
   cnewsource = ctarget  # new event
   cnewtarget = random.choice(enemyunits)
   cnewsource.targetting = ("sneaking", cnewtarget)
-  bv.yprint("{}: sneaking -> {}; planning skullduggery".format(cnewsource, cnewtarget), mode=["huddle"])
+  bv.yprint("{}: sneaking -> {}; planning skullduggery".format(cnewsource, cnewtarget), mode=['order_phase'])
   newcontext = contexts.Context({"csource":cnewsource, "ctarget":cnewtarget})
   battle.place_event("indirect_raid", newcontext, "Q_MANUEVER")
 
@@ -233,10 +231,8 @@ def order_yomi_win(battle, context, bv, narrator):
 def march(battle, context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
-  # if ctarget in csource.attacked_by:
   if csource.attacked_by:
-    # currently, this never activates since the order phase doesn't change attacked_by...
-    Event(battle, "action_already_used", context).activate()
+    battle.place_event("action_already_used", context, 'Q_RESOLVE')
     return
   ctarget.attacked_by.append(csource)
   csource.attacked.append(ctarget)
@@ -268,7 +264,7 @@ def indirect_raid(battle, context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
   if csource.attacked_by:
-    Event(battle, "action_already_used", context).activate()
+    battle.place_event("action_already_used", context, 'Q_RESOLVE')
     return
   Event(battle, "engage", context).activate()
   # tactic 1: raid

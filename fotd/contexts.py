@@ -14,7 +14,7 @@ class Context(object):
       setattr(self, o, opt[o])
 
   def __getitem__(self, key):
-    return self.opt[key]
+    return self.opt.get(key, None)
 
   def __contains__(self, key):
     return key in self.opt

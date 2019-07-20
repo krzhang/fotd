@@ -89,7 +89,7 @@ class BattleNarrator(Narrator):
   # Misc #
   ########
 
-  def narrate_disp_damage(self, context):
+  def narrate_receive_damage(self, context):
     ctarget = context['ctarget']
     dmgdata = context['dmgdata']
     dmglog = context['dmglog']
@@ -113,7 +113,7 @@ class BattleNarrator(Narrator):
     fdmgstr = ndmgstr + hpbar + " {} -> {} ({} damage)".format(
       oldsize, newsize, colors.color_damage(damage))
     if newsize == 0:
-      if dmgtype == 'duel_defeated':
+      if dmgtype == 'lost_duel':
         fdmgstr += "; " + ctext("OUTDUELED!", Colors.FAILURE)
       else:
         fdmgstr += "; " + ctext("DESTROYED!", Colors.FAILURE)

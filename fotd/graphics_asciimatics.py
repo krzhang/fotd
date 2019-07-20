@@ -8,7 +8,6 @@ from asciimatics.exceptions import ResizeScreenError, StopApplication
 from asciimatics.particles import Explosion, StarFirework, DropScreen, Rain
 from asciimatics.paths import Path, DynamicPath
 from asciimatics.renderers import StaticRenderer, SpeechBubble, FigletText, Rainbow
-from asciimatics.sprites import Arrow, Plot, Sam
 from asciimatics.renderers import SpeechBubble, FigletText, Box, Fire
 from asciimatics.scene import Scene
 from asciimatics.screen import Screen
@@ -426,7 +425,6 @@ def demo(screen):
   
   screen.play(scenes, stop_on_resize=True)
 
-
 def flood_demo(screen):
   scenes = []
 
@@ -488,14 +486,195 @@ def panic_demo(screen):
 
 def render_panic_tactic():
   Screen.wrapper(panic_demo)
-  
+
+sam_default = [
+    """
+    ______
+  .`      `.
+ /   -  -   \\
+|     __     |
+|            |
+ \\          /
+  '.______.'
+""",
+    """
+    ______
+  .`      `.
+ /   o  o   \\
+|     __     |
+|            |
+ \\          /
+  '.______.'
+"""
+]
+sam_left = """
+    ______
+  .`      `.
+ / o        \\
+|            |
+|--          |
+ \\          /
+  '.______.'
+"""
+sam_right = """
+    ______
+  .`      `.
+ /        o \\
+|            |
+|          --|
+ \\          /
+  '.______.'
+"""
+sam_down = """
+    ______
+  .`      `.
+ /          \\
+|            |
+|    ^  ^    |
+ \\   __     /
+  '.______.'
+"""
+sam_up = """
+    ______
+  .`  __  `.
+ /   v  v   \\
+|            |
+|            |
+ \\          /
+  '.______.'
+"""
+
+# Images for an arrow Sprite.
+left_arrow = """
+ /____
+/
+\\ ____
+ \\
+"""
+up_arrow = """
+  /\\
+ /  \\
+/|  |\\
+ |  |
+ """
+right_arrow = """
+____\\
+     \\
+____ /
+    /
+"""
+down_arrow = """
+ |  |
+\\|  |/
+ \\  /
+  \\/
+ """
+default_arrow = [
+    """
+  /\\
+ /  \\
+/|><|\\
+ |  |
+ """,
+    """
+  /\\
+ /  \\
+/|oo|\\
+ |  |
+ """,
+]
+
+
+# Simple static function to swap between 2 images to make a sprite blink.
+def _blink():
+    if random.random() > 0.9:
+        return 0
+    else:
+        return 1
+
+
+class Sam(Sprite):
+    """
+    Sam Paul sprite - an simple sample animated character.
+    """
+
+    def __init__(self, screen, path, start_frame=0, stop_frame=0):
+        """
+        See :py:obj:`.Sprite` for details.
+        """
+        super(Sam, self).__init__(
+            screen,
+            renderer_dict={
+                "default": StaticRenderer(images=sam_default, animation=_blink),
+                "left": StaticRenderer(images=[sam_left]),
+                "right": StaticRenderer(images=[sam_right]),
+                "down": StaticRenderer(images=[sam_down]),
+                "up": StaticRenderer(images=[sam_up]),
+            },
+            path=path,
+            start_frame=start_frame,
+            stop_frame=stop_frame)
+
+    def say(self, text):
+        self._scene.add_effect(
+            Speak(self._screen, self._scene, self._path, text, delete_count=50))
+
+
+class Arrow(Sprite):
+    """
+    Sample arrow sprite - points where it is going.
+    """
+
+    def __init__(self, screen, path, colour=Screen.COLOUR_WHITE, start_frame=0,
+                 stop_frame=0):
+        """
+        See :py:obj:`.Sprite` for details.
+        """
+        super(Arrow, self).__init__(
+            screen,
+            renderer_dict={
+                "default": StaticRenderer(images=default_arrow,
+                                          animation=_blink),
+                "left": StaticRenderer(images=[left_arrow]),
+                "right": StaticRenderer(images=[right_arrow]),
+                "down": StaticRenderer(images=[down_arrow]),
+                "up": StaticRenderer(images=[up_arrow]),
+            },
+            path=path,
+            colour=colour,
+            start_frame=start_frame,
+            stop_frame=stop_frame)
+
+
+class Plot(Sprite):
+    """
+    Sample Sprite that simply plots an "X" for each step in the path.  Useful
+    for plotting a path to the screen.
+    """
+
+    def __init__(self, screen, path, colour=Screen.COLOUR_WHITE, start_frame=0,
+                 stop_frame=0):
+        """
+        See :py:obj:`.Sprite` for details.
+        """
+        super(Plot, self).__init__(
+            screen,
+            renderer_dict={
+                "default": StaticRenderer(images=["X"])
+            },
+            path=path,
+            colour=colour,
+            clear=False,
+            start_frame=start_frame,
+            stop_frame=stop_frame)
+
 def _speak(screen, text, pos, start, tail="L"):
   if tail == 'L':
-    x=pos[0] + 4
-    y=pos[1] - 4
+    x=pos[0]
+    y=pos[1]-4
   else:
-    x=pos[0] - 4
-    y=pos[1] - 4
+    x=pos[0]-len(text) - 4 # extra -4 for the boundaries
+    y=pos[1]-4
   return Print(
     screen,
     SpeechBubble(text, tail, uni=screen.unicode_aware),
@@ -508,28 +687,28 @@ def _speak(screen, text, pos, start, tail="L"):
 def jeer_demo(screen, narration0, narration1):
   scenes = []
   centre = (screen.width // 2, screen.height // 2)
-  podium0 = (8, 5)
-  podium1 = (78, 5)
-  spodium0 = (16, 5)
-  spodium1 = (50, 8)
+  podium0 = (16, 4)
+  podium1 = (63, 7) # add some to be lower
   
   # Scene 1.
   path0 = Path()
   path1 = Path()
-  path0.jump_to(podium0[0], podium0[1])
-  path1.jump_to(podium1[0], podium1[1])
+  path0.jump_to(podium0[0]-8, podium0[1])
+  path1.jump_to(podium1[0]+8, podium1[1]-3)
   
   effects = [
     Sam(screen, path0),
     Sam(screen, path1),
-    _speak(screen, narration0[1], spodium0, 0),
-    _speak(screen, narration1[1], spodium1, 0, tail='R'),
+    # Print(screen, StaticRenderer(["X"]), podium0[1], podium0[0], speed=0),
+    # Print(screen, StaticRenderer(["Y"]), podium1[1], podium1[0], speed=0),
+    _speak(screen, narration0[1], podium0, 0),
+    _speak(screen, narration1[1], podium1, 50, tail='R'),
     Print(screen,
           FigletText("Jeer!", "banner3"),
           (screen.height - 4) // 2,
           colour=Screen.COLOUR_RED,
           speed=1,
-          stop_frame=30),
+          stop_frame=100),
   ]
   
   scenes.append(Scene(effects, -1))
@@ -537,3 +716,9 @@ def jeer_demo(screen, narration0, narration1):
 
 def render_jeer_tactic(narration0, narration1):
   Screen.wrapper(jeer_demo, arguments=[narration0, narration1])
+
+def test_jeer_tactic():
+  import insults
+  narration0 = ("Jing", "You are a {}!".format(insults.random_diss()))
+  narration1 = ("Yan", "No, you are a {}!".format(insults.random_diss()))
+  render_jeer_tactic(narration0, narration1)

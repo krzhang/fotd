@@ -235,21 +235,17 @@ def march(battle, context, bv, narrator):
     Event(battle, "engage", context).activate()
   converging = bool(ctarget.targetting[1] == csource) # if other ctarget is coming towards you
   if ctarget.is_defended():
-    bv.yprint("  %s able to launch defensive arrow volley" % ctarget, debug=True)
-    Event(battle,"arrow_strike", context.clean_switch()).defer("Q_RESOLVE")
+    Event(battle, "arrow_strike", context.clean_switch({'cause':'defensive_arrows'})).defer("Q_RESOLVE")
     if random.random() < 0.5:
-      bv.yprint("  %s able to launch offensive arrow volley" % csource, debug=True)
-      Event(battle, "arrow_strike", context).defer("Q_RESOLVE")
+      Event(battle, "arrow_strike", context.copy({'cause':'offensive_arrows'})).defer("Q_RESOLVE")
     Event(battle, "physical_clash", context.clean_switch()).defer("Q_RESOLVE")
   else:
     if random.random() < 0.5:
-      bv.yprint("  %s able to launch offensive arrow volley" % csource, debug=True)
-      Event(battle, "arrow_strike", context).defer("Q_RESOLVE")
+      Event(battle, "arrow_strike", context.copy({'cause':'offensive_arrows'})).defer("Q_RESOLVE")
     # defense doesn't have time to shoot arrows, unless they were coming in this direction
     if converging:
       if random.random() < 0.5:
-        bv.yprint("  %s able to launch defensive arrow volley" % ctarget, debug=True)
-        Event(battle, "arrow_strike", context.clean_switch()).defer("Q_RESOLVE")
+        Event(battle, "arrow_strike", context.clean_switch({'cause':'defensive_arrows'})).defer("Q_RESOLVE")
     # need logic for when 2 attackers rush into each other
     Event(battle, "physical_clash", context).defer("Q_RESOLVE")
 
@@ -261,13 +257,13 @@ def indirect_raid(battle, context, bv, narrator):
     return
   Event(battle, "engage", context).activate()
   # tactic 1: raid
-  vulnerable = bool(ctarget.order==rps.FinalOrder('D'))
+  vulnerable = bool(ctarget.order == rps.FinalOrder('D'))
   Event(battle, "arrow_strike", context.copy({"vulnerable":vulnerable})).defer("Q_RESOLVE")
 
 def engage(battle, context, bv, narrator):
   """
   What happens when they meet face to face, but before the attacks. All the resolved tactics
-  fire off. Tactics only fire when 
+  fire off. Tactics only fire when
   1) they match the order of the unit
   2) they have yomi advantage.
   """
@@ -348,7 +344,7 @@ def arrow_strike(battle, context, bv, narrator):
                                                     "dmgtype":"arrow",
                                                     "dmgdata":dmgdata,
                                                     "dmglog":dmglog})).activate()
-  if csource.has_unit_status("fire_arrow"): 
+  if csource.has_unit_status("fire_arrow"):
     Event(battle, 'fire_arrow', context).activate()
   if csource.has_unit_status("chu_ko_nu"):
     Event(battle, 'chu_ko_nu', context).activate()
@@ -360,14 +356,13 @@ def physical_clash(battle, context, bv, narrator):
   ctarget = context.ctarget
   vulnerable = (csource.order == rps.FinalOrder('A')) and (ctarget.order == rps.FinalOrder('I'))
   Event(battle, "physical_strike", context.copy({"vulnerable":vulnerable})).activate()
-  # bv.yprint("  %s able to launch retaliation" % ctarget) can die in the middle
   if random.random() < 0.5:
-    Event(battle, "physical_strike", context.clean_switch()).activate()
-  
+    Event(battle, "physical_strike", context.clean_switch({'cause':'retaliation'})).activate()
+
 def physical_strike(battle, context, bv, narrator):
   """ strike is the singular act of hitting """
   csource = context.csource
-  ctarget = context.ctarget 
+  ctarget = context.ctarget
   multiplier = 1
   wording = "hits"
   if "vulnerable" in context.opt and context.vulnerable:
@@ -603,7 +598,7 @@ def gain_status(battle, context, bv, narrator, stat_str):
   #   {"stat_str":stat_str, "stat_viz":status.Status(stat_str).stat_viz()}))
 
 def remove_status_probabilistic(battle, context, bv, narrator):
-  """ 
+  """
   context:
     status
     fizzle_prob
@@ -613,7 +608,7 @@ def remove_status_probabilistic(battle, context, bv, narrator):
   stat_str = context.stat_str
   assert ctarget.has_unit_status(stat_str)
   fizzle_prob = context.fizzle_prob
-  if (random.random() < fizzle_prob):
+  if random.random() < fizzle_prob:
     context.ctarget.remove_unit_status(stat_str)
     Event(battle, "remove_status", context).activate(stat_str)
   else:
@@ -624,7 +619,7 @@ def burned_bot(battle, context, bv, narrator):
   if battle.is_raining():
     bv.yprint("thanks to the rain, %s put out the fire." % ctarget)
     ctarget.remove_unit_status("burned")
-    
+
 def burned_eot(battle, context, bv, narrator):
   ctarget = context.ctarget
   if ctarget.has_unit_status("burned"): # could have dried up or something

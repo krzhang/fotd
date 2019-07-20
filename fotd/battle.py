@@ -56,6 +56,7 @@ class Battle():
                   self.armies[1].copy(),
                   debug_mode=False,
                   automated=True)
+    bat.hqs = self.
     bat.date = self.date
     bat.weather = self.weather
     bat.yomis = self.yomis
@@ -65,11 +66,11 @@ class Battle():
     return bat
   
   def end_state(self):
-    wins = [None, None]
+    wins = [False, False]
     for i in [0,1]:
       if self.armies[i].is_present():
         wins[i] = True
-    return wins
+    return tuple(wins)
   
   @property
   def formations(self):
@@ -221,15 +222,15 @@ class Battle():
     self._run_status_handlers("bot") # should be queue later
     self._send_orders_to_armies()
     self._run_queue('Q_ORDER')
-    for i in [0,1]:
+    for i in [0, 1]:
       for u in self.armies[i].present_units():
         assert u.targetting
     self._run_queue('Q_MANUEVER')
     self._run_queue('Q_RESOLVE')
     self._run_status_handlers("eot") # should be queue later
     game_end = False
-    for l in [0, 1]:
-      if not self.armies[l].is_present():
+    for i in [0, 1]:
+      if not self.armies[i].is_present():
         game_end = True
     events.Event(self, "turn_end", {"game_end":game_end}).activate()
     return game_end

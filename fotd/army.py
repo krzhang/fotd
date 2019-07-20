@@ -227,7 +227,8 @@ class Army(object):
     return chain
   
   def is_present(self):
-    return any([u for u in self.units if u.is_present()])
+    # what about commanders? currently relying on morale to take care of everything...
+    return any(self.present_units())
 
   def present_units(self):
     return tuple(u for u in self.units if u.is_present())

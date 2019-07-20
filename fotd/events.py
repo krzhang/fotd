@@ -635,7 +635,10 @@ def remove_status_probabilistic(battle, context, bv, narrator):
   if (random.random() < fizzle_prob):
     context.ctarget.remove_unit_status(stat_str)
     narrator.narrate_status("on_remove", context)
+    # TODO: use this form. Too tired now
+    # Event(battle, "remove_status", context).activate()
   else:
+    # Event(battle, "retain_status", context).activate()
     narrator.narrate_status("on_retain", context)
 
 def burned_bot(battle, context, bv, narrator):

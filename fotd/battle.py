@@ -194,9 +194,6 @@ class Battle():
     while self.queues[queue_name]:
       event = self.queues[queue_name].pop()
       event.activate()
-      # if any((not self.armies[i].is_present()) for i in [0, 1]):
-      #   # TODO: replace with arbitary leave condition
-      #   return
 
   def resolve_orders(self):
     """

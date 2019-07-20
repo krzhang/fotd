@@ -297,7 +297,8 @@ class BattleScreen(View):
     for y, li in enumerate(meat):
       print(self._render(li))
     print(self._render(fo), end="", flush=True)
-
+    self.console_buf = []
+    
   def disp_bulb(self, sc):
     """
     someone just thought of a tactic (the visibility is already set)

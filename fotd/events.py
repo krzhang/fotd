@@ -315,11 +315,11 @@ def duel_accepted(battle, context, bv, narrator):
   healths = ourduel.resolve()
   # it's not always true there is a winner
   has_winner = False
-  if healths[0] > 0 and healths[1] <= 0:
+  if healths[0] > 0 >= healths[1]:
     has_winner = True
     winner = context.csource
     loser = context.ctarget
-  elif healths[0] <= 0 and healths[1] > 0:
+  elif healths[0] <= 0 < healths[1]:
     has_winner = True
     winner = context.ctarget
     loser = context.csource
@@ -435,7 +435,7 @@ def unit_leave_battle(battle, context, bv, narrator):
     Event(battle, "army_leave_battle", context={'ctarget_army':army}).activate()
   else:
     # compute morale change from leaving battle
-    if ctarget.is_commander:
+    if ctarget.is_commander():
       damage = army.morale
     else:
       damage = 2

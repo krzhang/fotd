@@ -12,7 +12,6 @@ class Unit(object):
     self.speed = speed
     self.army = None
     self.color = None
-    self.is_commander = None
     self.unit_status = [] # not to be confused with character-status
     self.targetting = None
     self.attacked = [] # enemies attacked in a turn
@@ -33,9 +32,12 @@ class Unit(object):
   def copy(self):
     newunit = Unit(self.character.copy(), self.size, self.speed)
     newunit.present_state = self.present_state
-    newunit.attacked = self.attacked
-    newunit.attacked_by = self.attacked_by
+    newunit.attacked = self.attacked.copy()
+    newunit.attacked_by = self.attacked_by.copy()
     return newunit
+
+  def is_commander(self):
+    return self.has_unit_status("is_commander")
   
   def color_name(self):
     return "$[{}]${}$[7]$".format(self.color, self.name)
@@ -134,7 +136,7 @@ class Army(object):
     self.name = name
     self.units = units
     self.commander = self.units[0]
-    self.units[0].is_commander = True
+    self.commander.add_unit_status("is_commander")
     self.color = color
     self.armyid = armyid
     for u in units:
@@ -146,7 +148,6 @@ class Army(object):
           # blah_STATUS without the associatied string, creating a status that's not from a
           # skillstring
           # u.unit_status.append(status.Status.FromSkillName(s.skill_str))
-    self.commander.add_unit_status("is_commander")
     self.intelligence = intelligence.INTELLIGENCE_FROM_TYPE[intelligence_type](self)
     self.morale = morale
     self.last_turn_morale = morale

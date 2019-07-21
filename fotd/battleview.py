@@ -321,36 +321,7 @@ class BattleScreen(View):
       print(self._render(li))
     print(self._render(fo), end="", flush=True)
     self.console_buf = []
-    
-  def disp_bulb(self, sc):
-    """
-    someone just thought of a tactic (the visibility is already set)
-    """
-    unit = sc.unit
-    sc_str = sc.sc_str
-    order_str = str(sc.order)
-    if sc.visible_to(self.army):
-      self.yprint("{} {}: '".format(sc.str_seen_by_army(self.army),
-                                    unit.color_name()) +
-                  skills.skillcard_info(sc_str, "on_bulb")[order_str] + "'",
-                  mode=["huddle"])
-    else:
-      self.yprint("{} Scouts report that {} is planning skullduggery.".format(
-        sc.str_seen_by_army(self.army),
-        self.battle.armies[1-self.armyid].color_name()), mode=["huddle"])
 
-  def disp_successful_scout(self, sc, armyid):
-    """
-    armyid just successfully saw a card
-    """
-    unit = sc.unit
-    sc_str = sc.sc_str
-    order_str = str(sc.order)
-    if self.armyid == armyid:
-      self.yprint("{} Scouts find one of {}'s prepped tactics!".format(
-        sc.str_seen_by_army(self.army),
-        self.battle.armies[1-armyid].color_name()), mode=["huddle"])
-      
   def disp_duel(self, csource, ctarget, loser_history, health_history, damage_history):
     duelists = [csource, ctarget]
     self.yprint("{csource} and {ctarget} face off!",

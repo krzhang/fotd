@@ -124,12 +124,40 @@ class BattleNarrator(Narrator):
       dmg_str = disp_damage_calc(*dmglog)
       self.view.yprint(dmg_str, debug=True)
 
+  ###########################
+  # Formation / Order stuff #
+  ###########################
 
-  ###############
-  # Order stuff #
-  ###############
-  
-  def narrate_formation_input_completed(self, context):
+  def disp_bulb(self, sc):
+    """
+    someone just thought of a tactic (the visibility is already set)
+    """
+    unit = sc.unit
+    sc_str = sc.sc_str
+    order_str = str(sc.order)
+    if sc.visible_to(self.army):
+      self.view.yprint("{} {}: '".format(sc.str_seen_by_army(self.army),
+                                    unit.color_name()) +
+                  skills.skillcard_info(sc_str, "on_bulb")[order_str] + "'",
+                  mode=["huddle"])
+    else:
+      self.view.yprint("{} Scouts report that {} is planning skullduggery.".format(
+        sc.str_seen_by_army(self.army),
+        self.battle.armies[1-self.armyid].color_name()), mode=["huddle"])
+
+  def disp_successful_scout(self, sc, armyid):
+    """
+    armyid just successfully saw a card
+    """
+    unit = sc.unit
+    sc_str = sc.sc_str
+    order_str = str(sc.order)
+    if self.armyid == armyid:
+      self.yprint("{} Scouts find one of {}'s prepped tactics!".format(
+        sc.str_seen_by_army(self.army),
+        self.battle.armies[1-armyid].color_name()), mode=["huddle"])
+
+  def narrate_pre_formation_scout_completed(self, context, drawn_cards, scouted_cards):
     self.view.yprint("", mode=["huddle"])
     for i in [0, 1]:
       form = self.battle.formations[i]
@@ -139,8 +167,9 @@ class BattleNarrator(Narrator):
       self.view.yprint("  " + rps.formation_info(str(form), "desc_bonus"),
                        templates={"ctarget_army":self.battle.armies[i]}, mode=["huddle"])
     self.view.yprint("", mode=["huddle"])
-    # self.view.pause_and_display()
-    # self.view._flush()  # so we don't see formations again next time
+
+  def narrate_pre_order_scout_completed(self, context, drawn_cards, scouted_cards):
+    pass
 
   def narrate_order_yomi_completed(self, context, winner_id):
     self.view.yprint("", mode=["huddle"])

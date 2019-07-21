@@ -116,27 +116,27 @@ class Battle():
         u.targetting = None
         # TODO: same here
         u.last_turn_size = u.size
+
+  def _draw_and_scout(self):
+    ids = [0, 1]
+    drawn_cards = [None, None]
+    scouted_cards = [None, None]
+    for i in ids:
+      drawn_cards[i] = self.armies[i].tableau.draw_cards()
+      scouted_cards[i] = self.armies[i].tableau.scouted_by(self.armies[1-i])
+    return (drawn_cards, scouted_cards)
   
   def _get_formations(self):
-    ids = [0, 1]
-    for i in ids:
-      self.armies[i].tableau.draw_cards()
-      self.armies[i].tableau.scouted_by(self.armies[1-i])
-    for i in ids:
+    drawn_cards, scouted_cards = self._draw_and_scout()
+    Event(self, "pre_formation_scout_completed", Context({})).activate(drawn_cards, scouted_cards)
+    for i in [0, 1]:
       self.armies[i].formation = self.armies[i].intelligence.get_formation(self)
-    Event(self, "formation_input_completed", Context({})).activate()
 
   def _get_orders(self):
-    ids = [0, 1]
-    # orders
-    for i in ids:
-      self.armies[i].tableau.draw_cards()
-      self.armies[i].tableau.scouted_by(self.armies[1-i])
-    for i in ids:
-      # this is currently bad if player is second-player, because you can see the output
-      # of the AI orders
+    drawn_cards, scouted_cards = self._draw_and_scout()
+    Event(self, "pre_order_input_completed", Context({})).activate(drawn_cards, scouted_cards)
+    for i in [0, 1]:
       self.armies[i].order = self.armies[i].intelligence.get_final(self)
-    Event(self, "order_input_completed", Context({})).activate()
 
   def _handle_yomi(self):
     for i in [0, 1]:

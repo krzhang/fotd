@@ -104,6 +104,7 @@ class Tableau():
     draw hands from the deck of skillcards. Done twice: before the first formation call and once
 
     """
+    new_cards = []
     for sc in self.sc_dict:
       if self.sc_dict[sc] == False: # not yet drawn
         proc_chance = skills.skillcard_info(sc.sc_str, "bulb")[str(sc.order)]
@@ -112,19 +113,22 @@ class Tableau():
           # a new legal card is drawn
           self.sc_dict[sc] = True
           sc.make_visible_to(self.army)
-          self.bv.disp_bulb(sc)
-
+          new_cards.append(sc)
+    return new_cards
+  
   def scouted_by(self, army):
     """
     the other army scouts this tableau, and can see some of the new cards
     """
+    scouted_cards = []
     assert army.armyid == 1-self.armyid
     for sc in self.sc_dict:
       if self.sc_dict[sc] and not sc.visible_to(army):
         if random.random() < 0.5:
           sc.make_visible_to(army)
-          self.bv.disp_successful_scout(sc, army.armyid)
-    
+          scouted_cards.append(sc)
+    return scouted_cards
+
   def visible_bulbed_cards(self, viewer_army):
     visible_dict = {}
     for key in self.sc_dict:

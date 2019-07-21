@@ -63,6 +63,8 @@ class BattleNarrator(Narrator):
     4) Even on success, see if we defined a function called narrate_[event_name], 
        and run it
     """
+    if self.battle.imaginary:
+      return
     event_name = event.event_name
     context = event.context
     if event_name in EVENT_NARRATIONS:
@@ -126,6 +128,7 @@ class BattleNarrator(Narrator):
   ###############
   # Order stuff #
   ###############
+  
   def narrate_formation_input_completed(self, context):
     self.view.yprint("", mode=["huddle"])
     for i in [0, 1]:

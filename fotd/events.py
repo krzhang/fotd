@@ -1,5 +1,8 @@
+import logging
 import csv
 import random
+
+testlogger = logging.getLogger("test")
 
 from utils import str_to_bool
 import battle_constants
@@ -74,6 +77,9 @@ class Event():
               contexts.Context({'ctarget':potential_panicker})).activate('panicked')
         return
     # narrator handler
+    # if self.battle.imaginary and self.battle.battlescreen.show_AI: #  stupid hack
+    #   testlogger.debug(self.event_name)
+    # else:
     self.battle.narrator.notify(self, *args)
     # time to activate this event on the queue; note the event has its own context, battle, etc.
     if self.event_func:
@@ -199,17 +205,16 @@ def provoked_order(battle, context, bv, narrator):
 # Meta events about the orders themeselves #
 ############################################
 
-def order_yomi_win(battle, context, bv, narrator):
-  csource_army = context.ctarget_army
+def order_yomi_win(battle, context, bv, narrator, csource_army):
   ctarget_army = csource_army.other_army()
   ycount = csource_army.get_yomi_count()
   bet_bool = bool(ctarget_army.bet_morale_change > 0)
   morale_dam = ctarget_army.bet_morale_change + ycount
   Event(battle, "change_morale", contexts.Context({"ctarget_army":csource_army, # winning army
-                                             "morale_change":ycount})).activate()
+                                                   "morale_change":ycount})).activate()
   # definitely need this
   Event(battle, "change_morale", contexts.Context({"ctarget_army":ctarget_army, # losing army
-                                             "morale_change":-morale_dam})).activate()
+                                                   "morale_change":-morale_dam})).activate()
   # must put after to show the difference
   Event(battle, "yomi_morale_changed", contexts.Context({})).activate(
     csource_army, ctarget_army, ycount, morale_dam, bet_bool)
@@ -276,7 +281,7 @@ def engage(battle, context, bv, narrator):
       newcontext = context.copy({'skillcard':sc})
       Event(battle, sc.sc_str, newcontext).defer("Q_RESOLVE")
   if random.random() < battle_constants.DUEL_BASE_CHANCE:
-    if battle.imaginary:
+    if battle.automated or battle.imaginary:
       # we want to control the variance in imagined scenarios
       return
     acceptance, duel_data = duel.duel_commit(context, csource, ctarget)

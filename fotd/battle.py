@@ -30,7 +30,9 @@ class Battle():
     self.yomis = None
     self.yomi_winner_id = -1
     self.yomi_list = []
-    self.imaginary = False
+    self.automated = automated # happening with no player actor (so we can suppress input, etc.) 
+    self.imaginary = False # happening as part of an AI's mind in simulation
+    self.show_AI = show_AI
 
   def close(self):
     self.queues = []
@@ -47,12 +49,15 @@ class Battle():
     bat = Battle(self.armies[0].copy(intelligence_type),
                   self.armies[1].copy(intelligence_type),
                   debug_mode=False,
-                  automated=True)
+                  automated=True, show_AI=self.show_AI)
     bat.date = self.date
+    
     bat.weather = self.weather
     bat.yomis = self.yomis
     bat.yomi_winner_id = self.yomi_winner_id
-    bat.yomi_list = self.yomi_list
+    # WARNING: forgetting the copy() causes a heisenbug...
+    bat.yomi_list = self.yomi_list.copy()
+    bat.automated = True
     bat.imaginary = True
     return bat
   
@@ -131,8 +136,8 @@ class Battle():
       # this is currently bad if player is second-player, because you can see the output
       # of the AI orders
       self.armies[i].order = self.armies[i].intelligence.get_final(self)
-    # TODO: can add events here that trigger refreshes, etc.
-    
+    Event(self, "order_input_completed", Context({})).activate()
+
   def _handle_yomi(self):
     for i in [0, 1]:
       formation = self.formations[i]
@@ -151,11 +156,10 @@ class Battle():
     self.yomis = (rps.beats(self.orders[0], self.orders[1]),
                   rps.beats(self.orders[1], self.orders[0]))
     self.yomi_list.append(self.yomis)
-    if self.yomi_winner_id in [0,1]:
-      Event(self, "order_yomi_win",
-            Context({"ctarget_army":self.armies[self.yomi_winner_id]}))
+    if self.yomi_winner_id in [0, 1]:
+      Event(self, "order_yomi_win", Context({})).activate(self.armies[self.yomi_winner_id])
     Event(self, "order_yomi_completed", Context({})).activate(self.yomi_winner_id)
-    
+
   def _run_status_handlers(self, func_key):
     for i in [1, 0]:
       # originally these were in lists; the problem is you can change these lists, so make copies

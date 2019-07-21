@@ -6,7 +6,6 @@ import tableau
 class Unit(object):
   def __init__(self, character, size, speed):
     self.character = character
-    self.name = character.name
     self.size_base = size
     self.size = size
     self.speed = speed
@@ -65,6 +64,11 @@ class Unit(object):
     self.color = color
     self.character.color = color
 
+  @property
+
+  def name(self):
+    return self.character.name
+  
   @property
   def skills(self):
     return self.character.skills
@@ -189,7 +193,7 @@ class Army(object):
     transfer information given an imaginary copy of the army)
     """
     for u in self.units:
-      if u.name == unit.name:
+      if u.character.name == unit.character.name:
         return u
     assert False
     

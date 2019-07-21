@@ -1,4 +1,7 @@
+import logging
 import random
+
+# logger = logging.getLogger("test")
 
 import numpy as np
 import nashpy
@@ -162,9 +165,11 @@ class ArtificialIntelligence(Intelligence):
 class NashIntelligence(ArtificialIntelligence):
 
   def get_formation_matrix(self, battle):
+    # logger.debug("AI for final matrix")
     matrix = np.array([[0,0,0], [0,0,0],[0,0,0]])
     for i, strat0 in enumerate(['A','D','I']):
       for j, strat1 in enumerate(['A','D','I']):
+        # logger.debug("{} vs {}".format(i,j))
         strat_strs = [strat0, strat1]
         for _ in range(3):
           tempbattle = battle.imaginary_copy("AI_RANDOM_COMMITTER")
@@ -189,9 +194,11 @@ class NashIntelligence(ArtificialIntelligence):
     return rps.FormationOrder(np.random.choice(['A','D','I'], p=strat))
   
   def get_final_matrix(self, battle):
+    # logger.debug("AI for final matrix")
     matrix = np.array([[0,0,0], [0,0,0],[0,0,0]])
     for i, strat0 in enumerate(['A','D','I']):
       for j, strat1 in enumerate(['A','D','I']):
+        # logger.debug("{} vs {}".format(i,j))
         strat_strs = [strat0, strat1]
         for _ in range(3):
           tempbattle = battle.imaginary_copy("AI_RANDOM_RANDOM")
@@ -231,6 +238,11 @@ class NashIntelligence(ArtificialIntelligence):
     # battle.battlescreen.yprint("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}".format(*(strat0 + strat1)), mode=['AI'])
     # battle.battlescreen.yprint("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['AI'])
     return rps.FinalOrder(np.random.choice(['A','D','I'], p=strat))
+
+class RanNashIntelligence(NashIntelligence):
+
+  def get_formation(self, battle):
+    return rps.FormationOrder(np.random.choice(['A','D','I']))
   
 class TrueRandomIntelligence(Intelligence):
 
@@ -302,6 +314,7 @@ INTELLIGENCE_FROM_TYPE = {'AI_HEU_HEU': ArtificialIntelligence,
                           'AI_SCISSORS': ScissorsIntelligence,
                           'AI_RANDOM_COMMITTER': RandomIntelligence,
                           'AI_RANDOM_RANDOM': TrueRandomIntelligence,
+                          'AI_RANDOM_NASH': RanNashIntelligence,
                           'AI_NASH_NASH': NashIntelligence,
                           'AI_HEU_COMMITTER': HeuCommitter,
                           'AI_NASH_COMMITTER': NashCommitter,

@@ -17,7 +17,6 @@ make_speech,unit_single,single-general,False,False
 receive_damage,unit_single,single-general,False,False
 order_change,army_single,army-general,False,False
 change_morale,army_single,army-general,False,False
-order_yomi_win,army_single,army-general,False,False
 counter_arrow,unit_double ,target-skill,False,True
 chu_ko_nu,unit_double ,target-skill,False,True
 fire_arrow,unit_double ,target-skill,False,True

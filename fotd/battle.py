@@ -128,13 +128,14 @@ class Battle():
   
   def _get_formations(self):
     drawn_cards, scouted_cards = self._draw_and_scout()
-    Event(self, "pre_formation_scout_completed", Context({})).activate(drawn_cards, scouted_cards)
+    Event(self, "scout_completed", Context({})).activate(drawn_cards, scouted_cards)
     for i in [0, 1]:
       self.armies[i].formation = self.armies[i].intelligence.get_formation(self)
+    Event(self, "formation_completed", Context({})).activate()
 
   def _get_orders(self):
     drawn_cards, scouted_cards = self._draw_and_scout()
-    Event(self, "pre_order_input_completed", Context({})).activate(drawn_cards, scouted_cards)
+    Event(self, "scout_completed", Context({})).activate(drawn_cards, scouted_cards)
     for i in [0, 1]:
       self.armies[i].order = self.armies[i].intelligence.get_final(self)
 

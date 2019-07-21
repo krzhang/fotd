@@ -22,6 +22,9 @@ class SkillCard():
   def __hash__(self):
     return hash((self.sc_str, self.unit.name, str(self.order), self.armyid))
 
+  def __eq__(self, other):
+    return (self.sc_str, self.unit.name, str(self.order)) == (other.sc_str, other.unit.name, str(other.order))
+  
   def str_seen_by_army(self, army):
     if self.visible_to(army):
       return "<{}{}:{}$[7]$>".format(rps.order_info(self.order, "color_bulbed"),

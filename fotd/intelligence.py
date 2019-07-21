@@ -4,7 +4,7 @@ import random
 # logger = logging.getLogger("test")
 
 import numpy as np
-import nashpy
+# import nashpy
 import rps
 import skills
 from mathutils import normalize

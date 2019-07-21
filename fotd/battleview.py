@@ -207,19 +207,15 @@ class BattleScreen(View):
     inactive_skillstr = " ".join(inactive_skillist)
     # 'passive' means skills that are used and are not bulbed, meaning they *are* active
     active_skillist = [disp_text_activation(('*:' + s.short()),
-                                              success=True, upper=False)
+                                              success=None, upper=False)
                        for s in unit.character.skills if
                        bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
     active_skillcards = [sc.str_seen_by_army(self.army) for sc in unit.army.tableau.bulbed_by(unit)]
-    # invisible_count = len(unit.army.tableau.bulbed_by(unit)) - len(active_skillcards)
-    # active_skillcards += [disp_hidden_skillcard()]*invisible_count 
     if inactive_skillstr:
       sepstr = " | "
     else:
       sepstr = "| "
-    # active_skillstr = sepstr + " ".join(active_skillist + active_skillcards)
     active_skillstr = " ".join(active_skillist + active_skillcards)
-    # charstr = " "*2 + inactive_skillstr + active_skillstr
     charstr = " "*2 + active_skillstr
     return charstr
 

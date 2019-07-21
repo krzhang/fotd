@@ -369,7 +369,7 @@ def williams_solve_old(payoff_matrix, iterations=100):
 def army_power_estimate(army):
   if army.morale == 0:
     return 0
-  return sum([u.size for u in army.present_units()], 0) + army.morale*6
+  return sum([u.size for u in army.present_units()], 0) + army.morale*4
 
 def battle_edge_estimate(battle, armyid):
   return army_power_estimate(battle.armies[armyid]) - army_power_estimate(battle.armies[1-armyid])

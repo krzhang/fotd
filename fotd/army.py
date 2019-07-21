@@ -181,7 +181,6 @@ class Army(object):
     tarmy.tableau = self.tableau.copy(tarmy)
     tarmy.bet_morale_change = self.bet_morale_change
     # need to also run things from battle.init_day; messy
-    tarmy.tableau.clear()
     return tarmy
 
   def other_army(self):

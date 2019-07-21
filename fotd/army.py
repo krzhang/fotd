@@ -183,6 +183,16 @@ class Army(object):
     # need to also run things from battle.init_day; messy
     return tarmy
 
+  def find_unit(self, unit):
+    """
+    NOT an eq check; this is to find a unit by name without being hte same unit (so we can 
+    transfer information given an imaginary copy of the army)
+    """
+    for u in self.units:
+      if u.name == unit.name:
+        return u
+    assert False
+    
   def other_army(self):
     return self.battle.armies[1-self.armyid]
   

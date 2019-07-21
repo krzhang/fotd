@@ -107,12 +107,12 @@ OTHER_ATTRS = [
 # add: CaoRen + stonewall/iron wall
 
 def play(armies, debug=False, resize=False,
-         first_intelligence="PLAYER", second_intelligence="AI_WIP"):
+         first_intelligence="PLAYER", second_intelligence="AI_WIP", show_AI=False):
   if resize:
     print("\x1b[8;24;80t")
     # print ("\x1b[8;{};80t".format(textutils.BATTLE_SCREEN.max_screen_len))
   automated = (first_intelligence != 'PLAYER') and (second_intelligence != 'PLAYER')
-  bat = battle.Battle(armies[0], armies[1], debug_mode=debug, automated=automated)
+  bat = battle.Battle(armies[0], armies[1], debug_mode=debug, automated=automated, show_AI=show_AI)
   # graphics.Screen.wrapper(graphics.battle_screen, catch_interrupt = True, arguments=[bat])
   return bat.start_battle()
 
@@ -129,10 +129,10 @@ def army_unknown(armyid, color, aitype, num=4,morale=7,size=20):
   return Army("Enemy Unknown", random.sample(OTHER_UNITS, 4)[:num], armyid, color, aitype, morale)
     
 def test(debug=False, resize=False, first_intelligence="PLAYER",
-         second_intelligence="AI_WIP", num_units=4):
+         second_intelligence="AI_WIP", num_units=4, show_AI=False):
   armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence, num_units),
             army_bizarro(1, Colours.MAGENTA, second_intelligence, num_units)]
-  return play(armies, debug, resize, first_intelligence, second_intelligence)
+  return play(armies, debug, resize, first_intelligence, second_intelligence, show_AI)
 
 def test_duel(debug=False, resize=False,
          first_intelligence="PLAYER",

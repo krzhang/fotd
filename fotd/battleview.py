@@ -121,7 +121,7 @@ def disp_bar_day_tracker(max_pos, base, last_turn, cur):
 
 class BattleScreen(View):
 
-  def __init__(self, battle, armyid, automated=False):
+  def __init__(self, battle, armyid, automated=False, show_AI=False):
     super().__init__(automated=automated)
     self.console_buf = []
     self.huddle_buf = []
@@ -135,7 +135,7 @@ class BattleScreen(View):
     self.debug_mode = self.battle.debug_mode
     self.armyid = armyid
     # self.army = self.battle.armies[armyid]
-    self.view_AI = False
+    self.show_AI = show_AI
 
   def _flush(self):
     self.console_buf = []
@@ -449,6 +449,6 @@ class BattleScreen(View):
         self.order_buf.append(converted_text)
       else:
         assert m == 'AI'
-        if self.view_AI:
+        if self.show_AI:
           self.huddle_buf.append(converted_text)
     logging.info(text)

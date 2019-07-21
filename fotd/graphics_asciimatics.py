@@ -1,5 +1,6 @@
 from collections import defaultdict
 import sys
+import random
 
 from pyfiglet import Figlet
 from asciimatics.effects import Cycle, Print, Stars, Sprite, RandomNoise

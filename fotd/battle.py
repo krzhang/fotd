@@ -13,9 +13,9 @@ import weather
 
 class Battle():
 
-  def __init__(self, army1, army2, debug_mode=False, automated=False):
+  def __init__(self, army1, army2, debug_mode=False, automated=False, show_AI=False):
     self.debug_mode = debug_mode
-    self.battlescreen = BattleScreen(self, 0, automated=automated)
+    self.battlescreen = BattleScreen(self, 0, automated=automated, show_AI=show_AI)
     self.narrator = BattleNarrator(self, self.battlescreen)
     self.armies = [army1, army2]
     for a in self.armies:

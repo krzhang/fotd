@@ -15,6 +15,10 @@ class SkillCard():
     self.armyid = unit.army.armyid
     self.visibility = {0:False, 1:False}
 
+  def copy(self, unit):
+    # this is important as we are creating an imaginary card for a different unit
+    return SkillCard(self.sc_str, unit, self.order)
+
   def __hash__(self):
     return hash((self.sc_str, self.unit.name, str(self.order), self.armyid))
 
@@ -63,7 +67,8 @@ class Tableau():
     make a copy with a different perspective armyid
     """
     newtab = Tableau(newarmy)
-    newtab.sc_dict = self.sc_dict.copy()
+    for key in self.sc_dict:
+      newtab.sc_dict[key.copy(unit=newarmy.find_unit(key.unit))] = self.sc_dict[key]
     return newtab
 
   @property

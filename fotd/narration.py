@@ -421,7 +421,7 @@ ROLLS = {
     "on_fail_speech": None, # has its own routine
     "show_roll_success": False,
     "show_roll_failure": False,
-  },  
+  },
   "panic_tactic": {
     "roll_type": 'targetted tactic',
     "short": 'panic',
@@ -454,16 +454,16 @@ ROLLS = {
                           (None, '{csource} counters with their own volley.')],
     "on_fail_speech": None,
     "show_roll_success": False,
-    "show_roll_failure": False,    
-   },
+    "show_roll_failure": False,
+  },
    "chu_ko_nu": {
     "roll_type": 'targetted tactic',
     "short": 'chu ko nu',
     "on_roll": None,
     "on_success_speech": [("csource", "Have some more!")],
     "on_fail_speech": None,
-    "show_roll_success": False,    
-    "show_roll_failure": False,    
+    "show_roll_success": False,
+    "show_roll_failure": False,
   },
   "fire_arrow": {
     "roll_type": 'targetted tactic',
@@ -472,7 +472,7 @@ ROLLS = {
     "on_success_speech": [("csource", "Let them have a taste of these flaming arrows!")],
     "on_fail_speech": None,
     "show_roll_success": False,
-    "show_roll_failure": False,    
+    "show_roll_failure": False,
   },
   "trymode_status_bot": {
     "roll_type": 'buff',

@@ -208,35 +208,17 @@ class NashIntelligence(ArtificialIntelligence):
           tempbattle.resolve_orders()
           post_eval = battle_edge_estimate(tempbattle, 0)
           matrix[i][j] += post_eval - init_eval
+        logger.debug("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]), mode=['AI'])
         battle.battlescreen.yprint("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]), mode=['AI'])
-    return matrix
+    return matrix/3
   
   def get_final(self, battle):
     mat = self.get_final_matrix(battle)
-    rstrats0, rstrats1, _ = williams_solve_old(mat.tolist(), 100)
+    rstrats0, rstrats1, value = williams_solve_old(mat.tolist(), 100)
     strats = [normalize(rstrats0), normalize(rstrats1)]
     strat = strats[self.army.armyid]
-    battle.battlescreen.yprint("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}".format(*(strats[0] + strats[1])), mode=['AI'])
+    battle.battlescreen.yprint("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}, value={}".format(*(strats[0] + strats[1]), value), mode=['AI'])
     battle.battlescreen.yprint("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['AI'])
-    # bestvals = [None, None]
-    # beststrats = [None, None]
-    # for eq in tgame.vertex_enumeration():
-    #   val0 = np.matmul(np.matmul(eq[0], tgame.payoff_matrices[0]), np.array([1,1,1]).T)
-    #   if not bestvals[0] or val0 > bestvals[0]:
-    #     bestvals[0] = val0
-    #     beststrats[0] = eq[0]
-    #   val1 = np.matmul(np.matmul(np.array([1, 1, 1]), tgame.payoff_matrices[0]), eq[1].T)
-    #   if not bestvals[1] or val1 < bestvals[1]:
-    #     bestvals[1] = val1
-    #     beststrats[1] = eq[1]
-    # for i in [0,1]:
-    #   if beststrats[i] is None:
-    #     beststrats[i] = np.array([1,1,1])
-    # strat0 = normalize(beststrats[0])
-    # strat1 = normalize(beststrats[1])
-    # strat = normalize(beststrats[self.army.armyid])
-    # battle.battlescreen.yprint("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}".format(*(strat0 + strat1)), mode=['AI'])
-    # battle.battlescreen.yprint("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['AI'])
     return rps.FinalOrder(np.random.choice(['A','D','I'], p=strat))
 
 class RanNashIntelligence(NashIntelligence):

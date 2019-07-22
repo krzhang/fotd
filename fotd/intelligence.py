@@ -6,6 +6,7 @@ import random
 import numpy as np
 # import nashpy
 import rps
+from rps import FORMATION_ORDER_LIST, FINAL_ORDER_LIST
 import skills
 from mathutils import normalize
 
@@ -14,6 +15,11 @@ class Intelligence(object):
     # TODO: write this later
     self.army = army
     self.armyid = self.army.armyid
+
+class Committer(Intelligence):
+
+  def get_final(self, battle):
+    return rps.FinalOrder(str(self.army.formation))
 
 class PlayerIntelligence(Intelligence):
 
@@ -146,7 +152,7 @@ class ArtificialIntelligence(Intelligence):
       strat += np.array([1-m, 1-m, 1-m])
       assert min(strat) > 0
     nstrat =  normalize(strat)
-    return rps.FormationOrder(np.random.choice(['A', 'D', 'I'], p=nstrat))
+    return rps.FormationOrder(np.random.choice(FORMATION_ORDER_LIST, p=nstrat))
 
   def get_final(self, bat):
     choose_expert = np.random.choice([
@@ -160,15 +166,15 @@ class ArtificialIntelligence(Intelligence):
       strat += np.array([1-m, 1-m, 1-m])
       assert min(strat) > 0
     nstrat = normalize(strat)
-    return rps.FinalOrder(np.random.choice(['A', 'D', 'I'], p=nstrat))
+    return rps.FinalOrder(np.random.choice(FINAL_ORDER_LIST, p=nstrat))
 
 class NashIntelligence(ArtificialIntelligence):
 
   def get_formation_matrix(self, battle):
     # logger.debug("AI for formation matrix")
     matrix = np.array([[0,0,0], [0,0,0],[0,0,0]])
-    for i, strat0 in enumerate(['A','D','I']):
-      for j, strat1 in enumerate(['A','D','I']):
+    for i, strat0 in enumerate(FORMATION_ORDER_LIST):
+      for j, strat1 in enumerate(FORMATION_ORDER_LIST):
         # logger.debug("{} vs {}".format(i,j))
         strat_strs = [strat0, strat1]
         for _ in range(3):
@@ -199,8 +205,8 @@ class NashIntelligence(ArtificialIntelligence):
   def get_final_matrix(self, battle):
     # logger.debug("AI for final matrix")
     matrix = np.array([[0,0,0], [0,0,0],[0,0,0]])
-    for i, strat0 in enumerate(['A','D','I']):
-      for j, strat1 in enumerate(['A','D','I']):
+    for i, strat0 in enumerate(FINAL_ORDER_LIST):
+      for j, strat1 in enumerate(FINAL_ORDER_LIST):
         strat_strs = [strat0, strat1]
         for _ in range(3):
           tempbattle = battle.imaginary_copy("AI_RANDOM_RANDOM")
@@ -223,82 +229,62 @@ class NashIntelligence(ArtificialIntelligence):
     # logger.debug("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}, value={}".format(*(strats[0] + strats[1]), value))
     battle.battlescreen.yprint("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}, value={}".format(*(strats[0] + strats[1]), value), mode=['AI'])
     battle.battlescreen.yprint("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['AI'])
-    return rps.FinalOrder(np.random.choice(['A','D','I'], p=strat))
+    return rps.FinalOrder(np.random.choice(FINAL_ORDER_LIST, p=strat))
 
 class RanNashIntelligence(NashIntelligence):
 
   def get_formation(self, battle):
-    return rps.FormationOrder(np.random.choice(['A','D','I']))
-  
+    return rps.FormationOrder(np.random.choice(FORMATION_ORDER_LIST))
+
+
+class HeuCommitter(ArtificialIntelligence):
+
+  def get_final(self, battle):
+    return rps.FinalOrder(str(self.army.formation))
+
+####################################
+# Things we should be able to beat #
+####################################
+
 class TrueRandomIntelligence(Intelligence):
 
   def get_formation(self, battle):
-    return rps.FormationOrder(np.random.choice(['A','D','I']))
+    return rps.FormationOrder(np.random.choice(FORMATION_ORDER_LIST))
 
   def get_final(self, battle):
-    return rps.FinalOrder(np.random.choice(['A','D','I']))
-
-class RandomIntelligence(Intelligence):
-
-  def __init__(self, army):
-    super().__init__(army)
-    self.commit = None
-
-  def get_formation(self, battle):
-    self.commit = np.random.choice(['A','D','I'])
-    return rps.FormationOrder(self.commit)
-
-  def get_final(self, battle):
-    return rps.FinalOrder(str(self.army.formation))
-  
-class HeuCommitter(ArtificialIntelligence):
-
-  def __init__(self, army):
-    super().__init__(army)
-    self.commit = None
-
-  def get_formation(self, battle):
-    self.commit = super().get_formation(battle)
-    return self.commit
-
-  def get_final(self, battle):
-    return rps.FinalOrder(str(self.army.formation))
-
+    return rps.FinalOrder(np.random.choice(FINAL_ORDER_LIST))
+ 
 class NashCommitter(NashIntelligence):
 
   def get_final(self, battle):
     return rps.FinalOrder(str(self.army.formation))
 
-class RockIntelligence(Intelligence):
+class RandomCommitter(Committer):
+
+  def get_formation(self, battle):
+    return rps.FormationOrder(np.random.choice(FORMATION_ORDER_LIST))
+
+class RockIntelligence(Committer):
 
   def get_formation(self, battle):
     return rps.FormationOrder('A')
 
-  def get_final(self, battle):
-    return rps.FinalOrder('A')
-
-class PaperIntelligence(Intelligence):
+class PaperIntelligence(Committer):
 
   def get_formation(self, battle):
     return rps.FormationOrder('D')
 
-  def get_final(self, battle):
-    return rps.FinalOrder('D')
-
-class ScissorsIntelligence(Intelligence):
+class ScissorsIntelligence(Committer):
 
   def get_formation(self, battle):
     return rps.FormationOrder('I')
-
-  def get_final(self, battle):
-    return rps.FinalOrder('I')
 
 INTELLIGENCE_FROM_TYPE = {'AI_HEU_HEU': ArtificialIntelligence,
                           'PLAYER': PlayerIntelligence,
                           'AI_ROCK': RockIntelligence,
                           'AI_PAPER': PaperIntelligence,
                           'AI_SCISSORS': ScissorsIntelligence,
-                          'AI_RANDOM_COMMITTER': RandomIntelligence,
+                          'AI_RANDOM_COMMITTER': RandomCommitter,
                           'AI_RANDOM_RANDOM': TrueRandomIntelligence,
                           'AI_RANDOM_NASH': RanNashIntelligence,
                           'AI_NASH_NASH': NashIntelligence,

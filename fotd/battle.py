@@ -102,7 +102,7 @@ class Battle():
     # setup stuff
     for i in [0, 1]:
       self.armies[i].yomi_edge = None
-      self.armies[i].bet_morale_change = 0
+      # self.armies[i].bet_morale_change = 0
       self.armies[i].formation = None
       self.armies[i].order = None
       self.armies[i].formation_bonus = 1.0
@@ -144,13 +144,12 @@ class Battle():
       formation = self.formations[i]
       cost = rps.formation_info(str(formation), "morale_cost")[str(self.armies[i].order)]
       if cost:
-        self.armies[i].bet_morale_change = cost
+        # self.armies[i].bet_morale_change = cost
         self.armies[i].commitment_bonus = False
         Event(self, "order_change",
-              Context({"ctarget_army":self.armies[i],
-                                "morale_bet":cost})).activate()
+              Context({"ctarget_army":self.armies[i], "morale_cost":cost})).activate()
       else:
-        self.armies[i].bet_morale_change = 0
+        # self.armies[i].bet_morale_change = 0
         self.armies[i].commitment_bonus = True
 
     self.yomi_winner_id = rps.orders_to_winning_armyid(self.orders) # -1 if None

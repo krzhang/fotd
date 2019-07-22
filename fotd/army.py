@@ -164,7 +164,7 @@ class Army(object):
     self.commitment_bonus = False
     self.battle_lost = False
     self.tableau = tableau.Tableau(self)
-    self.bet_morale_change = 0
+    # self.bet_morale_change = 0
     
   def __repr__(self):
     return self.color_name()
@@ -183,7 +183,7 @@ class Army(object):
     tarmy.commitment_bonus = self.commitment_bonus
     tarmy.battle_lost = self.battle_lost
     tarmy.tableau = self.tableau.copy(tarmy)
-    tarmy.bet_morale_change = self.bet_morale_change
+    # tarmy.bet_morale_change = self.bet_morale_change
     # need to also run things from battle.init_day; messy
     return tarmy
 

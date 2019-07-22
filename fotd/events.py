@@ -209,19 +209,32 @@ def provoked_order(battle, context, bv, narrator):
 # Meta events about the orders themeselves #
 ############################################
 
+def order_change(battle, context, bv, narrator):
+  ctarget_army = context.ctarget_army
+  morale_cost = context.morale_cost
+  Event(battle, "change_morale", contexts.Context({"ctarget_army":ctarget_army, # losing army
+                                                   "morale_change":-morale_cost})).activate()
+  for u in ctarget_army.present_units():
+    damage = random.randint(0, 1)
+    Event(battle, "receive_damage", contexts.Context({"damage":damage,
+                                                      "ctarget":u,
+                                                      "dmgtype":"order_change",
+                                                      "dmglog":""})).activate()
+    
+
 def order_yomi_win(battle, context, bv, narrator, csource_army):
   ctarget_army = csource_army.other_army()
   ycount = csource_army.get_yomi_count()
-  bet_bool = bool(ctarget_army.bet_morale_change > 0)
-  morale_dam = ctarget_army.bet_morale_change + ycount
+  # TODO currently not used for anything; eventually may be used for different yomi win handling
+  # morale_dam = ctarget_army.bet_morale_change + ycount
   Event(battle, "change_morale", contexts.Context({"ctarget_army":csource_army, # winning army
                                                    "morale_change":ycount})).activate()
   # definitely need this
   Event(battle, "change_morale", contexts.Context({"ctarget_army":ctarget_army, # losing army
-                                                   "morale_change":-morale_dam})).activate()
+                                                   "morale_change":-ycount})).activate()
   # must put after to show the difference
   Event(battle, "yomi_morale_changed", contexts.Context({})).activate(
-    csource_army, ctarget_army, ycount, morale_dam, bet_bool)
+    csource_army, ctarget_army, ycount)
 
 ##################
 # Manuever Phase #
@@ -321,9 +334,9 @@ def duel_accepted(battle, context, bv, narrator):
   for i in x:
     if healths[i] <= 0:
       Event(battle, "receive_damage", contexts.Context({"damage":duelists[i].size,
+                                                        "csource":duelists[1-i],
                                                         "ctarget":duelists[i],
                                                         "dmgtype":"lost_duel",
-                                                        "dmgdata":"",
                                                         "dmglog":""})).activate()
 
 def duel_challenged(battle, context, bv, narrator):
@@ -342,16 +355,13 @@ def arrow_strike(battle, context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
   multiplier = 1
-  wording = "shoots"
   if "vulnerable" in context.opt and context.vulnerable:
     multiplier = 2
-    wording = "heavily shoots"
   damage, dmglog = _compute_arrow_damage(csource, ctarget, multiplier=multiplier)
-  dmgdata = (csource, ctarget, wording, damage)
   Event(battle, "receive_damage", contexts.Context({"damage":damage,
                                                     "ctarget":ctarget,
+                                                    "vulnerable":context["vulnerable"],
                                                     "dmgtype":"arrow",
-                                                    "dmgdata":dmgdata,
                                                     "dmglog":dmglog})).activate()
   if csource.has_unit_status("fire_arrow"):
     Event(battle, 'fire_arrow', context).activate()
@@ -373,16 +383,15 @@ def physical_strike(battle, context, bv, narrator):
   csource = context.csource
   ctarget = context.ctarget
   multiplier = 1
-  wording = "hits"
   if "vulnerable" in context.opt and context.vulnerable:
     multiplier = 2
-    wording = "heavily hits"
   damage, damlog = _compute_physical_damage(csource, ctarget, multiplier=multiplier)
-  dmgdata = (csource, ctarget, wording, damage)
   Event(battle, "receive_damage", contexts.Context({"damage":damage,
-                                          "ctarget":ctarget,
-                                          "dmgdata":dmgdata,
-                                          "dmglog":damlog})).activate()
+                                                    "csource":csource,
+                                                    "ctarget":ctarget,
+                                                    "vulnerable":context["vulnerable"],
+                                                    "dmgdata":dmgdata,
+                                                    "dmglog":damlog})).activate()
 
 
 ###############
@@ -582,9 +591,8 @@ def panic_tactic(battle, context, bv, narrator):
 def _flood_tactic_success(battle, context):
   damdice = battle_constants.FLOOD_TACTIC_DAMDICE
   damage = random.choice(range(damdice))
-  dmgdata = (context.csource, context.ctarget, "floods", damage)
   Event(battle, "receive_damage", context.copy(
-    {"damage":damage, "dmgdata":dmgdata, "dmglog":""})).activate()
+    {"damage":damage, "dmgtype":"flood", "dmglog":""})).activate()
 
 def flood_tactic(battle, context, bv, narrator):
   chance = 0.5
@@ -639,9 +647,8 @@ def burned_eot(battle, context, bv, narrator):
     else:
       damdice = 5
     damage = random.choice(range(damdice))
-    dmgdata = (None, ctarget, "burned", damage)
     Event(battle, "receive_damage", context.copy(
-      {"damage":damage, "dmgdata":dmgdata, "dmgtype":'fire', "dmglog":""})).activate()
+      {"damage":damage, "dmgtype":'fire', "dmglog":""})).activate()
     Event(battle, "remove_status_probabilistic", context.copy({"fizzle_prob": 0.5})).activate()
 
 ################

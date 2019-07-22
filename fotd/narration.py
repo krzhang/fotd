@@ -94,7 +94,6 @@ class BattleNarrator(Narrator):
 
   def narrate_receive_damage(self, context):
     ctarget = context['ctarget']
-    dmgdata = context['dmgdata']
     dmglog = context['dmglog']
     dmgtype = context['dmgtype']
     oldsize = context['ctarget'].size
@@ -104,15 +103,31 @@ class BattleNarrator(Narrator):
 
     newsize = oldsize - damage
     hpbar = disp_bar_single_hit(battle_constants.ARMY_SIZE_MAX, oldsize, newsize)
-    if not dmgdata:
-      ndmgstr = " "
-    elif dmgdata[0]: # this means there is a source; janky
-      ndmgstr = "{} {} {} ".format(dmgdata[0].color_name(),
-                                   dmgdata[2],
-                                   dmgdata[1].color_name())
-    else:
-      # this means a single target: "I got burned"
-      ndmgstr = "{} is {} ".format(dmgdata[1].color_name(), dmgdata[2])
+
+    ndmgstr = ""
+    mode = ["console"]
+    if context["csource"]:
+      if dmgtype == "physical":
+        if context["vulnerable"]:
+          wording = "heavily hits"
+        else:
+          wording = "hits"
+      elif dmgtype == "arrow":
+        if context["vulnerable"]:
+          wording = "heavily shoots"
+        else:
+          wording = "shoots"
+      elif dmgtype == 'flood':
+        wording = "floods"
+      if dmgtype in ['physical', 'arrow', 'flood']:
+        ndmgstr = "{} {} {} ".format(context['csource'].color_name(),
+                                     wording,
+                                     context['ctarget'].color_name())
+    elif dmgtype == "fire":
+      ndmgstr = "{ctarget} is burned "
+    elif dmgtype == "order_change":
+      ndmgstr = "{ctarget}'s order change is strenuous "
+      mode = ["huddle"]
     fdmgstr = ndmgstr + hpbar + " {} -> {} ({} damage)".format(
       oldsize, newsize, colors.color_damage(damage))
     if newsize == 0:
@@ -120,7 +135,7 @@ class BattleNarrator(Narrator):
         fdmgstr += "; " + ctext("OUTDUELED!", Colors.FAILURE)
       else:
         fdmgstr += "; " + ctext("DESTROYED!", Colors.FAILURE)
-    self.view.yprint(fdmgstr)
+    self.view.yprint(fdmgstr, templates=context, mode=mode)
     if dmglog:
       dmg_str = disp_damage_calc(*dmglog)
       self.view.yprint(dmg_str, debug=True)
@@ -129,34 +144,34 @@ class BattleNarrator(Narrator):
   # Formation / Order stuff #
   ###########################
 
-  def disp_bulb(self, sc):
-    """
-    someone just thought of a tactic (the visibility is already set)
-    """
-    unit = sc.unit
-    sc_str = sc.sc_str
-    order_str = str(sc.order)
-    if sc.visible_to(self.army):
-      self.view.yprint("{} {}: '".format(sc.str_seen_by_army(self.army),
-                                    unit.color_name()) +
-                  skills.skillcard_info(sc_str, "on_bulb")[order_str] + "'",
-                  mode=["huddle"])
-    else:
-      self.view.yprint("{} Scouts report that {} is planning skullduggery.".format(
-        sc.str_seen_by_army(self.army),
-        self.battle.armies[1-self.armyid].color_name()), mode=["huddle"])
+  # def disp_bulb(self, sc):
+  #   """
+  #   someone just thought of a tactic (the visibility is already set)
+  #   """
+  #   unit = sc.unit
+  #   sc_str = sc.sc_str
+  #   order_str = str(sc.order)
+  #   if sc.visible_to(self.army):
+  #     self.view.yprint("{} {}: '".format(sc.str_seen_by_army(self.army),
+  #                                   unit.color_name()) +
+  #                 skills.skillcard_info(sc_str, "on_bulb")[order_str] + "'",
+  #                 mode=["huddle"])
+  #   else:
+  #     self.view.yprint("{} Scouts report that {} is planning skullduggery.".format(
+  #       sc.str_seen_by_army(self.army),
+  #       self.battle.armies[1-self.armyid].color_name()), mode=["huddle"])
 
-  def disp_successful_scout(self, sc, armyid):
-    """
-    armyid just successfully saw a card
-    """
-    unit = sc.unit
-    sc_str = sc.sc_str
-    order_str = str(sc.order)
-    if self.armyid == armyid:
-      self.yprint("{} Scouts find one of {}'s prepped tactics!".format(
-        sc.str_seen_by_army(self.army),
-        self.battle.armies[1-armyid].color_name()), mode=["huddle"])
+  # def disp_successful_scout(self, sc, armyid):
+  #   """
+  #   armyid just successfully saw a card
+  #   """
+  #   unit = sc.unit
+  #   sc_str = sc.sc_str
+  #   order_str = str(sc.order)
+  #   if self.armyid == armyid:
+  #     self.yprint("{} Scouts find one of {}'s prepped tactics!".format(
+  #       sc.str_seen_by_army(self.army),
+  #       self.battle.armies[1-armyid].color_name()), mode=["huddle"])
 
   def narrate_scout_completed(self, context, drawn_cards, scouted_cards):
     myarmy = self.view.army
@@ -197,10 +212,10 @@ class BattleNarrator(Narrator):
       order = self.battle.orders[i]
       # print both into the main event buffer and the huddle buffer
       order_str = rps.order_info(str(order), "desc")
-      if not self.battle.armies[i].commitment_bonus:
-        order_str = "Breaking formation, " + order_str 
       self.view.yprint(order_str,
                        templates={"ctarget_army":self.battle.armies[i]}, mode=["huddle"])
+      if not self.battle.armies[i].commitment_bonus:
+        order_str = "  The formation breaking is strenuous ($[1]$-1 morale$[7]$ and desertion), " + order_str 
       if i == winner_id:
         self.view.yprint("  " + rps.order_info(str(order), "yomi_bonus"),
                          templates={"ctarget_army":self.battle.armies[i]}, mode=["huddle"])
@@ -208,6 +223,7 @@ class BattleNarrator(Narrator):
           self.view.yprint("  commitment bonus: " + rps.order_info(str(order), "commitment_bonus"),
                          templates={"ctarget_army":self.battle.armies[i]}, mode=["huddle"])
     self.view.yprint("", mode=["huddle"])
+
 
   def narrate_march(self, context):
     csource = context.csource
@@ -243,16 +259,15 @@ class BattleNarrator(Narrator):
                                                            ctarget.str_targetting()),
                      debug=True)
 
-  def narrate_yomi_morale_changed(self, context, source_army, target_army, ycount, morale_dam,
-                                  bet):
+  def narrate_yomi_morale_changed(self, context, source_army, target_army, ycount):
     if ycount > 1:
       combostr1 = "$[2,1]$+{} morale$[7]$ from combo".format(ycount)
     else:
       combostr1 = "$[2,1]$+1 morale$[7]$"
-    if bet:
-      combostr2 = "$[1]$-{} morale$[7]$ from order change".format(morale_dam)
-    else:
-      combostr2 = "$[1]$-1 morale$[7]$"
+    # if bet:
+    combostr2 = "$[1]$-{} morale$[7]$".format(ycount)
+    # else:
+    # combostr2 = "$[1]$-1 morale$[7]$"
     self.view.yprint("{} ({}) outread {} ({})!".format(source_army.color_name(),
                                                        combostr1,
                                                        target_army.color_name(),

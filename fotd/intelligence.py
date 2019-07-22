@@ -179,7 +179,7 @@ class NashIntelligence(ArtificialIntelligence):
         strat_strs = [strat0, strat1]
         for _ in range(3):
           tempbattle = battle.imaginary_copy("AI_RANDOM_COMMITTER")
-          for k in [0,1]:
+          for k in [0, 1]:
             tempbattle.armies[k].formation = rps.FormationOrder(strat_strs[k])
           init_eval = battle_edge_estimate(tempbattle, 0)
           # simulate the rest of the turn; should get orders and then resolve them

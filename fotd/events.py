@@ -88,12 +88,16 @@ class Event():
                       self.battle.battlescreen,
                       self.battle.narrator, *args)
 
-  def defer(self, queue_name, args=[]):
+  def defer(self, queue_name, args=None):
     """
     used when we want to make a new event on a queue of our choice 
     we pop from right, so we should place left.
     """
-    self.battle.queues[queue_name].appendleft((self, args))
+    if args is None:
+      nargs = []
+    else:
+      nargs = args
+    self.battle.queues[queue_name].appendleft((self, nargs))
 
 def event_info(event_name, key):
   """ Main auxilary function; gets a piece of info about an event type, and None otherwise."""

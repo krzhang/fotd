@@ -165,7 +165,7 @@ class ArtificialIntelligence(Intelligence):
 class NashIntelligence(ArtificialIntelligence):
 
   def get_formation_matrix(self, battle):
-    # logger.debug("AI for final matrix")
+    # logger.debug("AI for formation matrix")
     matrix = np.array([[0,0,0], [0,0,0],[0,0,0]])
     for i, strat0 in enumerate(['A','D','I']):
       for j, strat1 in enumerate(['A','D','I']):
@@ -181,15 +181,18 @@ class NashIntelligence(ArtificialIntelligence):
           tempbattle.resolve_orders()
           post_eval = battle_edge_estimate(tempbattle, 0)
           matrix[i][j] += post_eval - init_eval
+        # logger.debug("  value: {}".format(matrix[i][j]))         
+        # logger.debug("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]))
         battle.battlescreen.yprint("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]), mode=['AI'])
-    return matrix
+    return matrix/3
 
   def get_formation(self, battle):
     mat = self.get_formation_matrix(battle)
-    rstrats0, rstrats1, _ = williams_solve_old(mat.tolist(), 100)
+    rstrats0, rstrats1, value = williams_solve_old(mat.tolist(), 100)
     strats = [normalize(rstrats0), normalize(rstrats1)]
     strat = strats[self.army.armyid]
-    battle.battlescreen.yprint("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}".format(*(strats[0] + strats[1])), mode=['AI'])
+    # logger.debug("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}, value={}".format(*(strats[0] + strats[1]), value))
+    battle.battlescreen.yprint("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}, value={}".format(*(strats[0] + strats[1]), value), mode=['AI'])
     battle.battlescreen.yprint("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['AI'])
     return rps.FormationOrder(np.random.choice(['A','D','I'], p=strat))
   
@@ -198,7 +201,6 @@ class NashIntelligence(ArtificialIntelligence):
     matrix = np.array([[0,0,0], [0,0,0],[0,0,0]])
     for i, strat0 in enumerate(['A','D','I']):
       for j, strat1 in enumerate(['A','D','I']):
-        # logger.debug("{} vs {}".format(i,j))
         strat_strs = [strat0, strat1]
         for _ in range(3):
           tempbattle = battle.imaginary_copy("AI_RANDOM_RANDOM")
@@ -208,7 +210,8 @@ class NashIntelligence(ArtificialIntelligence):
           tempbattle.resolve_orders()
           post_eval = battle_edge_estimate(tempbattle, 0)
           matrix[i][j] += post_eval - init_eval
-        logger.debug("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]), mode=['AI'])
+        # logger.debug("  value: {}".format(matrix[i][j]))         
+        # logger.debug("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]))
         battle.battlescreen.yprint("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]), mode=['AI'])
     return matrix/3
   
@@ -217,6 +220,7 @@ class NashIntelligence(ArtificialIntelligence):
     rstrats0, rstrats1, value = williams_solve_old(mat.tolist(), 100)
     strats = [normalize(rstrats0), normalize(rstrats1)]
     strat = strats[self.army.armyid]
+    # logger.debug("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}, value={}".format(*(strats[0] + strats[1]), value))
     battle.battlescreen.yprint("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}, value={}".format(*(strats[0] + strats[1]), value), mode=['AI'])
     battle.battlescreen.yprint("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['AI'])
     return rps.FinalOrder(np.random.choice(['A','D','I'], p=strat))
@@ -361,13 +365,18 @@ def williams_solve_old(payoff_matrix, iterations=100):
   value_of_game = (max(row_cum_payoff) + min(col_cum_payoff)) / 2.0 / iterations
   return rowcnt, colcnt, value_of_game
   
-def army_power_estimate(army):
+def army_power_estimate(battle, army):
   if army.morale == 0:
-    return 0
-  return sum([u.size for u in army.present_units()], 0) + army.morale*4
+    val = 0
+  else:
+    val = sum([u.size for u in army.present_units()], 0) + army.morale*4
+  # logger.debug("{}: size {} morale {} value {}".format(army.color_name(),
+  #   sum([u.size for u in army.present_units()], 0),
+  #   army.morale, val))
+  return val
 
 def battle_edge_estimate(battle, armyid):
-  return army_power_estimate(battle.armies[armyid]) - army_power_estimate(battle.armies[1-armyid])
+  return army_power_estimate(battle, battle.armies[armyid]) - army_power_estimate(battle, battle.armies[1-armyid])
 
 def counter_strat(strat):
   """

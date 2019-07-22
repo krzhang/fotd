@@ -390,7 +390,6 @@ def physical_strike(battle, context, bv, narrator):
                                                     "csource":csource,
                                                     "ctarget":ctarget,
                                                     "vulnerable":context["vulnerable"],
-                                                    "dmgdata":dmgdata,
                                                     "dmglog":damlog})).activate()
 
 

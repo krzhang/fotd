@@ -2,6 +2,6 @@ asciimatics==1.11.0
 colorama==0.4.1
 future==0.17.1
 numpy==1.16.4
-Pillow==6.1.0
+Pillow==6.2.0
 pyfiglet==0.8.post1
 wcwidth==0.1.7

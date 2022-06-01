@@ -25,7 +25,6 @@ import random
 import status
 import sys
 
-# power/intel/pol/cha/coolness/bravery
 
 SKILLS_IMPLEMENTED = ["counter_arrow",
                       "chu_ko_nu",
@@ -56,6 +55,7 @@ JING_SKILLS = ["trymode", "counter_arrow", "fire_skill", "chu_ko_nu"]
 YOYO_SKILLS = ["cheer", "attack_supplies", "dash", "fire_skill", "panic_skill", "chaos"]
 HAN_SKILLS = ["sneak_attack", "dash", "jeer_skill", "chaos_arrow", "headhunter"]
 
+# power/intel/pol/cha/coolness/bravery
 PC_ATTRS = [ # First Name Last Name, since we are from the future
   ("Yan Zhang", "$[3]$Yellow$[7]$ Lightning", 71, 80, 74, 60, 5, 4, YAN_SKILLS),
   ("Jing Chan", "Purge", 55, 70, 90, 85, 4, 5, JING_SKILLS),
@@ -107,7 +107,7 @@ OTHER_ATTRS = [
 # add: CaoRen + stonewall/iron wall
 
 def play(armies, debug=False, resize=False,
-         first_intelligence="PLAYER", second_intelligence="AI_WIP", show_AI=False):
+         first_intelligence="PLAYER", second_intelligence="AI_NASH_NASH", show_AI=False):
   if resize:
     print("\x1b[8;24;80t")
     # print ("\x1b[8;{};80t".format(textutils.BATTLE_SCREEN.max_screen_len))
@@ -129,14 +129,14 @@ def army_unknown(armyid, color, aitype, num=4,morale=7,size=20):
   return Army("Enemy Unknown", random.sample(OTHER_UNITS, 4)[:num], armyid, color, aitype, morale)
     
 def test(debug=False, resize=False, first_intelligence="PLAYER",
-         second_intelligence="AI_WIP", num_units=4, show_AI=False):
+         second_intelligence="AI_NASH_NASH", num_units=4, show_AI=False):
   armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence, num_units),
             army_bizarro(1, Colours.MAGENTA, second_intelligence, num_units)]
   return play(armies, debug, resize, first_intelligence, second_intelligence, show_AI)
 
 def test_duel(debug=False, resize=False,
          first_intelligence="PLAYER",
-         second_intelligence="AI_WIP"):
+         second_intelligence="AI_NASH_NASH"):
   armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence),
             army_bizarro(1, Colours.MAGENTA, second_intelligence)]
   automated = (first_intelligence != 'PLAYER') and (second_intelligence != 'PLAYER')
@@ -150,7 +150,7 @@ def test_duel(debug=False, resize=False,
     'ctarget':armies[1].units[1]}), bat.battlescreen, bat.narrator)
   return 0
 
-def test_AI(debug=False, resize=False, first_intelligence="AI_WIP",
+def test_AI(debug=False, resize=False, first_intelligence="AI_NASH_NASH",
             second_intelligence="AI_RANDOM",
             morales = (7,7),
             sizes = (20, 20),

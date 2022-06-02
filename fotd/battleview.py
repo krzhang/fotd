@@ -1,3 +1,9 @@
+"""
+The Battlescreen is something that takes care of all rendering-related tasks,
+so it is the view in MVC. This file is for the default text (Asciimatics)
+based view.
+"""
+
 import logging
 
 import battle_constants
@@ -11,32 +17,7 @@ from textutils import YText, disp_bar_custom, disp_hrule, disp_text_activation
 import narration
 import rps
 import skills
-
-#############
-# Templates #
-#############
-
-CONVERT_TEMPLATES_DISPS = {
-  "ctarget":(lambda x: x.color_name()),
-  "csource":(lambda x: x.color_name()),
-  "ctarget_army":(lambda x: x.color_name()),
-  "csource_army":(lambda x: x.color_name()),
-  "order":(lambda x: x.color_abbrev()),
-}
-
-def convert_templates(templates):
-  """
-  templates: anything with a __getitem__ (so dictionaries, Contexts, etc.)
-  """
-  newtemplates = {}
-  for key in templates:
-    if key in CONVERT_TEMPLATES_DISPS:
-      func = CONVERT_TEMPLATES_DISPS[key]
-      newtemplates[key] = func(templates[key])
-    else:
-      # could just be a string
-      newtemplates[key] = templates[key]
-  return newtemplates
+from templates import CONVERT_TEMPLATES_DISPS, convert_templates
 
 ######
 # IO #
@@ -70,6 +51,7 @@ class View():
     pass
 
   def _get_input(self, pause_str, accepted_inputs):
+    # this part screws with MVC a bit
     while True:
       self.render_all(pause_str=pause_str)
       inp = read_single_keypress()[0]
@@ -119,8 +101,10 @@ def disp_bar_day_tracker(max_pos, base, last_turn, cur):
                          ['#', '#', '.', " "],
                          [cur, last_turn-cur, base-last_turn, max_pos-base])
 
-class BattleScreen(View):
-
+class TextBattleScreen(View):
+  """ 
+  Default ASCII-oriented Battlescreen. 
+  """
   def __init__(self, battle, armyid, automated=False, show_AI=False):
     super().__init__(automated=automated)
     self.console_buf = []
@@ -131,6 +115,7 @@ class BattleScreen(View):
     self.max_stat_len = 3
     self.max_console_len = 3
     self.max_footer_len = 1
+    
     self.battle = battle
     self.debug_mode = self.battle.debug_mode
     self.armyid = armyid

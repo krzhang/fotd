@@ -3,19 +3,32 @@ from collections import deque
 import random
 
 from narration import BattleNarrator
-from battleview import BattleScreen
+from battleview import TextBattleScreen
+from pygameview import PGBattleScreen
+
 from contexts import Context
 from events import Event
 import rps
 import status
 import battle_constants
 import weather
+import state as s
+import resources
 
 class Battle():
 
-  def __init__(self, army1, army2, debug_mode=False, automated=False, show_AI=False):
+  def __init__(self, army1, army2,
+               debug_mode=False, automated=False, show_AI=False,
+               view="PYGAME"):
     self.debug_mode = debug_mode
-    self.battlescreen = BattleScreen(self, 0, automated=automated, show_AI=show_AI)
+    if view == "PYGAME":
+      self.battlescreen = PGBattleScreen(self, 0, automated=automated,
+                                           show_AI=show_AI)
+      self.battlescreen.new()
+    else:
+      assert view == "TEXT"
+      self.battlescreen = TextBattleScreen(self, 0, automated=automated,
+                                       show_AI=show_AI)
     self.narrator = BattleNarrator(self, self.battlescreen)
     self.armies = [army1, army2]
     for a in self.armies:

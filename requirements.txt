@@ -2,7 +2,7 @@ asciimatics==1.11.0
 colorama==0.4.1
 future==0.17.1
 numpy
-pyglet
+pygame
 Pillow
 pyfiglet==0.8.post1
 wcwidth==0.1.7

@@ -18,8 +18,13 @@ BASE_DIR = os.getcwd()
 # RESOURCES_DIR = os.path.join(BASE_DIR, "Resources")
 VERSION = "0.2dev"
 
-WIDTH = 800
-HEIGHT = 600
+BG_WIDTH = 800
+BG_HEIGHT = 600
+INFO_WIDTH = 200 # info on the RHS
+CONSOLE_HEIGHT = 200 # console buffer on the bottom
+
+WIDTH = BG_WIDTH + INFO_WIDTH
+HEIGHT = BG_HEIGHT + CONSOLE_HEIGHT
 FPS = 30
 TITLE = "Battle"
 
@@ -98,6 +103,14 @@ class PGBattleScreen:
   def new(self):
     self.background = Static(0, 0, resources.IMAGE_PATH / "old-paper-800-600.jpg")
     self.all_sprites.add(self.background)
+    armies = self.battle.armies
+    for j in range(2):
+      v_offset = 120+240*j
+      army = armies[j]
+      for i, unit in enumerate(army.units):
+        h_offset = 90 + 170*i
+        spr = UnitSpr(h_offset, v_offset, resources.SPRITES_PATH / "Soldier.png", unit)
+        self.all_sprites.add(spr)
     self.run()
     
   def events(self):
@@ -106,10 +119,36 @@ class PGBattleScreen:
   def update(self):
     self.all_sprites.update()
 
-  def draw(self):
+  def draw(self, pause_str=None):
+    if self.automated:
+      return
+
     if self.playing:
+
+      # if self.huddle_buf:
+      #   self._render_and_pause_huddle()
+      # if self.order_buf:
+      #   self._render_and_pause_order()
+
       self.screen.fill(c.BLACK)
+
+      # for armies, put them in sprites
       self.all_sprites.draw(self.screen)
+      
+      # we can ignore the statline
+      # st = self._disp_statline()
+
+      # we can just print an area for the console
+      # co = self._disp_console() 
+      # fo = self._disp_footerline(pause_str) # 1 line, string
+      # meat = ar + st + co # meat of the print job, not counting the final string
+      # assert len(meat) == self.max_screen_len - 1
+      # # effects = []
+      # for y, li in enumerate(meat):
+      #   print(self._render(li))
+      #   print(self._render(fo), end="", flush=True)
+      #   self.console_buf = []
+
       pg.display.flip()
 
   def run(self):

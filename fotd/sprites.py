@@ -8,3 +8,9 @@ class Static(pg.sprite.Sprite):
     self.image = pg.image.load(filename).convert_alpha()
     self.rect = self.image.get_rect()
     self.rect.left, self.rect.top = x, y
+
+class UnitSpr(Static):
+  def __init__(self, x, y, filename, unit):
+    super().__init__(x, y, filename)
+    self.unit = unit
+    unit.sprite = self # is this even a good pattern

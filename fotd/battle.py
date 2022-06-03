@@ -24,7 +24,6 @@ class Battle():
     if view == "PYGAME":
       self.battlescreen = PGBattleScreen(self, 0, automated=automated,
                                            show_AI=show_AI)
-      self.battlescreen.new()
     else:
       assert view == "TEXT"
       self.battlescreen = TextBattleScreen(self, 0, automated=automated,
@@ -46,6 +45,8 @@ class Battle():
     self.automated = automated # happening with no player actor (so we can suppress input, etc.) 
     self.imaginary = False # happening as part of an AI's mind in simulation
     self.show_AI = show_AI
+    if view == "PYGAME":
+      self.battlescreen.new()
 
   def close(self):
     self.queues = []

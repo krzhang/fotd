@@ -11,8 +11,7 @@ import duel
 
 from colors import ctext, Colors, Fore, Back, Style
 import colors
-from utils import read_single_keypress, clear_screen
-from textutils import YText, disp_bar_custom, disp_hrule, disp_text_activation
+from textutils import YText
 
 import narration
 import rps
@@ -29,6 +28,70 @@ PAUSE_STRS = {
   "FINAL_ORDER": Colors.INVERT + "Input $[4]$ORDERS" + Colors.INVERT + " for army {armyid}$[7]$" 
 }
 
+#######################
+# Text Mode Utilities #
+#######################
+
+def read_single_keypress():
+  """Waits for a single keypress on stdin.
+
+  [How do I make python to wait for a pressed key - Stack Overflow](https://stackoverflow.com/questions/983354/how-do-i-make-python-to-wait-for-a-pressed-key#comment90923542_6599441)
+
+  This is a silly function to call if you need to do it a lot because it has
+  to store stdin's current setup, setup stdin for reading single keystrokes
+  then read the single keystroke then revert stdin back after reading the
+  keystroke.
+  
+  Returns a tuple of characters of the key that was pressed - on Linux, 
+  pressing keys like up arrow results in a sequence of characters. Returns 
+  ('\x03',) on KeyboardInterrupt which can happen when a signal gets
+  handled.
+  
+  """
+  import termios, fcntl, sys
+  fd = sys.stdin.fileno()
+  # save old state
+  flags_save = fcntl.fcntl(fd, fcntl.F_GETFL)
+  attrs_save = termios.tcgetattr(fd)
+  # make raw - the way to do this comes from the termios(3) man page.
+  attrs = list(attrs_save) # copy the stored version to update
+  # iflag
+  attrs[0] &= ~(termios.IGNBRK | termios.BRKINT | termios.PARMRK
+                | termios.ISTRIP | termios.INLCR | termios. IGNCR
+                | termios.ICRNL | termios.IXON )
+  # oflag
+  attrs[1] &= ~termios.OPOST
+  # cflag
+  attrs[2] &= ~(termios.CSIZE | termios. PARENB)
+  attrs[2] |= termios.CS8
+  # lflag
+  attrs[3] &= ~(termios.ECHONL | termios.ECHO | termios.ICANON
+                | termios.ISIG | termios.IEXTEN)
+  termios.tcsetattr(fd, termios.TCSANOW, attrs)
+  # turn off non-blocking
+  fcntl.fcntl(fd, fcntl.F_SETFL, flags_save & ~os.O_NONBLOCK)
+  # read a single keystroke
+  ret = []
+  try:
+    ret.append(sys.stdin.read(1)) # returns a single character
+    fcntl.fcntl(fd, fcntl.F_SETFL, flags_save | os.O_NONBLOCK)
+    c = sys.stdin.read(1) # returns a single character
+    while len(c) > 0:
+      ret.append(c)
+      c = sys.stdin.read(1)
+  except KeyboardInterrupt:
+    ret.append('\x03')
+  finally:
+    # restore old state
+    termios.tcsetattr(fd, termios.TCSAFLUSH, attrs_save)
+    fcntl.fcntl(fd, fcntl.F_SETFL, flags_save)
+  if ret[0] == 'q':
+    sys.exit(0)
+  return tuple(ret)
+
+def clear_screen():
+  os.system('cls' if os.name == 'nt' else 'clear')
+
 ###################
 # Base View class # (TODO: move out later when we have more views
 ###################
@@ -42,7 +105,7 @@ class View():
     """
     converts a line of my-type of string (see prerender) to step 2, which is colorama-printable
     """
-    return YText(line).to_colorama()
+    return YText(line).to_pygame()
 
   def _flush(self):
     pass
@@ -65,6 +128,38 @@ class View():
     _ = read_single_keypress()[0]
     self._flush()
 
+#########################################
+# Display (convert to string) Functions #
+#########################################
+
+def disp_hrule():
+  return "="*80
+
+def disp_bar_custom(colors, chars, nums):
+  """
+  all iterators, to make bars like this: '####$$$$----@@@@@@@@' etc.
+  k colors
+  k chars
+  k nums
+  the nums are meant to go from large to small, so max size first, etc.
+  """
+  makestr = ""
+  for i in zip(colors, chars, nums):
+    makestr += i[0]
+    makestr += i[1]*i[2]
+  return makestr
+
+def disp_text_activation(any_str, success=None, upper=True):
+  """
+  to display an ``activated'' string (skill, skillcard, whatever) to give a decorated 
+  context.
+  """
+  if upper:
+    newstr = any_str.upper()
+  else:
+    newstr = any_str
+  return "<" + colors.color_bool(success) + " ".join(newstr.split("_")) + "$[7]$>"
+    
 #########################
 # Battle-specific stuff #
 #########################

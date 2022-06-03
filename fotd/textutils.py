@@ -10,7 +10,6 @@ a text utility module.
 import re
 
 # import graphics_asciimatics
-from utils import read_single_keypress
 import colors
 from colors import ctext, Colors, Fore, Back, Style
 
@@ -110,6 +109,12 @@ class YText():
         new_str += AM_TO_CR_FORE[a]
       new_str += t
     return new_str + Colors.ENDC
+
+  def to_pygame(self):
+    """
+    For now, just return the raw text; we can convert the color stuff later
+    """
+    return self._raw_str
   
   def _to_asciimatics(self):
     """
@@ -149,37 +154,6 @@ class YText():
         line = match.group(8)
     return(new_line, colours)
   
-#########################################
-# Display (convert to string) Functions #
-#########################################
-
-def disp_hrule():
-  return "="*80
-
-def disp_bar_custom(colors, chars, nums):
-  """
-  all iterators, to make bars like this: '####$$$$----@@@@@@@@' etc.
-  k colors
-  k chars
-  k nums
-  the nums are meant to go from large to small, so max size first, etc.
-  """
-  makestr = ""
-  for i in zip(colors, chars, nums):
-    makestr += i[0]
-    makestr += i[1]*i[2]
-  return makestr
-
-def disp_text_activation(any_str, success=None, upper=True):
-  """
-  to display an ``activated'' string (skill, skillcard, whatever) to give a decorated 
-  context.
-  """
-  if upper:
-    newstr = any_str.upper()
-  else:
-    newstr = any_str
-  return "<" + colors.color_bool(success) + " ".join(newstr.split("_")) + "$[7]$>"
 
 
 

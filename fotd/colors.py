@@ -13,6 +13,9 @@ class IColors:
   GREY   = Color(160, 160, 160)
   ICE    = Color(92, 247, 251)
 
+  CYAN = Color(0, 255, 255)
+  MAGENTA = Color(255, 0, 255)
+  
   GREEN_A50  = Color(0, 255, 0, 50)
   RED_A50    = Color(255, 0, 0, 50)
   BLUE_A50   = Color(0, 0, 255, 50)
@@ -111,16 +114,16 @@ class Colors:
 # # clear the line
 # ESC [ mode K    # clear the line
      
-class Colours:
-  # for asciimatics
-  BLACK = 0
-  RED = 1
-  GREEN = 2
-  YELLOW = 3
-  BLUE = 4
-  MAGENTA = 5
-  CYAN = 6
-  WHITE = 7
+# class Colours:
+#   # for asciimatics
+#   BLACK = 0
+#   RED = 1
+#   GREEN = 2
+#   YELLOW = 3
+#   BLUE = 4
+#   MAGENTA = 5
+#   CYAN = 6
+#   WHITE = 7
 
 class Attrs:
   # for asciimatics

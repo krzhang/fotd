@@ -1,4 +1,4 @@
-
+import state
 from collections import deque
 import random
 
@@ -21,6 +21,7 @@ class Battle():
                debug_mode=False, automated=False, show_AI=False,
                view="PYGAME"):
     self.debug_mode = debug_mode
+    self.state_stack = [state.GenesisState(self)]
     if view == "PYGAME":
       self.battlescreen = PGBattleScreen(self, 0, automated=automated,
                                            show_AI=show_AI)
@@ -130,6 +131,8 @@ class Battle():
         u.targetting = None
         # TODO: same here
         u.last_turn_size = u.size
+    formation_turn = FormationTurn(self, 0)
+    formation_turn.enter_state()      
 
   def _draw_and_scout(self):
     ids = [0, 1]
@@ -140,19 +143,14 @@ class Battle():
       scouted_cards[i] = self.armies[i].tableau.scouted_by(self.armies[1-i])
     return (drawn_cards, scouted_cards)
   
-  def _get_formations(self):
-    drawn_cards, scouted_cards = self._draw_and_scout()
-    Event(self, "scout_completed", Context({})).activate(drawn_cards, scouted_cards)
-    for i in [0, 1]:
-      self.armies[i].formation = self.armies[i].intelligence.get_formation(self)
-    Event(self, "formation_completed", Context({})).activate()
+  # def _get_formations(self):
+  #   drawn_cards, scouted_cards = self._draw_and_scout()
+  #   Event(self, "scout_completed", Context({})).activate(drawn_cards, scouted_cards)
+  #   for i in [0, 1]:
+  #     self.armies[i].formation = self.armies[i].intelligence.get_formation(self)
+  #   Event(self, "formation_completed", Context({})).activate()
 
-  def _get_orders(self):
-    drawn_cards, scouted_cards = self._draw_and_scout()
-    Event(self, "scout_completed", Context({})).activate(drawn_cards, scouted_cards)
-    for i in [0, 1]:
-      self.armies[i].order = self.armies[i].intelligence.get_final(self)
-
+  
   def _handle_yomi(self):
     for i in [0, 1]:
       formation = self.formations[i]
@@ -208,11 +206,25 @@ class Battle():
       event, args = self.queues[queue_name].pop()
       event.activate(*args)
 
+  def start_formations(self):
+    drawn_cards, scouted_cards = self._draw_and_scout()
+    Event(self, "scout_completed", Context({})).activate(drawn_cards, scouted_cards)
+    formation_turn = FormationTurn(self, 0)
+    formation_turn.enter_state()
+
+  def start_orders(self):
+    drawn_cards, scouted_cards = self._draw_and_scout()
+    Event(self, "scout_completed", Context({})).activate(drawn_cards, scouted_cards)
+    order_turn = OrderTurn(self, 0)
+    order_turn.enter_state()
+      
   def resolve_orders(self):
     """
     The battle logic that happens after logic is selected.
     Is public because AI also uses it to run mental simulations
     """
+    resolution = Resolution(self)
+    resolution.enter_state()
     self._handle_yomi()
     # preloading events
     self._run_status_handlers("bot") # should be queue later
@@ -230,23 +242,101 @@ class Battle():
         game_end = True
     Event(self, "turn_end", {"game_end":game_end}).activate()
     return game_end
-    
-  def take_turn(self):
-    """
-    The main function which takes one turn of this battle.
-    returns whether the battle is over
-    """
-    # formations
-    self._init_day()
-    self._get_formations()
-    self._get_orders()
-    return self.resolve_orders()
-  # exposed methods
+
+      # def take_turn(self):
+  #   """
+  #   The main function which takes one turn of this battle.
+  #   returns whether the battle is over
+  #   """
+  #   # formations
+  #   self._init_day()
+  #   self._get_formations()
+  #   self._get_orders()
+  #   return self.resolve_orders()
+  # # exposed methods
   
   def start_battle(self):
-    while(True):
-      game_ended = self.take_turn()
-      if game_ended:
-        state = self.end_state()
-        self.close()
-        return state
+    self._init_day()    
+  # def start_battle(self):
+  #   while(True):
+  #     game_ended = self.take_turn()
+  #     if game_ended:
+  #       state = self.end_state()
+  #       self.close()
+  #       return state  
+
+###############
+# State Stuff #
+###############
+
+class FormationTurn(state.State):  
+  def __init__(self, game, battle, armyid):
+    super().__init__(game)
+    self.battle = battle
+    self.army = battle.armies[armyid]
+    self.armyid = armyid
+    self.battle.armies[armyid].intelligence.await_formation()
+
+  def update(self, actions):
+    if self.army.formation:
+      if self.armyid == 0:
+        self.exit_state()
+        formation_turn = FormationTurn(self.game, self.battle, 1)
+        formation_turn.enter_state()
+      else:
+        assert self.armyid == 1
+        self.exit_state()
+        Event(self.battle, "formation_completed", Context({})).activate()
+        self.battle.start_orders()
+    else:
+      assert self.army.intelligence_type == 'PLAYER'
+      if any(actions.values()):
+        for k in actions:
+          if actions[k]:
+            self.army.formation = rps.FormationOrder(k)
+
+class OrderTurn(state.State):
+  def __init__(self, battle, armyid):
+    super().__init__(battle)
+    self.army = battle.armies[armyid]
+    self.armyid = armyid
+    self.controller.armies[armyid].intelligence.await_final()
+
+  def update(self, actions):
+    if self.army.order:
+      if self.armyid == 0:
+        self.exit_state()
+        order_turn = OrderTurn(self.controller, 1)
+        order_turn.enter_state()
+      else:
+        assert self.armyid == 1
+        self.exit_state()
+        Event(self.controller, "order_completed", Context({})).activate()
+        self.controller.start_resolution()
+    else:
+      assert self.army.intelligence_type == 'PLAYER'
+      if any(actions.values()):
+        for k in actions:
+          if actions[k]:
+            self.army.order = rps.FinalOrder(k)
+
+class Resolution(state.State):
+  def __init__(self, battle):
+    super().__init__(battle)
+    self.controller.resolve_orders()
+
+  def update(self, actions):
+    if any(actions.values()):
+      # update on any key
+      self.controller._init_day()
+  # TODO: IMPLEMENT THESE
+        
+  # def _get_orders(self):
+  #   for i in [0, 1]:
+  #     self.armies[i].order = self.armies[i].intelligence.get_final(self)
+
+      
+  # def _get_formations(self):
+  #   for i in [0, 1]:
+  #     self.armies[i].formation = self.armies[i].intelligence.get_formation(self)
+  #   Event(self, "formation_completed", Context({})).activate()

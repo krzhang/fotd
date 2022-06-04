@@ -4,11 +4,13 @@ is a kind of view and replaces the ASCII one in battleview.
 """
 import logging
 import sys
+import os
 
 import pygame as pg
-import os
+from pgsettings import *
+import resources
+
 from colors import IColors as c
-from colors import Colors
 
 import rps
 
@@ -16,28 +18,43 @@ import rps
 
 BASE_DIR = os.getcwd()
 # RESOURCES_DIR = os.path.join(BASE_DIR, "Resources")
-VERSION = "0.2dev"
-
-BG_WIDTH = 800
-BG_HEIGHT = 600
-INFO_WIDTH = 200 # info on the RHS
-CONSOLE_HEIGHT = 200 # console buffer on the bottom
-
-WIDTH = BG_WIDTH + INFO_WIDTH
-HEIGHT = BG_HEIGHT + CONSOLE_HEIGHT
-FPS = 30
 TITLE = "Battle"
 
-import resources
 from sprites import *
 from templates import CONVERT_TEMPLATES_DISPS, convert_templates
 
 PAUSE_STRS = {
-  "MORE_STR": Colors.INVERT + "MORE... [hit a key]" + Colors.ENDC,
-  "FORMATION_ORDER": Colors.INVERT +  "Input $[4]$FORMATION" + Colors.INVERT + " for army {armyid}$[7]$",
-  "FINAL_ORDER": Colors.INVERT + "Input $[4]$ORDERS" + Colors.INVERT + " for army {armyid}$[7]$" 
+  # "MORE_STR": Colors.INVERT + "MORE... [hit a key]" + Colors.ENDC,
+  # "FORMATION_ORDER": Colors.INVERT +  "Input $[4]$FORMATION" + Colors.INVERT + " for army {armyid}$[7]$",
+  # "FINAL_ORDER": Colors.INVERT + "Input $[4]$ORDERS" + Colors.INVERT + " for army {armyid}$[7]$"
+  "MORE_STR": "MORE... [hit a key]",
+  "FORMATION_ORDER": "Input Formation",
+  "FINAL_ORDER": "Input Orders"
 }
 
+class InfoBox:
+  """ the box on the right that shows mouseover info """
+
+  def __init__(self, battlescreen):
+    # upper-left-corner
+    self.x = BG_WIDTH
+    self.y = 0
+    self.font = pg.font.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 20)
+    self.battlescreen = battlescreen
+    self.text = None
+    self.text_rect = None
+    
+  def render_unit(self, unit):
+    self.text = self.font.render(unit.name, True, c.WHITE, c.BLACK)
+    self.text_rect = self.text.get_rect()
+    self.text_rect.topleft = (self.x + 5, self.y + 5)
+
+  def handle_info(self, info):
+    if not info:
+      return
+    if info[0] == "UNIT":
+      self.render_unit(info[1])
+      
 class PGBattleScreen:
   """ a Pygame battle object """
 
@@ -47,6 +64,7 @@ class PGBattleScreen:
 
     self.screen = pg.display.set_mode((self.game_width, self.game_height))
     pg.display.set_caption(TITLE)
+    self.infobox = InfoBox(self)
 
     # self.clock = pg.time.clock()
     self.running = True
@@ -72,33 +90,42 @@ class PGBattleScreen:
     self.automated = automated
     self.show_AI = show_AI
 
-    self.all_sprites = pg.sprite.Group()
+    self.actions = {"A": False,
+                    "D": False,
+                    "I": False,
+                    "Q": False}
     
+    self.all_sprites = pg.sprite.Group()
+
+  @property
+  def state_stack(self):
+    return self.battle.state_stack
+  
   @property
   def army(self):
     return self.battle.armies[self.armyid]
 
-  def _get_input(self, pause_str, accepted_inputs):
-    pg.event.clear()
-    while True:
-      event = pg.event.wait()
-      if event.type == pg.QUIT:
-        pg.quit()
-        sys.exit()
-      elif event.type == pg.KEYDOWN:
-        kn = pg.key.name(event.key)
-        if kn.upper() in accepted_inputs:
-          return kn.upper()
+  # def _get_input(self, pause_str, accepted_inputs):
+  #   pg.event.clear()
+  #   while True:
+  #     event = pg.event.wait()
+  #     if event.type == pg.QUIT:
+  #       pg.quit()
+  #       sys.exit()
+  #     elif event.type == pg.KEYDOWN:
+  #       kn = pg.key.name(event.key)
+  #       if kn.upper() in accepted_inputs:
+  #         return kn.upper()
 
-  def pause_and_display(self, pause_str=None):
-    if self.automated:
-      return
-    self.draw()
-    pg.event.clear()
-    while True:
-      event = pg.event.wait()
-      if event.type == pg.KEYDOWN:
-        return
+  # def pause_and_display(self, pause_str=None):
+  #   if self.automated:
+  #     return
+  #   self.draw()
+  #   pg.event.clear()
+  #   while True:
+  #     event = pg.event.wait()
+  #     if event.type == pg.KEYDOWN:
+  #       return
 
   def new(self):
     self.background = Static(0, 0, resources.IMAGE_PATH / "old-paper-800-600.jpg")
@@ -114,10 +141,19 @@ class PGBattleScreen:
     self.run()
     
   def events(self):
-    pass
-
+    for event in pg.event.get():
+      if event.type == pg.QUIT:
+        self.playing = False
+      if event.type == pg.KEYDOWN:
+        kr = pg.key.name(event.key)
+        kn = kr.upper()
+        print(kn)
+        if kn in self.actions:
+          self.actions[kn] = True
+        
   def update(self):
     self.all_sprites.update()
+    self.state_stack[-1].update(self.actions)
 
   def draw(self, pause_str=None):
     if self.automated:
@@ -134,7 +170,16 @@ class PGBattleScreen:
 
       # for armies, put them in sprites
       self.all_sprites.draw(self.screen)
-      
+
+      mouseover = None
+      for spr in self.all_sprites:
+        if spr.infobox and spr.rect.collidepoint(pg.mouse.get_pos()):
+          mouseover = spr.mouseover_info()
+          break
+
+      self.infobox.handle_info(mouseover)
+      if self.infobox.text:
+        self.screen.blit(self.infobox.text, self.infobox.text_rect)
       # we can ignore the statline
       # st = self._disp_statline()
 

@@ -17,16 +17,29 @@ class Unit(object):
     self.attacked_by = []
     self.last_turn_size = None
     self.present_state = 'PRESENT'
-
+    self.spr = None
+    
   def __eq__(self, other):
     return hasattr(self, "character") and hasattr(other, "character") and self.character == other.character
 
   def __repr__(self):
-    return self.color_name()
+    return self.name
+  
+  @property
+  def name(self):
+    return self.character.name
+  
+  @property
+  def skills(self):
+    return self.character.skills
+
+  def __str__(self):
+    return str(self.character)
 
   def unhook(self):
     self.army = None
     self.character = None
+    self.spr = None
     
   def copy(self):
     newunit = Unit(self.character.copy(), self.size, self.speed)
@@ -38,8 +51,8 @@ class Unit(object):
   def is_commander(self):
     return self.has_unit_status("is_commander")
   
-  def color_name(self):
-    return "$[{}]${}$[7]$".format(self.color, self.name)
+  # def _color_name(self):
+  #   return "$[{}]${}$[7]$".format(self.color, self.name)
 
   def str_unit_size(unit):
     csize = colors.color_size(unit.size, unit.size_base) + str(unit.size) + "$[7]$"
@@ -64,17 +77,6 @@ class Unit(object):
     self.color = color
     self.character.color = color
 
-  @property
-
-  def name(self):
-    return self.character.name
-  
-  @property
-  def skills(self):
-    return self.character.skills
-
-  def __str__(self):
-    return str(self.character)
 
   def has_unit_status(self, stat_str):
     return stat_str in [s.stat_str for s in self.unit_status]
@@ -152,6 +154,7 @@ class Army(object):
           # blah_STATUS without the associatied string, creating a status that's not from a
           # skillstring
           # u.unit_status.append(status.Status.FromSkillName(s.skill_str))
+    self.intelligence_type = intelligence_type
     self.intelligence = intelligence.INTELLIGENCE_FROM_TYPE[intelligence_type](self)
     self.morale = morale
     self.last_turn_morale = morale

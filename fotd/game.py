@@ -11,9 +11,9 @@ logger.addHandler(flog)
 # handler.setLevel(logging.DEBUG)
 # logger.addHandler(handler)
 
-from colors import Colours
 from character import Character
 from army import Unit, Army
+from colors import IColors as c
 
 import textutils
 import battle
@@ -77,15 +77,15 @@ def army_unknown(armyid, color, aitype, num=4,morale=7,size=20):
     
 def test(debug=False, resize=False, first_intelligence="PLAYER",
          second_intelligence="AI_NASH_NASH", num_units=4, show_AI=False):
-  armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence, num_units),
-            army_bizarro(1, Colours.MAGENTA, second_intelligence, num_units)]
+  armies = [army_mysticsoft(0, c.CYAN, first_intelligence, num_units),
+            army_bizarro(1, c.MAGENTA, second_intelligence, num_units)]
   return play(armies, debug, resize, first_intelligence, second_intelligence, show_AI)
 
 def test_duel(debug=False, resize=False,
          first_intelligence="PLAYER",
          second_intelligence="AI_NASH_NASH"):
-  armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence),
-            army_bizarro(1, Colours.MAGENTA, second_intelligence)]
+  armies = [army_mysticsoft(0, c.CYAN, first_intelligence),
+            army_bizarro(1, c.MAGENTA, second_intelligence)]
   automated = (first_intelligence != 'PLAYER') and (second_intelligence != 'PLAYER')
   bat = battle.Battle(armies[0], armies[1], debug_mode=debug, automated=automated)
   armies[0].units[0].health = 100
@@ -104,8 +104,8 @@ def test_AI(debug=False, resize=False, first_intelligence="AI_NASH_NASH",
             num_units=4, trials=100):
   final_results = [0, 0]
   for _ in range(trials):
-    armies = [army_mysticsoft(0, Colours.CYAN, first_intelligence, num_units, size=sizes[0], morale=morales[0]),
-            army_bizarro(1, Colours.MAGENTA, second_intelligence, num_units, size=sizes[1], morale=morales[1])]
+    armies = [army_mysticsoft(0, c.CYAN, first_intelligence, num_units, size=sizes[0], morale=morales[0]),
+            army_bizarro(1, c.MAGENTA, second_intelligence, num_units, size=sizes[1], morale=morales[1])]
     bat = battle.Battle(armies[0], armies[1], debug_mode=False, automated=True)
     results = bat.start_battle()
     for j in [0,1]:

@@ -1,5 +1,6 @@
 import logging
 import random
+import state
 
 # logger = logging.getLogger("test")
 
@@ -23,11 +24,17 @@ class Committer(Intelligence):
 
 class PlayerIntelligence(Intelligence):
 
-  def get_formation(self, battle):
-    return rps.FormationOrder(battle.battlescreen.input_battle_order("FORMATION_ORDER", self.armyid))
+  def await_formation(self, battle):
+    # return rps.FormationOrder(battle.battlescreen.input_battle_order("FORMATION_ORDER", self.armyid))
+    
+    # literally do nothing, since we wait for input
+    pass
 
-  def get_final(self, battle):
-    return rps.FinalOrder(battle.battlescreen.input_battle_order("FINAL_ORDER", self.armyid))
+  def await_final(self, battle):
+    # return rps.FinalOrder(battle.battlescreen.input_battle_order("FINAL_ORDER", self.armyid))
+
+    # same as above
+    pass
 
   # def get_order(self, battle, armyid, order_type):
   #   if order_type == 'FORMATION':
@@ -142,6 +149,7 @@ class ArtificialIntelligence(Intelligence):
     return counters_to_counters
 
   def get_formation(self, bat):
+    """ There is no waiting here since the AI is instant"""
     choose_expert = np.random.choice([
       self.expert_yomi_1,
       self.expert_yomi_2,
@@ -167,6 +175,13 @@ class ArtificialIntelligence(Intelligence):
       assert min(strat) > 0
     nstrat = normalize(strat)
     return rps.FinalOrder(np.random.choice(FINAL_ORDER_LIST, p=nstrat))
+
+  def await_final(self, battle):
+    """ AIs dont wait"""
+    self.army.order = self.get_final(battle)
+
+  def await_formation(self, battle):
+    self.army.formation = self.get_formation(battle)
 
 class NashIntelligence(ArtificialIntelligence):
 
@@ -201,6 +216,7 @@ class NashIntelligence(ArtificialIntelligence):
     battle.battlescreen.yprint("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}, value={}".format(*(strats[0] + strats[1]), value), mode=['AI'])
     battle.battlescreen.yprint("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['AI'])
     return rps.FormationOrder(np.random.choice(['A','D','I'], p=strat))
+
   
   def get_final_matrix(self, battle):
     # logger.debug("AI for final matrix")
@@ -231,6 +247,8 @@ class NashIntelligence(ArtificialIntelligence):
     battle.battlescreen.yprint("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['AI'])
     return rps.FinalOrder(np.random.choice(FINAL_ORDER_LIST, p=strat))
 
+
+    
 class RanNashIntelligence(NashIntelligence):
 
   def get_formation(self, battle):

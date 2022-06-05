@@ -44,7 +44,7 @@ class Character(object):
     return self.name
 
   def color_name(self):
-    return "$[{}]${}$[7]$".format(self.color, self.name)
+    return "{}{}$[7]$".format(self.color, self.name)
   
   def title_fancy(self):
     if self.title:

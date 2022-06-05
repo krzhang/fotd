@@ -9,7 +9,7 @@ import logging
 import battle_constants
 import duel
 
-from colors import ctext, Colors, Fore, Back, Style
+from colors import ctext, YCodes
 import colors
 from textutils import YText
 
@@ -23,9 +23,9 @@ from templates import CONVERT_TEMPLATES_DISPS, convert_templates
 ######
 
 PAUSE_STRS = {
-  "MORE_STR": Colors.INVERT + "MORE... [hit a key]" + Colors.ENDC,
-  "FORMATION_ORDER": Colors.INVERT +  "Input $[4]$FORMATION" + Colors.INVERT + " for army {armyid}$[7]$",
-  "FINAL_ORDER": Colors.INVERT + "Input $[4]$ORDERS" + Colors.INVERT + " for army {armyid}$[7]$" 
+  "MORE_STR": "MORE... [hit a key]",
+  "FORMATION_ORDER": "Input $[4]$FORMATION for army {armyid}$[7]$",
+  "FINAL_ORDER": "Input $[4]$ORDERS for army {armyid}$[7]$" 
 }
 
 #######################
@@ -177,22 +177,22 @@ def disp_unit_status_noskills(unit):
 
 def disp_bar_morale(max_morale, cur_morale, last_turn_morale):
   if last_turn_morale > cur_morale:
-    return disp_bar_custom([Colors.BLUE, Colors.FAILURE, Colors.ENDC],
+    return disp_bar_custom([YCodes.BLUE, YCodes.FAILURE, YCodes.ENDC],
                            ['+', '*', '.'],
                            [cur_morale, last_turn_morale-cur_morale, max_morale-last_turn_morale])
-  return disp_bar_custom([Colors.BLUE, Colors.SUCCESS, Colors.ENDC],
+  return disp_bar_custom([YCodes.BLUE, YCodes.SUCCESS, YCodes.ENDC],
                          ['+', '*', '.'],
                          [last_turn_morale, cur_morale-last_turn_morale, max_morale-cur_morale])
 
 def disp_bar_single_hit(max_pos, oldhp, newhp):
   """Total: length; base: max; cur: current. """
-  return disp_bar_custom([Colors.SUCCESS, Colors.RED, Colors.ENDC],
+  return disp_bar_custom([YCodes.SUCCESS, YCodes.RED, YCodes.ENDC],
                          ['#', '#', ' '],
                          [newhp, oldhp-newhp, max_pos-oldhp])
-  # return  Colors.OKGREEN + '#'*cur + Colors.RED + '#'*(base-cur) + Colors.ENDC + '.'*(total-base)
+  # return  YCodes.OKGREEN + '#'*cur + YCodes.RED + '#'*(base-cur) + YCodes.ENDC + '.'*(total-base)
 
 def disp_bar_day_tracker(max_pos, base, last_turn, cur):
-  return disp_bar_custom([Colors.GOOD, Colors.RED, Colors.ENDC, Colors.ENDC],
+  return disp_bar_custom([YCodes.GOOD, YCodes.RED, YCodes.ENDC, YCodes.ENDC],
                          ['#', '#', '.', " "],
                          [cur, last_turn-cur, base-last_turn, max_pos-base])
 
@@ -232,12 +232,12 @@ class TextBattleScreen(View):
     for i in [0,1]:
       other = 1-i
       if rps.beats(orders[i], orders[other]):
-        ocolors.append(Colors.SUCCESS)
+        ocolors.append(YCodes.SUCCESS)
       elif rps.beats(orders[other], orders[i]):
-        ocolors.append(Colors.FAILURE)
+        ocolors.append(YCodes.FAILURE)
       else:
         ocolors.append("")
-    return tuple([ocolors[i] + orders[i] + Colors.ENDC for i in [0,1]])
+    return tuple([ocolors[i] + orders[i] + YCodes.ENDC for i in [0,1]])
 
   def _day_status_str(self):
     """ what to put on top"""
@@ -411,7 +411,7 @@ class TextBattleScreen(View):
       bars = [None, None]
       for j in [0, 1]:
         last_health = health_history[i][j]
-        bars[j] = disp_bar_custom([Colors.CYAN + Style.DIM, Colors.RED, Colors.ENDC],
+        bars[j] = disp_bar_custom([YCodes.CYAN + Style.DIM, YCodes.RED, YCodes.ENDC],
                                   ['=', '*', '.'],
                                   [healths[j], last_health - healths[j], 20 - last_health])
       self.yprint("   {} {} vs {} {}".format(csource.color_name(),

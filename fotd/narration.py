@@ -7,7 +7,7 @@ import rps
 import skills
 import status
 # import graphics_asciimatics
-from colors import ctext, Colors
+from colors import ctext, YCodes
 import colors
 from battleview import disp_bar_single_hit, disp_damage_calc
 
@@ -132,9 +132,9 @@ class BattleNarrator(Narrator):
       oldsize, newsize, colors.color_damage(damage))
     if newsize == 0:
       if dmgtype == 'lost_duel':
-        fdmgstr += "; " + ctext("OUTDUELED!", Colors.FAILURE)
+        fdmgstr += "; " + ctext("OUTDUELED!", YCodes.FAILURE)
       else:
-        fdmgstr += "; " + ctext("DESTROYED!", Colors.FAILURE)
+        fdmgstr += "; " + ctext("DESTROYED!", YCodes.FAILURE)
     self.view.yprint(fdmgstr, templates=context, mode=mode)
     if dmglog:
       dmg_str = disp_damage_calc(*dmglog)

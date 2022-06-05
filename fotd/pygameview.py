@@ -6,15 +6,21 @@ import logging
 import sys
 import os
 
-import pygame as pg
+import pygame
+import pygame.freetype
+pygame.freetype.init()
+
 from pgsettings import *
 import resources
 
 import colors
-from colors import IColors as c
+from colors import PColors as c
+from textutils import YText
 
 import rps
 import skills
+
+
 
 # move to settings later
 
@@ -60,6 +66,35 @@ def disp_text_activation(any_str, success=None, upper=True):
   # return "<" + colors.color_bool(success) + " ".join(newstr.split("_")) + "$[7]$>"
   return "<" + colors.color_bool(success) + " ".join(newstr.split("_")) + "$[7]$>"
 
+def text_to_surface(surf, x, y, font, ytext_str):
+  """ 
+  Given a YText string and a pygame [surface], render the text to it (with colors).
+
+  We return the final place for the cursor (only y is really important, since it tells us if
+  we shifted vertically) 
+  
+  useful picture for font:
+  https://user-images.githubusercontent.com/41798797/53959995-0e870780-4120-11e9-84b5-1dde7fa995ec.png
+
+  Return the offset for where the "cursor" should be next
+
+  See https://www.pygame.org/docs/ref/freetype.html#pygame.freetype.Font.render_to
+  """
+  font.origin = True
+  # this means everything is with respect to the origin. See link at beginning
+  # of file for details
+  ytext = YText(ytext_str)
+  text, attrs = ytext.raw_str, ytext.pcolor_map
+  width, height = surf.get_size()
+  line_spacing = font.get_sized_height() + 2
+  for i, t in enumerate(text):
+    bounds = font.get_rect(t)
+    if x + bounds.width + bounds.x >= width:
+      x, y = 0, y + line_spacing    
+    font.render_to(surf, (x, y + line_spacing), None, fgcolor=attrs[i][0], bgcolor=attrs[i][1])
+    x += bounds.width
+  return 0, y + line_spacing # the new cursor has things shifted
+
 class InfoBox:
   """ the box on the right that shows mouseover info """
 
@@ -67,11 +102,12 @@ class InfoBox:
     # upper-left-corner
     self.x = BG_WIDTH
     self.y = 0
-    self.font_mid = pg.font.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 20)
-    self.font_small = pg.font.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 12)
+    self.font_mid = pygame.freetype.Font(None, 20)
+    self.font_small = pygame.freetype.Font(None, 12)
+    # self.font_mid = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 20)
+    # self.font_small = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 12)
     self.battlescreen = battlescreen
-    self.texts = []
-    self.rects = []
+    self.surface = pygame.Surface((INFO_WIDTH, INFO_HEIGHT))
 
   def _disp_unit_healthline(self, unit, side):
     healthbar = self._disp_bar_day_tracker(battle_constants.ARMY_SIZE_MAX, unit.size_base, unit.last_turn_size, unit.size)
@@ -110,30 +146,14 @@ class InfoBox:
     active_skillstr = " ".join(active_skillist + active_skillcards)
     charstr = " "*2 + active_skillstr
     return charstr
-    
+  
   def _render_unit(self, unit):
-    acc_height = self.y + 5
-    self.texts = [self.font_mid.render(unit.character.full_name_fancy(), True, c.WHITE, c.BLACK)]
-    self.rects.append(self.texts[0].get_rect())
-    self.rects[0].topleft = (self.x + 5, acc_height)
-    # heatlh
-    acc_height += self.rects[0].height
-    self.texts.append(self.font_mid.render(str(unit.size), True, c.GREEN, c.BLACK))
-    self.rects.append(self.texts[1].get_rect())
-    self.rects[1].topleft = (self.x + 5, acc_height)
-    # status
-    acc_height += self.rects[1].height
-    sstr = self._disp_unit_status_noskills(unit)
-    self.texts.append(self.font_mid.render(sstr, True, c.YELLOW, c.BLACK))
-    self.rects.append(self.texts[2].get_rect())
-    self.rects[2].topleft = (self.x + 5, acc_height)
-    # skills
-    acc_height += self.rects[2].height
-    skstr = self._disp_unit_skills(unit, unit.army.armyid)
-    self.texts.append(self.font_mid.render(skstr, True, c.CYAN, c.BLACK))
-    self.rects.append(self.texts[3].get_rect())
-    self.rects[3].topleft = (self.x + 5, acc_height)
-
+    self.surface.fill(c.BLACK)
+    x, y = 0, 0
+    x, y = text_to_surface(self.surface, x, y, self.font_mid, unit.character.full_name_fancy())
+    x, y = text_to_surface(self.surface, x, y, self.font_mid, str(unit.size))
+    x, y = text_to_surface(self.surface, x, y, self.font_mid, self._disp_unit_status_noskills(unit))
+    x, y = text_to_surface(self.surface, x, y, self.font_mid, self._disp_unit_skills(unit, unit.army.armyid))
     
   def handle_info(self, info):
     if not info:
@@ -148,17 +168,17 @@ class PGBattleScreen:
     self.game_width, self.game_height = WIDTH, HEIGHT
     os.environ['SDL_VIDEO_WINDOW_POS'] = "%d, %d" % (50, 50)
 
-    self.screen = pg.display.set_mode((self.game_width, self.game_height))
-    pg.display.set_caption(TITLE)
+    self.screen = pygame.display.set_mode((self.game_width, self.game_height))
+    pygame.display.set_caption(TITLE)
     self.infobox = InfoBox(self)
 
-    # self.clock = pg.time.clock()
+    # self.clock = pygame.time.clock()
     self.running = True
     self.playing = True
     self.fps = FPS
 
-    pg.font.init()
-    pg.mixer.init()
+    pygame.font.init()
+    pygame.mixer.init()
 
     self.console_buf = []
     self.huddle_buf = []
@@ -181,7 +201,7 @@ class PGBattleScreen:
                     "I": False,
                     "Q": False}
     
-    self.all_sprites = pg.sprite.Group()
+    self.all_sprites = pygame.sprite.Group()
 
   @property
   def state_stack(self):
@@ -192,14 +212,14 @@ class PGBattleScreen:
     return self.battle.armies[self.armyid]
 
   # def _get_input(self, pause_str, accepted_inputs):
-  #   pg.event.clear()
+  #   pygame.event.clear()
   #   while True:
-  #     event = pg.event.wait()
-  #     if event.type == pg.QUIT:
-  #       pg.quit()
+  #     event = pygame.event.wait()
+  #     if event.type == pygame.QUIT:
+  #       pygame.quit()
   #       sys.exit()
-  #     elif event.type == pg.KEYDOWN:
-  #       kn = pg.key.name(event.key)
+  #     elif event.type == pygame.KEYDOWN:
+  #       kn = pygame.key.name(event.key)
   #       if kn.upper() in accepted_inputs:
   #         return kn.upper()
 
@@ -207,10 +227,10 @@ class PGBattleScreen:
   #   if self.automated:
   #     return
   #   self.draw()
-  #   pg.event.clear()
+  #   pygame.event.clear()
   #   while True:
-  #     event = pg.event.wait()
-  #     if event.type == pg.KEYDOWN:
+  #     event = pygame.event.wait()
+  #     if event.type == pygame.KEYDOWN:
   #       return
 
   def new(self):
@@ -227,17 +247,17 @@ class PGBattleScreen:
     self.run()
     
   def events(self):
-    for event in pg.event.get():
-      if event.type == pg.QUIT:
+    for event in pygame.event.get():
+      if event.type == pygame.QUIT:
         self.playing = False
-      if event.type == pg.KEYDOWN:
-        kr = pg.key.name(event.key)
+      if event.type == pygame.KEYDOWN:
+        kr = pygame.key.name(event.key)
         kn = kr.upper()
         print(kn)
         if kn in self.actions:
           self.actions[kn] = True
           if kn == 'Q':
-            pg.quit()
+            pygame.quit()
             sys.exit(0)
         
   def update(self):
@@ -262,14 +282,13 @@ class PGBattleScreen:
 
       mouseover = None
       for spr in self.all_sprites:
-        if spr.infobox and spr.rect.collidepoint(pg.mouse.get_pos()):
+        if spr.infobox and spr.rect.collidepoint(pygame.mouse.get_pos()):
           mouseover = spr.mouseover_info()
           break
 
-      self.infobox.handle_info(mouseover)
-      if self.infobox.texts:
-        for t in zip(self.infobox.texts, self.infobox.rects):
-          self.screen.blit(t[0], t[1])
+      if mouseover:
+        self.infobox.handle_info(mouseover)
+        self.screen.blit(self.infobox.surface, (BG_WIDTH, 0))
       # we can ignore the statline
       # st = self._disp_statline()
 
@@ -284,7 +303,7 @@ class PGBattleScreen:
       #   print(self._render(fo), end="", flush=True)
       #   self.console_buf = []
 
-      pg.display.flip()
+      pygame.display.flip()
 
   def run(self):
     while self.playing:
@@ -334,8 +353,6 @@ class PGBattleScreen:
     logging.debug(converted_text) # always log this
     if debug and not self.debug_mode:
       return
-    # so we get here if either SHOW_DEBUG or debug=False, which means we send it to the buffer
-    # right now: DO NOTHING
     # so we get here if either SHOW_DEBUG or debug=False, which means we send it to the buffer
     for m in mode:
       if m == "console":

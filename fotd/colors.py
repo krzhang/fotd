@@ -1,21 +1,18 @@
 from pygame import Color
-from colorama import Fore, Back, Style, init
-init()
 
-class IColors:
-  # colors from Ice Emblem
+class PColors:
+  # colors from Pygame
   BLACK  = Color(0, 0, 0)
-  WHITE  = Color(255, 255, 255)
-  GREEN  = Color(0, 255, 0)
   RED    = Color(255, 0, 0)
+  GREEN  = Color(0, 255, 0)
+  YELLOW = Color(255, 255, 0)
   BLUE   = Color(0, 0, 255)
-  YELLOW = Color(255, 200, 0)
+  MAGENTA = Color(255, 0, 255)
+  CYAN = Color (0, 255, 255)
+  WHITE  = Color(255, 255, 255)
   GREY   = Color(160, 160, 160)
   ICE    = Color(92, 247, 251)
-
-  CYAN = Color(0, 255, 255)
-  MAGENTA = Color(255, 0, 255)
-  
+   
   GREEN_A50  = Color(0, 255, 0, 50)
   RED_A50    = Color(255, 0, 0, 50)
   BLUE_A50   = Color(0, 0, 255, 50)
@@ -35,16 +32,19 @@ class IColors:
 
   TRANSPARENT = Color(0, 0, 0, 0)
 
-class Colors:
-  # HEADER = '\033[95m'
-  # OKBLUE = '\033[94m'
-  # OKGREEN = '\033[92m'
-  # WARNING = '\033[93m'
-  # FAIL = '\033[91m'
-  # # ENDC = '\033[0m'
-  ENDC = Style.RESET_ALL
-  # BOLD = '\033[1m'
-  UNDERLINE = '\033[4m'
+# quick numerical conversion from ASCIIMATICS numbers to Pygame colors
+PCOLOR_FROM_ASCIIMATICS = {
+  0:PColors.BLACK,
+  1:PColors.RED,
+  2:PColors.GREEN,
+  3:PColors.YELLOW,
+  4:PColors.BLUE,
+  5:PColors.MAGENTA,
+  6:PColors.CYAN,
+  7:PColors.WHITE}
+
+class YCodes:
+  """ Codes for YText objects"""
   # mine below
   BLACK = "$[0]$"
   RED = "$[1]$"
@@ -54,84 +54,13 @@ class Colors:
   MAGENTA = "$[5]$"
   CYAN = "$[6]$"
   WHITE = "$[7]$"
-  # BLUE = Fore.BLUE
-  # YELLOW = Fore.YELLOW
-  # RED = Fore.RED
-  # GREEN = Fore.GREEN
-  # MAGENTA = Fore.MAGENTA
-  # CYAN = Fore.CYAN
-  # RPS
-  # By function
+  # by functionality
   INVERT = "$[7,3]$"
   SUCCESS = "$[2,1]$"
   GOOD = "$[2]$"
   NEUTRAL = "$[5]$"
   POOR = "$[3]$"
   FAILURE = "$[1]$"
-
-# Fore: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.
-# Back: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.
-# Style: DIM, NORMAL, BRIGHT, RESET_ALL
-
-# ESC [ 0 m       # reset all (colors and brightness)
-# ESC [ 1 m       # bright
-# ESC [ 2 m       # dim (looks same as normal brightness)
-# ESC [ 22 m      # normal brightness
-
-# # FOREGROUND:
-# ESC [ 30 m      # black
-# ESC [ 31 m      # red
-# ESC [ 32 m      # green
-# ESC [ 33 m      # yellow
-# ESC [ 34 m      # blue
-# ESC [ 35 m      # magenta
-# ESC [ 36 m      # cyan
-# ESC [ 37 m      # white
-# ESC [ 39 m      # reset
-
-# # BACKGROUND
-# ESC [ 40 m      # black
-# ESC [ 41 m      # red
-# ESC [ 42 m      # green
-# ESC [ 43 m      # yellow
-# ESC [ 44 m      # blue
-# ESC [ 45 m      # magenta
-# ESC [ 46 m      # cyan
-# ESC [ 47 m      # white
-# ESC [ 49 m      # reset
-
-# # cursor positioning
-# ESC [ y;x H     # position cursor at x across, y down
-# ESC [ y;x f     # position cursor at x across, y down
-# ESC [ n A       # move cursor n lines up
-# ESC [ n B       # move cursor n lines down
-# ESC [ n C       # move cursor n characters forward
-# ESC [ n D       # move cursor n characters backward
-
-# # clear the screen
-# ESC [ mode J    # clear the screen
-
-# # clear the line
-# ESC [ mode K    # clear the line
-     
-# class Colours:
-#   # for asciimatics
-#   BLACK = 0
-#   RED = 1
-#   GREEN = 2
-#   YELLOW = 3
-#   BLUE = 4
-#   MAGENTA = 5
-#   CYAN = 6
-#   WHITE = 7
-
-class Attrs:
-  # for asciimatics
-  A_BOLD = 1
-  A_NORMAL = 2
-  A_REVERSE = 3
-  A_UNDERLINE = 4
-
   
 def ctext(text, colornumstr):
   return(colornumstr + text + "$[7]$")
@@ -140,33 +69,33 @@ def ctext(text, colornumstr):
   
 def color_bool(success):
   if success:
-    return Colors.SUCCESS
+    return YCodes.SUCCESS
   elif success == False:
-    return Colors.FAILURE
+    return YCodes.FAILURE
   else:
     # when we don't know if it failed
-    return Colors.NEUTRAL
+    return YCodes.NEUTRAL
 
 def color_prob(prob):
   pstr = "{:4.3f}".format(prob)
   if prob > 0.8:
-    return ctext(pstr, Colors.SUCCESS)
+    return ctext(pstr, YCodes.SUCCESS)
   elif prob > 0.6:
-    return ctext(pstr, Colors.GOOD)
+    return ctext(pstr, YCodes.GOOD)
   elif prob > 0.4:
-    return ctext(pstr, Colors.NEUTRAL)
+    return ctext(pstr, YCodes.NEUTRAL)
   elif prob > 0.2:
-    return ctext(pstr, Colors.POOR)
+    return ctext(pstr, YCodes.POOR)
   else:
-    return ctext(pstr, Colors.FAILURE)
+    return ctext(pstr, YCodes.FAILURE)
 
 def color_damage(damage):
   if damage == 0:
-    return ctext(str(damage), Colors.SUCCESS)
+    return ctext(str(damage), YCodes.SUCCESS)
   elif damage <= 3:
-    return ctext(str(damage), Colors.NEUTRAL)
+    return ctext(str(damage), YCodes.NEUTRAL)
   else:
-    return ctext(str(damage), Colors.FAILURE)
+    return ctext(str(damage), YCodes.FAILURE)
 
 def color_size(size, size_base):
   return color_prob(float(size)/size_base)

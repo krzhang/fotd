@@ -10,9 +10,11 @@ import pygame as pg
 from pgsettings import *
 import resources
 
+import colors
 from colors import IColors as c
 
 import rps
+import skills
 
 # move to settings later
 
@@ -55,6 +57,7 @@ def disp_text_activation(any_str, success=None, upper=True):
     newstr = any_str.upper()
   else:
     newstr = any_str
+  # return "<" + colors.color_bool(success) + " ".join(newstr.split("_")) + "$[7]$>"
   return "<" + colors.color_bool(success) + " ".join(newstr.split("_")) + "$[7]$>"
 
 class InfoBox:
@@ -110,7 +113,7 @@ class InfoBox:
     
   def _render_unit(self, unit):
     acc_height = self.y + 5
-    self.texts = [self.font_mid.render(unit.name, True, c.WHITE, c.BLACK)]
+    self.texts = [self.font_mid.render(unit.character.full_name_fancy(), True, c.WHITE, c.BLACK)]
     self.rects.append(self.texts[0].get_rect())
     self.rects[0].topleft = (self.x + 5, acc_height)
     # heatlh
@@ -124,6 +127,13 @@ class InfoBox:
     self.texts.append(self.font_mid.render(sstr, True, c.YELLOW, c.BLACK))
     self.rects.append(self.texts[2].get_rect())
     self.rects[2].topleft = (self.x + 5, acc_height)
+    # skills
+    acc_height += self.rects[2].height
+    skstr = self._disp_unit_skills(unit, unit.army.armyid)
+    self.texts.append(self.font_mid.render(skstr, True, c.CYAN, c.BLACK))
+    self.rects.append(self.texts[3].get_rect())
+    self.rects[3].topleft = (self.x + 5, acc_height)
+
     
   def handle_info(self, info):
     if not info:

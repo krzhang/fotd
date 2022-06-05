@@ -2,8 +2,8 @@ VERSION = "0.2dev"
 
 BG_WIDTH = 800
 BG_HEIGHT = 600
-INFO_WIDTH = 200 # info on the RHS
-CONSOLE_HEIGHT = 200 # console buffer on the bottom
+INFO_WIDTH = 600 # info on the RHS
+CONSOLE_HEIGHT = 400 # console buffer on the bottom
 
 WIDTH = BG_WIDTH + INFO_WIDTH
 HEIGHT = BG_HEIGHT + CONSOLE_HEIGHT

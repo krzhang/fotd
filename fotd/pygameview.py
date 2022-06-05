@@ -32,6 +32,31 @@ PAUSE_STRS = {
   "FINAL_ORDER": "Input Orders"
 }
 
+def disp_bar_custom(colors, chars, nums):
+  """
+  all iterators, to make bars like this: '####$$$$----@@@@@@@@' etc.
+  k colors
+  k chars
+  k nums
+  the nums are meant to go from large to small, so max size first, etc.
+  """
+  makestr = ""
+  for i in zip(colors, chars, nums):
+    makestr += i[0]
+    makestr += i[1]*i[2]
+  return makestr
+
+def disp_text_activation(any_str, success=None, upper=True):
+  """
+  to display an ``activated'' string (skill, skillcard, whatever) to give a decorated 
+  context.
+  """
+  if upper:
+    newstr = any_str.upper()
+  else:
+    newstr = any_str
+  return "<" + colors.color_bool(success) + " ".join(newstr.split("_")) + "$[7]$>"
+
 class InfoBox:
   """ the box on the right that shows mouseover info """
 
@@ -39,21 +64,72 @@ class InfoBox:
     # upper-left-corner
     self.x = BG_WIDTH
     self.y = 0
-    self.font = pg.font.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 20)
+    self.font_mid = pg.font.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 20)
+    self.font_small = pg.font.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 12)
     self.battlescreen = battlescreen
-    self.text = None
-    self.text_rect = None
-    
-  def render_unit(self, unit):
-    self.text = self.font.render(unit.name, True, c.WHITE, c.BLACK)
-    self.text_rect = self.text.get_rect()
-    self.text_rect.topleft = (self.x + 5, self.y + 5)
+    self.texts = []
+    self.rects = []
 
+  def _disp_unit_healthline(self, unit, side):
+    healthbar = self._disp_bar_day_tracker(battle_constants.ARMY_SIZE_MAX, unit.size_base, unit.last_turn_size, unit.size)
+    statuses = self._disp_unit_status_noskills(unit)
+    # charstr = "{} {} Hp:{} {}".format(healthbar, disp_cha_fullname(unit.character),
+    #                                   disp_unit_size(unit), statuses)
+    charstr = "{} {} {}".format(healthbar, unit.character.full_name_fancy(), statuses)
+    return charstr
+
+  def _disp_bar_day_tracker(max_pos, base, last_turn, cur):
+    return disp_bar_custom([Colors.GOOD, Colors.RED, Colors.ENDC, Colors.ENDC],
+                           ['#', '#', '.', " "],
+                           [cur, last_turn-cur, base-last_turn, max_pos-base])
+
+  
+  def _disp_unit_status_noskills(self, unit):
+    """ string for the unit's statuses that do NOT include skills"""
+    return " ".join((s.stat_viz() for s in unit.unit_status if not s.is_skill()))
+  
+  def _disp_unit_skills(self, unit, side):
+    # inactive means skills that are not bulbed
+    inactive_skillist = [s.str_fancy(success=False)
+                         for s in unit.character.skills if
+                         not bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
+    inactive_skillstr = " ".join(inactive_skillist)
+    # 'passive' means skills that are used and are not bulbed, meaning they *are* active
+    active_skillist = [disp_text_activation(('*:' + s.short()),
+                                              success=None, upper=False)
+                       for s in unit.character.skills if
+                       bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
+    active_skillcards = [sc.str_seen_by_army(self.army) for sc in unit.army.tableau.bulbed_by(unit)]
+    if inactive_skillstr:
+      sepstr = " | "
+    else:
+      sepstr = "| "
+    active_skillstr = " ".join(active_skillist + active_skillcards)
+    charstr = " "*2 + active_skillstr
+    return charstr
+    
+  def _render_unit(self, unit):
+    acc_height = self.y + 5
+    self.texts = [self.font_mid.render(unit.name, True, c.WHITE, c.BLACK)]
+    self.rects.append(self.texts[0].get_rect())
+    self.rects[0].topleft = (self.x + 5, acc_height)
+    # heatlh
+    acc_height += self.rects[0].height
+    self.texts.append(self.font_mid.render(str(unit.size), True, c.GREEN, c.BLACK))
+    self.rects.append(self.texts[1].get_rect())
+    self.rects[1].topleft = (self.x + 5, acc_height)
+    # status
+    acc_height += self.rects[1].height
+    sstr = self._disp_unit_status_noskills(unit)
+    self.texts.append(self.font_mid.render(sstr, True, c.YELLOW, c.BLACK))
+    self.rects.append(self.texts[2].get_rect())
+    self.rects[2].topleft = (self.x + 5, acc_height)
+    
   def handle_info(self, info):
     if not info:
       return
     if info[0] == "UNIT":
-      self.render_unit(info[1])
+      self._render_unit(info[1])
       
 class PGBattleScreen:
   """ a Pygame battle object """
@@ -150,6 +226,9 @@ class PGBattleScreen:
         print(kn)
         if kn in self.actions:
           self.actions[kn] = True
+          if kn == 'Q':
+            pg.quit()
+            sys.exit(0)
         
   def update(self):
     self.all_sprites.update()
@@ -178,8 +257,9 @@ class PGBattleScreen:
           break
 
       self.infobox.handle_info(mouseover)
-      if self.infobox.text:
-        self.screen.blit(self.infobox.text, self.infobox.text_rect)
+      if self.infobox.texts:
+        for t in zip(self.infobox.texts, self.infobox.rects):
+          self.screen.blit(t[0], t[1])
       # we can ignore the statline
       # st = self._disp_statline()
 

@@ -161,7 +161,7 @@ class YText():
     for a, b, c in color_map:
       # ignore attributes for now
       if a == None:
-        a = 7
+        a = 8
       if b == None:
         b = 0
       cm.append((colors.PCOLOR_FROM_ASCIIMATICS[a],

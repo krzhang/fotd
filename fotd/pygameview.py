@@ -13,13 +13,14 @@ pygame.freetype.init()
 from pgsettings import *
 import resources
 
-import colors
+
 from colors import PColors as c
+from colors import color_bool, YCodes
 from textutils import YText
 
 import rps
 import skills
-
+import battle_constants
 
 
 # move to settings later
@@ -54,6 +55,11 @@ def disp_bar_custom(colors, chars, nums):
     makestr += i[1]*i[2]
   return makestr
 
+def disp_bar_day_tracker(max_pos, base, last_turn, cur):
+  return disp_bar_custom([YCodes.GOOD, YCodes.RED, YCodes.GREY, YCodes.GREY],
+                         ['#', '#', '.', " "],
+                         [cur, last_turn-cur, base-last_turn, max_pos-base])
+
 def disp_text_activation(any_str, success=None, upper=True):
   """
   to display an ``activated'' string (skill, skillcard, whatever) to give a decorated 
@@ -64,7 +70,7 @@ def disp_text_activation(any_str, success=None, upper=True):
   else:
     newstr = any_str
   # return "<" + colors.color_bool(success) + " ".join(newstr.split("_")) + "$[7]$>"
-  return "<" + colors.color_bool(success) + " ".join(newstr.split("_")) + "$[7]$>"
+  return "<" + color_bool(success) + " ".join(newstr.split("_")) + "$[7]$>"
 
 def text_to_surface(surf, x, y, font, ytext_str):
   """ 
@@ -110,18 +116,14 @@ class InfoBox:
     self.surface = pygame.Surface((INFO_WIDTH, INFO_HEIGHT))
 
   def _disp_unit_healthline(self, unit, side):
-    healthbar = self._disp_bar_day_tracker(battle_constants.ARMY_SIZE_MAX, unit.size_base, unit.last_turn_size, unit.size)
+    last_turn_size = unit.last_turn_size or unit.size_base
+    healthbar = disp_bar_day_tracker(battle_constants.ARMY_SIZE_MAX,
+                                     unit.size_base,
+                                     last_turn_size,
+                                     unit.size)
     statuses = self._disp_unit_status_noskills(unit)
-    # charstr = "{} {} Hp:{} {}".format(healthbar, disp_cha_fullname(unit.character),
-    #                                   disp_unit_size(unit), statuses)
-    charstr = "{} {} {}".format(healthbar, unit.character.full_name_fancy(), statuses)
+    charstr = "{}/{} {}".format(unit.size, unit.size_base, healthbar)
     return charstr
-
-  def _disp_bar_day_tracker(max_pos, base, last_turn, cur):
-    return disp_bar_custom([Colors.GOOD, Colors.RED, Colors.ENDC, Colors.ENDC],
-                           ['#', '#', '.', " "],
-                           [cur, last_turn-cur, base-last_turn, max_pos-base])
-
   
   def _disp_unit_status_noskills(self, unit):
     """ string for the unit's statuses that do NOT include skills"""
@@ -151,7 +153,7 @@ class InfoBox:
     self.surface.fill(c.BLACK)
     x, y = 0, 0
     x, y = text_to_surface(self.surface, x, y, self.font_mid, unit.character.full_name_fancy())
-    x, y = text_to_surface(self.surface, x, y, self.font_mid, str(unit.size))
+    x, y = text_to_surface(self.surface, x, y, self.font_mid, self._disp_unit_healthline(unit, 0))
     x, y = text_to_surface(self.surface, x, y, self.font_mid, self._disp_unit_status_noskills(unit))
     x, y = text_to_surface(self.surface, x, y, self.font_mid, self._disp_unit_skills(unit, unit.army.armyid))
     

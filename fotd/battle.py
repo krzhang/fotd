@@ -13,7 +13,6 @@ import status
 import battle_constants
 import weather
 # import state as s
-import resources
 
 class Battle():
 

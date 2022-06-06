@@ -41,7 +41,8 @@ PCOLOR_FROM_ASCIIMATICS = {
   4:PColors.BLUE,
   5:PColors.MAGENTA,
   6:PColors.CYAN,
-  7:PColors.WHITE}
+  7:PColors.WHITE,
+  8:PColors.GREY}
 
 class YCodes:
   """ Codes for YText objects"""
@@ -54,6 +55,7 @@ class YCodes:
   MAGENTA = "$[5]$"
   CYAN = "$[6]$"
   WHITE = "$[7]$"
+  GREY = "$[8]$"
   # by functionality
   INVERT = "$[7,3]$"
   SUCCESS = "$[2,1]$"
@@ -63,7 +65,7 @@ class YCodes:
   FAILURE = "$[1]$"
   
 def ctext(text, colornumstr):
-  return(colornumstr + text + "$[7]$")
+  return(colornumstr + text + "$[8]$")
 
 # color functions
   

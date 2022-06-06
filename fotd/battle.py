@@ -131,7 +131,7 @@ class Battle():
         # TODO: same here
         u.last_turn_size = u.size
     formation_turn = FormationTurn(self, 0)
-    formation_turn.enter_state()      
+    formation_turn.enter_state()
 
   def _draw_and_scout(self):
     ids = [0, 1]
@@ -255,7 +255,8 @@ class Battle():
   # # exposed methods
   
   def start_battle(self):
-    self._init_day()    
+    print("Let's start the battle!")
+    self._init_day()  
   # def start_battle(self):
   #   while(True):
   #     game_ended = self.take_turn()
@@ -276,6 +277,9 @@ class FormationTurn(state.State):
     self.armyid = armyid
     self.battle.armies[armyid].intelligence.await_formation()
 
+  def __str__(self):
+    return "Waiting for formations from {}" % self.armyid
+ 
   def update(self, actions):
     if self.army.formation:
       if self.armyid == 0:
@@ -301,6 +305,9 @@ class OrderTurn(state.State):
     self.armyid = armyid
     self.controller.armies[armyid].intelligence.await_final()
 
+  def __str__(self):
+    return "Waiting for orders from {}" % self.armyid
+
   def update(self, actions):
     if self.army.order:
       if self.armyid == 0:
@@ -323,6 +330,9 @@ class Resolution(state.State):
   def __init__(self, battle):
     super().__init__(battle)
     self.controller.resolve_orders()
+
+  def __str__(self):
+    return "Resolution"
 
   def update(self, actions):
     if any(actions.values()):

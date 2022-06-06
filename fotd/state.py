@@ -1,5 +1,6 @@
 # State Machine controller. Meant to be agnostic of the view.
-import pygame
+import pygame as pg
+import sys
 
 class State():
   def __init__(self, controller): # a battle is a controller
@@ -12,6 +13,9 @@ class State():
   def render(self, surface):
     pass
 
+  def __str__(self):
+    return ""
+  
   def enter_state(self):
     if len(self.controller.state_stack) > 1:
       self.prev_state = self.controller.state_stack[-1]
@@ -24,7 +28,9 @@ class State():
     pass
 
 class GenesisState(State):
-  pass
+
+  def __str__(self):
+    return "Genesis State"
   
 class EndState(State):
   pass

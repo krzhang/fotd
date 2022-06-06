@@ -162,9 +162,108 @@ class InfoBox:
       return
     if info[0] == "UNIT":
       self._render_unit(info[1])
-      
+
+class Console:
+  """ the box on the bottom that shows updates """
+
+  def __init__(self, battlescreen):
+    # upper-left-corner
+    self.x = 0
+    self.y = BG_HEIGHT
+    self.max_console_lines = 10
+    self.font_large = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 32)
+    self.font_mid = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 20)
+    self.font_small = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 12)
+    self.battlescreen = battlescreen
+    self.surface = pygame.Surface((CONSOLE_WIDTH, CONSOLE_HEIGHT))
+    self.console_buf = []
+
+  def _day_status_str(self):
+    """ what to put on top"""
+    return "Day {}: {}".format(self.battlescreen.battle.date, self.battlescreen.battle.weather)
+
+  def _vs_str(self):
+    if self.battle.formations[0] and self.battle.formations[1]: # formation orders were given
+      form0 = self.battle.formations[0].color_abbrev()
+      form1 = self.battle.formations[1].color_abbrev()
+    else:
+      form0 = form1 = "?"
+    if self.battle.orders[0] and self.battle.orders[1]:
+      strat0 = self.battle.orders[0].color_abbrev()
+      strat1 = self.battle.orders[1].color_abbrev()
+    else:
+      strat0 = strat1 = "?"
+    if self.battle.yomi_winner_id == -1:
+      winner_text = "$[7,2]$VS$[7]$"
+    elif self.battle.yomi_winner_id == 0:
+      winner_text = "$[7,1]$>>$[7]$"
+    else:
+      winner_text = "$[7,1]$<<$[7]$"
+    return "      {} ({}) {} -> {} {} {} <- {} ({}) {}".format(
+      disp_bar_morale(10, self.battle.armies[0].morale, self.battle.armies[0].last_turn_morale),
+      self.battle.armies[0].color_name(),
+      form0,
+      strat0,
+      winner_text,
+      strat1,
+      form1,
+      self.battle.armies[1].color_name(),
+      disp_bar_morale(10, self.battle.armies[1].morale, self.battle.armies[1].last_turn_morale))
+  
+  def _disp_statline(self): # 3 lines
+    vs_line = self._vs_str()
+    statline = self._day_status_str()
+    return [statline, vs_line]
+    
+  def render(self):
+    self.surface.fill(c.BLACK)
+    to_print = []
+    x, y = 0, 0
+    # x, y = text_to_surface(self.surface, x, y, self.font_large, self._disp_statline())
+    x, y = text_to_surface(self.surface, x, y, self.font_large, self._day_status_str())
+    for i in range(self.max_console_lines):
+      if self.console_buf:
+        x, y = text_to_surface(self.surface, x, y, self.font_mid, self.console_buf[0])
+        self.console_buf = self.console_buf[1:]
+      else:
+        x, y = text_to_surface(self.surface, x, y, self.font_mid, "")
+    if self.console_buf:
+      # pause_and_display
+      pass
+
+      # we can ignore the statline for now
+      # st = self._disp_statline()
+
+      # we can just print an area for the console
+      # co = self._disp_console() 
+      # fo = self._disp_footerline(pause_str) # 1 line, string
+      # meat = ar + st + co # meat of the print job, not counting the final string
+      # assert len(meat) == self.max_screen_len - 1
+      # # effects = []
+      # for y, li in enumerate(meat):
+      #   print(self._render(li))
+      #   print(self._render(fo), end="", flush=True)
+      #   self.console_buf = []
+
+class StateBox:
+  """ the lower-right corner to tell the player what's going on """
+  def __init__(self, battlescreen):
+    # upper-left-corner
+    self.x = BG_WIDTH
+    self.y = BG_HEIGHT
+    self.font_large = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 32)
+    self.font_mid = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 20)
+    self.font_small = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 12)
+    self.battlescreen = battlescreen
+    self.surface = pygame.Surface((STATE_WIDTH, STATE_HEIGHT))
+
+  def render(self):
+    self.surface.fill(c.BLACK)
+    cur_state = self.battlescreen.battle.state_stack[-1]
+    text_to_surface(self.surface, STATE_WIDTH/2, STATE_HEIGHT/2, self.font_large, str(cur_state))
+
 class PGBattleScreen:
-  """ a Pygame battle object """
+  """ a Pygame View + Controller for a battle object """
 
   def __init__(self, battle, armyid, automated=False, show_AI=False):
     self.game_width, self.game_height = WIDTH, HEIGHT
@@ -172,7 +271,6 @@ class PGBattleScreen:
 
     self.screen = pygame.display.set_mode((self.game_width, self.game_height))
     pygame.display.set_caption(TITLE)
-    self.infobox = InfoBox(self)
 
     # self.clock = pygame.time.clock()
     self.running = True
@@ -182,14 +280,18 @@ class PGBattleScreen:
     pygame.font.init()
     pygame.mixer.init()
 
-    self.console_buf = []
+    self.infobox = InfoBox(self)
+    self.console = Console(self)
+    self.statebox = StateBox(self)
+    
     self.huddle_buf = []
     self.order_buf = []
-    self.max_screen_len = 24
-    self.max_armies_len = 17
-    self.max_stat_len = 3
-    self.max_console_len = 3
-    self.max_footer_len = 1
+
+    # self.max_screen_len = 24
+    # self.max_armies_len = 17
+    # self.max_stat_len = 3
+    # self.max_console_len = 3
+    # self.max_footer_len = 1
     
     self.battle = battle
     self.debug_mode = self.battle.debug_mode
@@ -279,9 +381,10 @@ class PGBattleScreen:
 
       self.screen.fill(c.BLACK)
 
-      # for armies, put them in sprites
+      # sprites
       self.all_sprites.draw(self.screen)
 
+      # infobox
       mouseover = None
       for spr in self.all_sprites:
         if spr.infobox and spr.rect.collidepoint(pygame.mouse.get_pos()):
@@ -291,21 +394,17 @@ class PGBattleScreen:
       if mouseover:
         self.infobox.handle_info(mouseover)
         self.screen.blit(self.infobox.surface, (BG_WIDTH, 0))
-      # we can ignore the statline
-      # st = self._disp_statline()
 
-      # we can just print an area for the console
-      # co = self._disp_console() 
-      # fo = self._disp_footerline(pause_str) # 1 line, string
-      # meat = ar + st + co # meat of the print job, not counting the final string
-      # assert len(meat) == self.max_screen_len - 1
-      # # effects = []
-      # for y, li in enumerate(meat):
-      #   print(self._render(li))
-      #   print(self._render(fo), end="", flush=True)
-      #   self.console_buf = []
+      # console
+      self.console.render()
+      self.screen.blit(self.console.surface, (0, BG_HEIGHT))
+
+      # state
+      self.statebox.render()
+      self.screen.blit(self.statebox.surface, (BG_WIDTH, BG_HEIGHT))
 
       pygame.display.flip()
+
 
   def run(self):
     while self.playing:
@@ -358,7 +457,7 @@ class PGBattleScreen:
     # so we get here if either SHOW_DEBUG or debug=False, which means we send it to the buffer
     for m in mode:
       if m == "console":
-        self.print_line(converted_text)
+        self.console.console_buf.append(converted_text)
       elif m == "huddle":
         self.huddle_buf.append(converted_text)
       elif m == 'order_phase':
@@ -367,6 +466,3 @@ class PGBattleScreen:
         assert m == 'AI'
         if self.show_AI:
           self.huddle_buf.append(converted_text)
-    logging.info(text)
-
-  

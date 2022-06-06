@@ -61,8 +61,9 @@ def play(armies, debug=False, resize=False,
                       debug_mode=debug, automated=automated,
                       show_AI=show_AI,
                       view="PYGAME")
-  return bat.start_battle()
-
+  # return bat.start_battle()  # eventually need to return values
+  bat.start_battle()
+ 
 def army_mysticsoft(armyid, color, aitype, num=4,morale=7,size=20):
   PC_UNITS = [Unit(test_char(*args), size, 10) for args in PC_ATTRS]
   return Army("Mysticsoft", PC_UNITS[:num], armyid, color, aitype, morale)

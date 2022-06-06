@@ -8,26 +8,6 @@ def _winning_chance_estimate(context, source, target):
   s_str *= random.uniform(1.0, 1.2) # ego boost
   return s_str/(t_str + s_str)
 
-def duel_commit_old(context, source, target):
-  """ 
-  gives 2 commitment values for if the source would want to duel target
-  """
-  actors = [source, target]
-  acceptance = None
-  dueldata = None
-  winning_chance_estimate = _winning_chance_estimate(context, source, target)
-  desperation_multiplier = 1.0
-  if source.army.morale <= 2 or source.size <= 5:
-    desperation_multiplier *= 1.5
-  gains_estimate = (5 + target.size)*desperation_multiplier
-  losses_estimate = (5 + source.size)
-  evwin = winning_chance_estimate*gains_estimate
-  evloss = (1-winning_chance_estimate)*losses_estimate
-  ratio = evwin/(evwin + evloss)
-  acceptance = bool(random.random() < ratio)
-  dueldata = (winning_chance_estimate, gains_estimate, losses_estimate, ratio)
-  return acceptance, dueldata
-
 def duel_commit(context, source, target):
   """ 
   gives 2 commitment values for if the source would want to duel target
@@ -36,8 +16,6 @@ def duel_commit(context, source, target):
   errors = [5,0]  # arrogance
   acceptance = False
   dueldata = None
-  winning_chance_estimate = _winning_chance_estimate(context, source, target)
-  desperation_multiplier = 1.0
   if source.army.morale <= 2 or source.size <= 5:
     errors[0] += 5  # desperation
   if target.is_commander():
@@ -50,7 +28,7 @@ def duel_commit(context, source, target):
     losses_estimate = source.size
   total_gains = 0
   for i in range(2):
-    imaginary_duel = Duel(context, None, None, actors, errors)
+    imaginary_duel = Duel(context, None, actors, errors)
     healths = imaginary_duel.resolve()
     if healths[1] <= 0:  # won in your mind
       total_gains += gains_estimate
@@ -96,9 +74,13 @@ def duel_commit(context, source, target):
 
 class Duel():
 
-  def __init__(self, context, bv, narrator, duelists, errors=(0,0)):
+  def __init__(self, context, bv, duelists, errors=(0,0)):
     self.context = context
     self.bv = bv
+    if bv:
+      self.narrator = bv.narrator
+    else:
+      self.narrator = None
     self.duelists = duelists
     self.errors = errors # error in power calculation from ego, etc.
 

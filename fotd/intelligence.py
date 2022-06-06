@@ -111,8 +111,8 @@ class ArtificialIntelligence(Intelligence):
       return base_vec
     
     priors = self.evaluate_state(battle, self.army)
-    battle.battlescreen.yprint("AI uses yomi 1", mode=['AI'])
-    battle.battlescreen.yprint("AI evaluates own strength (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*priors), mode=['AI'])
+    logging.debug("AI uses yomi 1", mode=['AI'])
+    logging.debug("AI evaluates own strength (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*priors), mode=['AI'])
     return priors
 
   def expert_yomi_1(self, battle):
@@ -120,8 +120,8 @@ class ArtificialIntelligence(Intelligence):
     advises playing your own state
     """
     priors = self.evaluate_state(battle, self.army)
-    battle.battlescreen.yprint("AI uses yomi 1", mode=['AI'])
-    battle.battlescreen.yprint("AI evaluates own strength (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*priors), mode=['AI'])
+    logging.debug("AI uses yomi 1", mode=['AI'])
+    logging.debug("AI evaluates own strength (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*priors), mode=['AI'])
     return priors
   
   def expert_yomi_2(self, bat):
@@ -198,13 +198,14 @@ class NashIntelligence(ArtificialIntelligence):
             tempbattle.armies[k].formation = rps.FormationOrder(strat_strs[k])
           init_eval = battle_edge_estimate(tempbattle, 0)
           # simulate the rest of the turn; should get orders and then resolve them
-          tempbattle._get_orders()
+          for k in [0, 1]:
+            tempbattle.armies[k].order = tempbattle.armies[k].intelligence.get_final(tempbattle)
           tempbattle.resolve_orders()
           post_eval = battle_edge_estimate(tempbattle, 0)
           matrix[i][j] += post_eval - init_eval
         # logger.debug("  value: {}".format(matrix[i][j]))         
         # logger.debug("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]))
-        battle.battlescreen.yprint("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]), mode=['AI'])
+        logging.debug("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]), mode=['AI'])
     return matrix/3
 
   def get_formation(self, battle):
@@ -213,8 +214,8 @@ class NashIntelligence(ArtificialIntelligence):
     strats = [normalize(rstrats0), normalize(rstrats1)]
     strat = strats[self.army.armyid]
     # logger.debug("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}, value={}".format(*(strats[0] + strats[1]), value))
-    battle.battlescreen.yprint("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}, value={}".format(*(strats[0] + strats[1]), value), mode=['AI'])
-    battle.battlescreen.yprint("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['AI'])
+    logging.debug("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}, value={}".format(*(strats[0] + strats[1]), value), mode=['AI'])
+    logging.debug("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['AI'])
     return rps.FormationOrder(np.random.choice(['A','D','I'], p=strat))
 
   
@@ -234,7 +235,7 @@ class NashIntelligence(ArtificialIntelligence):
           matrix[i][j] += post_eval - init_eval
         # logger.debug("  value: {}".format(matrix[i][j]))         
         # logger.debug("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]))
-        battle.battlescreen.yprint("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]), mode=['AI'])
+        logging.debug("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]), mode=['AI'])
     return matrix/3
   
   def get_final(self, battle):
@@ -243,12 +244,11 @@ class NashIntelligence(ArtificialIntelligence):
     strats = [normalize(rstrats0), normalize(rstrats1)]
     strat = strats[self.army.armyid]
     # logger.debug("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}, value={}".format(*(strats[0] + strats[1]), value))
-    battle.battlescreen.yprint("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}, value={}".format(*(strats[0] + strats[1]), value), mode=['AI'])
-    battle.battlescreen.yprint("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['AI'])
+    logging.debug("Beststrats (A/D/I): {:4.3f}/{:4.3f}/{:4.3f} vs {:4.3f}/{:4.3f}/{:4.3f}, value={}".format(*(strats[0] + strats[1]), value), mode=['AI'])
+    logging.debug("Nash equilibria (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*strat), mode=['AI'])
     return rps.FinalOrder(np.random.choice(FINAL_ORDER_LIST, p=strat))
 
 
-    
 class RanNashIntelligence(NashIntelligence):
 
   def get_formation(self, battle):

@@ -177,24 +177,88 @@ def disp_unit_status_noskills(unit):
 
 def disp_bar_morale(max_morale, cur_morale, last_turn_morale):
   if last_turn_morale > cur_morale:
-    return disp_bar_custom([YCodes.BLUE, YCodes.FAILURE, YCodes.ENDC],
+    return disp_bar_custom([YCodes.BLUE, YCodes.FAILURE, YCodes.GREY],
                            ['+', '*', '.'],
                            [cur_morale, last_turn_morale-cur_morale, max_morale-last_turn_morale])
-  return disp_bar_custom([YCodes.BLUE, YCodes.SUCCESS, YCodes.ENDC],
+  return disp_bar_custom([YCodes.BLUE, YCodes.SUCCESS, YCodes.GREY],
                          ['+', '*', '.'],
                          [last_turn_morale, cur_morale-last_turn_morale, max_morale-cur_morale])
 
 def disp_bar_single_hit(max_pos, oldhp, newhp):
   """Total: length; base: max; cur: current. """
-  return disp_bar_custom([YCodes.SUCCESS, YCodes.RED, YCodes.ENDC],
+  return disp_bar_custom([YCodes.SUCCESS, YCodes.RED, YCodes.GREY],
                          ['#', '#', ' '],
                          [newhp, oldhp-newhp, max_pos-oldhp])
-  # return  YCodes.OKGREEN + '#'*cur + YCodes.RED + '#'*(base-cur) + YCodes.ENDC + '.'*(total-base)
+  # return  YCodes.OKGREEN + '#'*cur + YCodes.RED + '#'*(base-cur) + YCodes.GREY + '.'*(total-base)
 
 def disp_bar_day_tracker(max_pos, base, last_turn, cur):
-  return disp_bar_custom([YCodes.GOOD, YCodes.RED, YCodes.ENDC, YCodes.ENDC],
+  return disp_bar_custom([YCodes.GOOD, YCodes.RED, YCodes.GREY, YCodes.GREY],
                          ['#', '#', '.', " "],
                          [cur, last_turn-cur, base-last_turn, max_pos-base])
+
+class MockBattleScreen(View):
+  """
+  a mock battlescreen (for e.g. AI imagination where we need no output)
+  """
+  
+  def __init__(self, battle, armyid, automated=False, show_AI=False):
+    super().__init__(automated=automated)
+    self.battle = battle
+    self.debug_mode = self.battle.debug_mode
+    self.armyid = armyid
+    self.show_AI = show_AI
+    self.narrator = narration.BattleNarrator(self.battle, self)
+
+  @property
+  def army(self):
+    return self.battle.armies[self.armyid]
+  
+  def render_all(self, pause_str=None):
+    pass
+  
+  def disp_duel(self, csource, ctarget, loser_history, health_history, damage_history):
+    pass
+
+  def disp_chara_speech(self, chara, speech, context):
+    """
+    What to display when a character says something.
+    """
+    pass
+  
+  def disp_activated_narration(self, activated_text, other_str, success=None):
+    """ 
+    What to display when we want to make a narration involving a skill / skillcard
+    (really any string)
+    """
+    pass
+  
+  def input_battle_order(self, order_type, armyid):
+    """
+    Input a list of orders. The orders are objects (probably rps.Order()) with 
+    - colored_abbrev method for display
+    - str method for input
+    """
+    if order_type == 'FORMATION_ORDER':
+      order_list = [rps.FormationOrder(s) for s in rps.FORMATION_ORDER_LIST]
+    else:
+      assert order_type == 'FINAL_ORDER'
+      order_list = [rps.FinalOrder(s) for s in rps.FINAL_ORDER_LIST]
+    
+    pausestr_1 = PAUSE_STRS[order_type].format(**{"armyid":armyid})
+    render_list = [order.color_abbrev() for order in order_list]
+    pausestr_2 = " ({}):$[7]$".format("/".join(render_list))
+    return self._get_input(pausestr_1 + pausestr_2,
+                           [str(order).upper() for order in order_list])
+
+  ############
+  # Printing #
+  ############
+  
+  def print_line(self, text):
+    logging.info(text)
+
+  def yprint(self, text, templates=None, debug=False, mode=("console",)):
+    logging.info(text)
 
 class TextBattleScreen(View):
   """ 
@@ -237,7 +301,7 @@ class TextBattleScreen(View):
         ocolors.append(YCodes.FAILURE)
       else:
         ocolors.append("")
-    return tuple([ocolors[i] + orders[i] + YCodes.ENDC for i in [0,1]])
+    return tuple([ocolors[i] + orders[i] + YCodes.GREY for i in [0,1]])
 
   def _day_status_str(self):
     """ what to put on top"""
@@ -411,7 +475,7 @@ class TextBattleScreen(View):
       bars = [None, None]
       for j in [0, 1]:
         last_health = health_history[i][j]
-        bars[j] = disp_bar_custom([YCodes.CYAN + Style.DIM, YCodes.RED, YCodes.ENDC],
+        bars[j] = disp_bar_custom([YCodes.CYAN, YCodes.RED, YCodes.GREY],
                                   ['=', '*', '.'],
                                   [healths[j], last_health - healths[j], 20 - last_health])
       self.yprint("   {} {} vs {} {}".format(csource.color_name(),

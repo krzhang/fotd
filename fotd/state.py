@@ -41,19 +41,33 @@ class QuitState(State):
     pg.quit()
     sys.exit()
   
-class UserInput(State):
+# class UserInput(State):
 
-  def __init__(self, controller, callback):
-    super().__init__(controller)
-    self.callback = callback
+#   def __init__(self, controller, callback):
+#     super().__init__(controller)
+#     self.callback = callback
     
+#   def update(self, actions):
+#     if actions['Q']:
+#       quitting = QuitState(self.controller)
+#       quitting.enter_state()
+#     elif any(actions.values()):
+#       for k in actions:
+#         if actions[k]:
+#           self.exit_state()
+#           callback(k)
+
+class Pause(State):
+  def __init__(self, controller):
+    super().__init__(controller)
+
+  def __str__(self):
+    return "Paused"
+
   def update(self, actions):
-    if actions['Q']:
-      quitting = QuitState(self.controller)
-      quitting.enter_state()
-    elif any(actions.values()):
-      for k in actions:
-        if actions[k]:
-          self.exit_state()
-          callback(k)
-      
+    pg.event.clear()
+    while True:
+      event = pg.event.wait()
+      if event.type == pg.KEYDOWN:
+        self.exit_state()
+        return

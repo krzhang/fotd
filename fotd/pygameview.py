@@ -21,6 +21,8 @@ from textutils import YText
 import rps
 import skills
 import battle_constants
+import state
+from narration import BattleNarrator
 
 
 # move to settings later
@@ -228,8 +230,7 @@ class Console:
       else:
         x, y = text_to_surface(self.surface, x, y, self.font_mid, "")
     if self.console_buf:
-      # pause_and_display
-      pass
+      self.battlescreen.pause()
 
       # we can ignore the statline for now
       # st = self._disp_statline()
@@ -260,7 +261,7 @@ class StateBox:
   def render(self):
     self.surface.fill(c.BLACK)
     cur_state = self.battlescreen.battle.state_stack[-1]
-    text_to_surface(self.surface, STATE_WIDTH/2, STATE_HEIGHT/2, self.font_large, str(cur_state))
+    text_to_surface(self.surface, 0, 0, self.font_large, str(cur_state))
 
 class PGBattleScreen:
   """ a Pygame View + Controller for a battle object """
@@ -280,9 +281,12 @@ class PGBattleScreen:
     pygame.font.init()
     pygame.mixer.init()
 
+    self.battle = battle
+    
     self.infobox = InfoBox(self)
     self.console = Console(self)
     self.statebox = StateBox(self)
+    self.narrator = BattleNarrator(self.battle, self)
     
     self.huddle_buf = []
     self.order_buf = []
@@ -293,7 +297,6 @@ class PGBattleScreen:
     # self.max_console_len = 3
     # self.max_footer_len = 1
     
-    self.battle = battle
     self.debug_mode = self.battle.debug_mode
     self.armyid = armyid
     # self.army = self.battle.armies[armyid]
@@ -306,10 +309,14 @@ class PGBattleScreen:
                     "Q": False}
     
     self.all_sprites = pygame.sprite.Group()
-
+    
   @property
   def state_stack(self):
     return self.battle.state_stack
+
+  def pause(self):
+    pause = state.Pause(self.battle)
+    pause.enter_state()
   
   @property
   def army(self):
@@ -413,6 +420,23 @@ class PGBattleScreen:
       self.update()
       self.draw()
 
+  def disp_activated_narration(self, activated_text, other_str, success=None):
+    """ 
+    What to display when we want to make a narration involving a skill / skillcard
+    (really any string)
+    """
+    if activated_text:
+      preamble = disp_text_activation(activated_text, success) + " "
+    else:
+      preamble = ""
+    if success:
+      successtr = "SUCCESS!"
+    else:
+      successtr = "FAIL!"
+    if not other_str:
+      other_str = disp_text_activation(successtr, success)
+    self.yprint(preamble + other_str)
+
   def disp_chara_speech(self, chara, speech, context):
     """
     What to display when a character says something.
@@ -420,6 +444,23 @@ class PGBattleScreen:
     self.yprint("{}: '$[2]${}$[7]$'".format(chara.color_name(), speech),
                 templates=context)
 
+  def disp_duel(self, csource, ctarget, loser_history, health_history, damage_history):
+    duelists = [csource, ctarget]
+    self.yprint("{csource} and {ctarget} face off!",
+                templates={"csource":csource,
+                           "ctarget":ctarget})
+    for i, healths in enumerate(health_history[1:]):
+      bars = [None, None]
+      for j in [0, 1]:
+        last_health = health_history[i][j]
+        bars[j] = disp_bar_custom([YCodes.CYAN, YCodes.RED, YCodes.GREY],
+                                  ['=', '*', '.'],
+                                  [healths[j], last_health - healths[j], 20 - last_health])
+      self.yprint("   {} {} vs {} {}".format(csource.color_name(),
+                                             bars[0],
+                                             bars[1],
+                                             ctarget.color_name()))
+    
   def input_battle_order(self, order_type, armyid):
     """
     Input a list of orders. The orders are objects (probably rps.Order()) with 

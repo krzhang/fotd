@@ -51,8 +51,8 @@ class Unit(object):
   def is_commander(self):
     return self.has_unit_status("is_commander")
   
-  # def _color_name(self):
-  #   return "$[{}]${}$[7]$".format(self.color, self.name)
+  def color_name(self):
+    return "$[{}]${}$[7]$".format(self.color, self.name)
 
   def str_unit_size(unit):
     csize = colors.color_size(unit.size, unit.size_base) + str(unit.size) + "$[7]$"

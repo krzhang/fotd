@@ -1,9 +1,11 @@
+# Controller object for Battle
+
 import state
 from collections import deque
 import random
 
 from narration import BattleNarrator
-from battleview import TextBattleScreen
+from battleview import MockBattleScreen
 from pygameview import PGBattleScreen
 
 from contexts import Context
@@ -15,20 +17,14 @@ import weather
 # import state as s
 
 class Battle():
-
+  """ An abstract battle that doesn't understand views"""
   def __init__(self, army1, army2,
-               debug_mode=False, automated=False, show_AI=False,
-               view="PYGAME"):
+               debug_mode=False, automated=False, show_AI=False):
     self.debug_mode = debug_mode
     self.state_stack = [state.GenesisState(self)]
-    if view == "PYGAME":
-      self.battlescreen = PGBattleScreen(self, 0, automated=automated,
-                                           show_AI=show_AI)
-    else:
-      assert view == "TEXT"
-      self.battlescreen = TextBattleScreen(self, 0, automated=automated,
-                                       show_AI=show_AI)
-    self.narrator = BattleNarrator(self, self.battlescreen)
+
+    self.battlescreen = MockBattleScreen(self, 0, automated=automated, show_AI = show_AI) # to be hooked later
+
     self.armies = [army1, army2]
     for a in self.armies:
       a.hook(self)
@@ -45,8 +41,6 @@ class Battle():
     self.automated = automated # happening with no player actor (so we can suppress input, etc.) 
     self.imaginary = False # happening as part of an AI's mind in simulation
     self.show_AI = show_AI
-    if view == "PYGAME":
-      self.battlescreen.new()
 
   def close(self):
     self.queues = []
@@ -270,29 +264,27 @@ class Battle():
 ###############
 
 class FormationTurn(state.State):  
-  def __init__(self, game, battle, armyid):
-    super().__init__(game)
-    self.battle = battle
+  def __init__(self, battle, armyid):
+    super().__init__(battle)
     self.army = battle.armies[armyid]
     self.armyid = armyid
-    self.battle.armies[armyid].intelligence.await_formation()
+    self.controller.armies[armyid].intelligence.await_formation(self.controller)
 
   def __str__(self):
-    return "Waiting for formations from {}" % self.armyid
+    return "Waiting for formations from {}".format(self.armyid)
  
   def update(self, actions):
     if self.army.formation:
       if self.armyid == 0:
         self.exit_state()
-        formation_turn = FormationTurn(self.game, self.battle, 1)
+        formation_turn = FormationTurn(self.controller, 1)
         formation_turn.enter_state()
       else:
         assert self.armyid == 1
         self.exit_state()
-        Event(self.battle, "formation_completed", Context({})).activate()
-        self.battle.start_orders()
+        Event(self.controller, "formation_completed", Context({})).activate()
+        self.controller.start_orders()
     else:
-      assert self.army.intelligence_type == 'PLAYER'
       if any(actions.values()):
         for k in actions:
           if actions[k]:
@@ -303,10 +295,10 @@ class OrderTurn(state.State):
     super().__init__(battle)
     self.army = battle.armies[armyid]
     self.armyid = armyid
-    self.controller.armies[armyid].intelligence.await_final()
+    self.controller.armies[armyid].intelligence.await_final(self.controller)
 
   def __str__(self):
-    return "Waiting for orders from {}" % self.armyid
+    return "Waiting for orders from {}".format(self.armyid)
 
   def update(self, actions):
     if self.army.order:
@@ -318,7 +310,7 @@ class OrderTurn(state.State):
         assert self.armyid == 1
         self.exit_state()
         Event(self.controller, "order_completed", Context({})).activate()
-        self.controller.start_resolution()
+        self.controller.resolve_orders()
     else:
       assert self.army.intelligence_type == 'PLAYER'
       if any(actions.values()):
@@ -329,12 +321,12 @@ class OrderTurn(state.State):
 class Resolution(state.State):
   def __init__(self, battle):
     super().__init__(battle)
-    self.controller.resolve_orders()
 
   def __str__(self):
     return "Resolution"
 
   def update(self, actions):
+    # gotta kill these updates if this is imaginary
     if any(actions.values()):
       # update on any key
       self.controller._init_day()

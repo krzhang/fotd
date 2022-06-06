@@ -17,6 +17,7 @@ from colors import YCodes
 
 import textutils
 import battle
+import pygameview
 # import graphics_asciimatics
 import intelligence
 import events
@@ -56,13 +57,19 @@ def play(armies, debug=False, resize=False,
   if resize:
     print("\x1b[8;24;80t")
     # print ("\x1b[8;{};80t".format(textutils.BATTLE_SCREEN.max_screen_len))
+  
   automated = (first_intelligence != 'PLAYER') and (second_intelligence != 'PLAYER')
   bat = battle.Battle(armies[0], armies[1],
                       debug_mode=debug, automated=automated,
-                      show_AI=show_AI,
-                      view="PYGAME")
-  # return bat.start_battle()  # eventually need to return values
+                      show_AI=show_AI)
+  print("Did we get here?")
   bat.start_battle()
+  battlescreen = pygameview.PGBattleScreen(bat, 0, automated=automated, show_AI=show_AI)
+  bat.battlescreen = battlescreen
+  battlescreen.new()
+
+  # return bat.start_battle()  # eventually need to return values
+  return None
  
 def army_mysticsoft(armyid, color, aitype, num=4,morale=7,size=20):
   PC_UNITS = [Unit(test_char(*args), size, 10) for args in PC_ATTRS]

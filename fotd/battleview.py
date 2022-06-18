@@ -11,7 +11,7 @@ import duel
 
 from colors import ctext, YCodes
 import colors
-from textutils import YText
+from ytext import YText
 
 import narration
 import rps

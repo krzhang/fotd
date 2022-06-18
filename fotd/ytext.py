@@ -9,36 +9,6 @@ a text utility module.
 
 import re
 import colors
-# from colors import ctext, Colors, Fore, Back, Style
-
-# AM_TO_CR_FORE = {
-#   0:Fore.BLACK,
-#   1:Fore.RED,
-#   2:Fore.GREEN,
-#   3:Fore.YELLOW,
-#   4:Fore.BLUE,
-#   5:Fore.MAGENTA,
-#   6:Fore.CYAN,
-#   7:Fore.WHITE,  
-# }
-
-# AM_TO_CR_BACK = {
-#   0:Back.BLACK,
-#   1:Back.RED,
-#   2:Back.GREEN,
-#   3:Back.YELLOW,
-#   4:Back.BLUE,
-#   5:Back.MAGENTA,
-#   6:Back.CYAN,
-#   7:Back.WHITE,  
-# }
-
-# ATTRIBUTES = {
-#     "1": 1, # BOLD
-#     "2": 2, # NORMAL
-#     "3": 3, # REVERSE
-#     "4": 4, # UNDERLINE
-# }
 
 class YText():
   """
@@ -74,46 +44,6 @@ class YText():
   def __len__(self):
     assert len(self.raw_str) == len(self._color_map)
     return len(self.raw_str)
-  
-  # def to_colorama_old(self):
-  #   """
-  #   colorama just prints strings with escape characters embedded in
-  #   """
-  #   new_str = self._str
-  #   for k in STR_TO_CR:
-  #     new_str = new_str.replace(k, STR_TO_CR[k])
-  #   return new_str
-
-  # def to_colorama(self):
-  #   """
-  #   colorama just prints strings with escape characters embedded in
-  #   """
-  #   cur_map = (None, None, None)
-  #   new_str = ""
-  #   for i, t in enumerate(self._raw_str):
-  #     if self._color_map[i] != cur_map:
-  #       new_str += Colors.ENDC
-  #       cur_map = self._color_map[i]
-  #       a,b,c = self._color_map[i]
-  #       assert a is not None
-  #       if b == 1: # BOLD
-  #         new_str += Style.BRIGHT
-  #       elif b == 2: # NORMAL
-  #         new_str += Style.NORMAL
-  #       elif b == 4: # UNDERLINE
-  #         new_str += Style.UNDERLINE
-  #       elif b == 3: # REVERSE
-  #         if c is None:
-  #           c = 0
-  #         a, c = c, a
-  #       if c:
-  #         new_str += AM_TO_CR_BACK[c]
-  #       else:
-  #         pass
-  #       assert a is not None
-  #       new_str += AM_TO_CR_FORE[a]
-  #     new_str += t
-  #   return new_str + Colors.ENDC
   
   def _to_asciimatics(self):
     """

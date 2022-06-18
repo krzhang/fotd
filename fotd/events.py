@@ -11,7 +11,6 @@ import duel
 import rps
 import skills
 import status
-import textutils
 
 # <2019-07-04 Thu>
 # had both statuses and skills here, and decided to offload all skills into statuses, and so

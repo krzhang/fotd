@@ -16,7 +16,7 @@ import resources
 
 from colors import PColors as c
 from colors import color_bool, YCodes
-from textutils import YText
+from ytext import YText
 
 import rps
 import skills

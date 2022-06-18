@@ -15,7 +15,6 @@ from character import Character
 from army import Unit, Army
 from colors import YCodes
 
-import textutils
 import battle
 import pygameview
 # import graphics_asciimatics
@@ -56,7 +55,6 @@ def play(armies, debug=False, resize=False,
          first_intelligence="PLAYER", second_intelligence="AI_NASH_NASH", show_AI=False):
   if resize:
     print("\x1b[8;24;80t")
-    # print ("\x1b[8;{};80t".format(textutils.BATTLE_SCREEN.max_screen_len))
   
   automated = (first_intelligence != 'PLAYER') and (second_intelligence != 'PLAYER')
   bat = battle.Battle(armies[0], armies[1],

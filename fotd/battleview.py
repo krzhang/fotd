@@ -250,6 +250,9 @@ class MockBattleScreen(View):
     return self._get_input(pausestr_1 + pausestr_2,
                            [str(order).upper() for order in order_list])
 
+  def pause(self):
+    pass
+
   ############
   # Printing #
   ############

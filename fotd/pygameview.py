@@ -97,7 +97,7 @@ def text_to_surface(surf, x, y, font, ytext_str):
   text, attrs = ytext.raw_str, ytext.pcolor_map
   # recall the triple is (foreground, background, attribute)
   width, height = surf.get_size()
-  line_spacing = (font.get_sized_height() + 2)/2 # I don't understand why this is doubled
+  line_spacing = (font.get_sized_height() + 2)
   for i, t in enumerate(text):
     bounds = font.get_rect(t)
     if x + bounds.width + bounds.x >= width:
@@ -118,8 +118,6 @@ class InfoBox:
     self.y = 0
     self.font_mid = pygame.freetype.Font(None, 20)
     self.font_small = pygame.freetype.Font(None, 12)
-    # self.font_mid = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 20)
-    # self.font_small = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 12)
     self.battlescreen = battlescreen
     self.surface = pygame.Surface((INFO_WIDTH, INFO_HEIGHT))
 
@@ -148,7 +146,7 @@ class InfoBox:
                                               success=None, upper=False)
                        for s in unit.character.skills if
                        bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
-    active_skillcards = [sc.str_seen_by_army(self.army) for sc in unit.army.tableau.bulbed_by(unit)]
+    active_skillcards = [sc.str_seen_by_army(self.battlescreen.army) for sc in unit.army.tableau.bulbed_by(unit)]
     if inactive_skillstr:
       sepstr = " | "
     else:
@@ -180,8 +178,10 @@ class Console:
     self.y = BG_HEIGHT
     self.max_console_lines = 10
     self.font_large = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 32)
-    self.font_mid = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 20)
-    self.font_small = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 12)
+    # self.font_mid = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 20)
+    # self.font_small = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 12)
+    self.font_mid = pygame.freetype.Font(None, 20)
+    self.font_small = pygame.freetype.Font(None, 12)
     self.battlescreen = battlescreen
     self.surface = pygame.Surface((CONSOLE_WIDTH, CONSOLE_HEIGHT))
     self.console_buf = []
@@ -259,8 +259,10 @@ class StateBox:
     self.x = BG_WIDTH
     self.y = BG_HEIGHT
     self.font_large = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 32)
-    self.font_mid = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 20)
-    self.font_small = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 12)
+    # self.font_mid = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 20)
+    # self.font_small = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 12)
+    self.font_mid = pygame.freetype.Font(None, 20)
+    self.font_small = pygame.freetype.Font(None, 12)
     self.battlescreen = battlescreen
     self.surface = pygame.Surface((STATE_WIDTH, STATE_HEIGHT))
 

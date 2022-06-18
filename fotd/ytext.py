@@ -99,7 +99,7 @@ class YText():
       if b == None:
         b = 0
       cm.append((colors.PCOLOR_FROM_ASCIIMATICS[a],
-                 coqlors.PCOLOR_FROM_ASCIIMATICS[b],
+                 colors.PCOLOR_FROM_ASCIIMATICS[b],
                  c))
     return cm
     

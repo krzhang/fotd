@@ -92,14 +92,15 @@ class YText():
     Convert colors to pygame style
     """
     cm = []
-    for a, b, c in color_map:
+    for a, c, b in color_map:
       # ignore attributes for now
       if a == None:
         a = 8
       if b == None:
         b = 0
       cm.append((colors.PCOLOR_FROM_ASCIIMATICS[a],
-                 colors.PCOLOR_FROM_ASCIIMATICS[b]))
+                 coqlors.PCOLOR_FROM_ASCIIMATICS[b],
+                 c))
     return cm
     
 

@@ -87,19 +87,25 @@ def text_to_surface(surf, x, y, font, ytext_str):
   Return the offset for where the "cursor" should be next
 
   See https://www.pygame.org/docs/ref/freetype.html#pygame.freetype.Font.render_to
+
+  For styles, see https://www.pygame.org/docs/ref/freetype.html#pygame.freetype.Font.style
   """
   font.origin = True
   # this means everything is with respect to the origin. See link at beginning
   # of file for details
   ytext = YText(ytext_str)
   text, attrs = ytext.raw_str, ytext.pcolor_map
+  # recall the triple is (foreground, background, attribute)
   width, height = surf.get_size()
   line_spacing = (font.get_sized_height() + 2)/2 # I don't understand why this is doubled
   for i, t in enumerate(text):
     bounds = font.get_rect(t)
     if x + bounds.width + bounds.x >= width:
-      x, y = 0, y + line_spacing    
-    font.render_to(surf, (x, y + line_spacing), None, fgcolor=attrs[i][0], bgcolor=attrs[i][1])
+      x, y = 0, y + line_spacing
+    style = pygame.freetype.STYLE_DEFAULT
+    if attrs[i][2] == 1: # BOLD
+      style = pygame.freetype.STYLE_STRONG
+    font.render_to(surf, (x, y + line_spacing), None, fgcolor=attrs[i][0], bgcolor=attrs[i][1], style=style)
     x += bounds.width
   return 0, y + line_spacing # the new cursor has things shifted
 

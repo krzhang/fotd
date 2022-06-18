@@ -263,6 +263,20 @@ class StateBox:
     cur_state = self.battlescreen.battle.state_stack[-1]
     text_to_surface(self.surface, 0, 0, self.font_large, str(cur_state))
 
+class InputController(object):
+  def __init__(self, view):
+    self.view = view # typically the battlescreen
+    self.cooldown = 0
+    
+  def disable(self):
+    self.cooldown = INPUT_COOLDOWN_WINDOW
+    
+  def is_enabled(self):
+    return (self.cooldown == 0)
+
+  def update(self, time_taken):
+    self.cooldown = max(self.cooldown - time_taken, 0)
+  
 class PGBattleScreen:
   """ a Pygame View + Controller for a battle object """
 
@@ -273,11 +287,14 @@ class PGBattleScreen:
     self.screen = pygame.display.set_mode((self.game_width, self.game_height))
     pygame.display.set_caption(TITLE)
 
-    # self.clock = pygame.time.clock()
+    self.input_controller = InputController(self)
+    
     self.running = True
     self.playing = True
     self.fps = FPS
 
+    self.clock = pygame.time.Clock()
+    
     pygame.font.init()
     pygame.mixer.init()
 
@@ -361,20 +378,28 @@ class PGBattleScreen:
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         self.playing = False
+
+      # key detection
       if event.type == pygame.KEYDOWN:
         kr = pygame.key.name(event.key)
         kn = kr.upper()
         print(kn)
         if kn in self.actions:
-          self.actions[kn] = True
           if kn == 'Q':
             pygame.quit()
             sys.exit(0)
-        
+          pt = pygame.time.get_ticks()
+          print(pt)
+          if self.input_controller.is_enabled():
+            self.actions[kn] = True
+            self.input_controller.disable()
+            
   def update(self):
     self.all_sprites.update()
     self.state_stack[-1].update(self.actions)
-
+    dt = self.clock.tick()
+    self.input_controller.update(dt)
+    
   def draw(self, pause_str=None):
     if self.automated:
       return

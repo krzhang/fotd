@@ -94,7 +94,7 @@ def text_to_surface(surf, x, y, font, ytext_str):
   ytext = YText(ytext_str)
   text, attrs = ytext.raw_str, ytext.pcolor_map
   width, height = surf.get_size()
-  line_spacing = font.get_sized_height() + 2
+  line_spacing = (font.get_sized_height() + 2)/2
   for i, t in enumerate(text):
     bounds = font.get_rect(t)
     if x + bounds.width + bounds.x >= width:
@@ -375,6 +375,14 @@ class PGBattleScreen:
     self.run()
     
   def events(self):
+
+    # this code should go to the input_controller
+    
+    self.actions = {"A": False,
+                    "D": False,
+                    "I": False,
+                    "Q": False}    
+
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         self.playing = False

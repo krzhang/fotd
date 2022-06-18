@@ -124,6 +124,10 @@ class Battle():
         u.targetting = None
         # TODO: same here
         u.last_turn_size = u.size
+    print("flushed formation")
+    print(self.armies[0].formation)
+    print(self.armies[1].formation)
+    
     formation_turn = FormationTurn(self, 0)
     formation_turn.enter_state()
 
@@ -277,12 +281,14 @@ class FormationTurn(state.State):
     if self.army.formation:
       if self.armyid == 0:
         self.exit_state()
+        print("Got formation " + str(self.army.formation) + " for " + str(self.armyid))
         formation_turn = FormationTurn(self.controller, 1)
         formation_turn.enter_state()
       else:
         assert self.armyid == 1
         self.exit_state()
         Event(self.controller, "formation_completed", Context({})).activate()
+        print("Got formation " + str(self.army.formation) + " for " + str(self.armyid))
         self.controller.start_orders()
     else:
       if any(actions.values()):

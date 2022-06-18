@@ -94,7 +94,7 @@ def text_to_surface(surf, x, y, font, ytext_str):
   ytext = YText(ytext_str)
   text, attrs = ytext.raw_str, ytext.pcolor_map
   width, height = surf.get_size()
-  line_spacing = (font.get_sized_height() + 2)/2
+  line_spacing = (font.get_sized_height() + 2)/2 # I don't understand why this is doubled
   for i, t in enumerate(text):
     bounds = font.get_rect(t)
     if x + bounds.width + bounds.x >= width:

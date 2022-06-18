@@ -23,7 +23,7 @@ class Character(object):
     self.items = []
     self.status = []
     self.calc_attributes()
-    self.color = ""
+    self.color = "" # this is a
 
   def __eq__(self, other):
     return hasattr(self, "id") and hasattr(other, "id") and self.id == other.id

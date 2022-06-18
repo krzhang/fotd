@@ -52,7 +52,8 @@ class Unit(object):
     return self.has_unit_status("is_commander")
   
   def color_name(self):
-    return "$[{}]${}$[7]$".format(self.color, self.name)
+    return "{}{}$[7]$".format(self.color, self.name)
+    # return "$[{}]${}$[7]$".format(self.color, self.name)
 
   def str_unit_size(unit):
     csize = colors.color_size(unit.size, unit.size_base) + str(unit.size) + "$[7]$"
@@ -214,7 +215,7 @@ class Army(object):
       u.unhook()
     
   def color_name(self):
-    return "$[{}]${}$[7]$".format(self.color, self.name)
+    return "{}{}$[7]$".format(self.color, self.name)
   
   def get_order(self):
     return self.order

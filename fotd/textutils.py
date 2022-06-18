@@ -43,7 +43,11 @@ import colors
 class YText():
   """
 
-  Much of this code is taken from asciimatics.renderer, converted for my purposes  
+  Example YText(): 
+  - initialize: 'Whoa$[3,1]$, this is $[4]$ color-coded text!' 
+  - rendered (kept internally): 'Whoa${3,1}, this is ${4}color-coded text!'
+
+  This scheme emulates asciimatics.renderer.
   """
  
   _colour_esc_code = r"^\$\{((\d+),(\d+),(\d+)|(\d+),(\d+)|(\d+))\}(.*)"
@@ -51,7 +55,7 @@ class YText():
 
   def __init__(self, _str):
     """   
-    Example of _str: $[4,1]$I am colored text$[7]$.
+    Example of _str: $[4,1]$I am colored text$[7]$. 
     """
     self._str = self._prerender(_str)
     self.raw_str, self._color_map = self._to_asciimatics()

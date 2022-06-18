@@ -78,7 +78,6 @@ class Unit(object):
     self.color = color
     self.character.color = color
 
-
   def has_unit_status(self, stat_str):
     return stat_str in [s.stat_str for s in self.unit_status]
 

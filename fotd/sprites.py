@@ -23,3 +23,7 @@ class UnitSpr(Static):
     
   def mouseover_info(self):
     return ("UNIT", self.unit)
+
+  def update(self):
+    if not self.unit.is_present():
+      self.kill()

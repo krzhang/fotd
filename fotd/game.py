@@ -62,7 +62,7 @@ def play(armies, debug=False, resize=False,
                       show_AI=show_AI)
   print("Did we get here?")
   bat.start_battle()
-  battlescreen = pygameview.PGBattleScreen(bat, 0, automated=automated, show_AI=show_AI)
+  battlescreen = pygameview.PGBattleView(bat, 0, automated=automated, show_AI=show_AI)
   bat.battlescreen = battlescreen
   battlescreen.new()
 

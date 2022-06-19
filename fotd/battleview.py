@@ -196,7 +196,7 @@ def disp_bar_day_tracker(max_pos, base, last_turn, cur):
                          ['#', '#', '.', " "],
                          [cur, last_turn-cur, base-last_turn, max_pos-base])
 
-class MockBattleScreen(View):
+class MockBattleView(View):
   """
   a mock battlescreen (for e.g. AI imagination where we need no output)
   """
@@ -263,7 +263,7 @@ class MockBattleScreen(View):
   def yprint(self, text, templates=None, debug=False, mode=("console",)):
     logging.info(text)
 
-class TextBattleScreen(View):
+class TextBattleView(View):
   """ 
   Default ASCII-oriented Battlescreen. 
   """

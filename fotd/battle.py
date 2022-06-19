@@ -5,8 +5,8 @@ from collections import deque
 import random
 
 from narration import BattleNarrator
-from battleview import MockBattleScreen
-from pygameview import PGBattleScreen
+from battleview import MockBattleView
+from pygameview import PGBattleView
 
 from contexts import Context
 from events import Event
@@ -23,7 +23,7 @@ class Battle():
     self.debug_mode = debug_mode
     self.state_stack = [state.GenesisState(self)]
 
-    self.battlescreen = MockBattleScreen(self, 0, automated=automated, show_AI = show_AI) # to be hooked later
+    self.battlescreen = MockBattleView(self, 0, automated=automated, show_AI = show_AI) # to be hooked later
 
     self.armies = [army1, army2]
     for a in self.armies:

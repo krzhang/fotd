@@ -1,5 +1,5 @@
 """
-pygame related abstractions. The main thing here is PGBattleScreen, which
+pygame related abstractions. The main thing here is PGBattleView, which
 is a kind of view and replaces the ASCII one in battleview.
 """
 import logging
@@ -285,7 +285,7 @@ class InputController(object):
   def update(self, time_taken):
     self.cooldown = max(self.cooldown - time_taken, 0)
   
-class PGBattleScreen:
+class PGBattleView:
   """ a Pygame View + Controller for a battle object """
 
   def __init__(self, battle, armyid, automated=False, show_AI=False):
@@ -497,7 +497,7 @@ class PGBattleScreen:
       last_health = health_history[i][j]
       bars[j] = disp_bar_custom([YCodes.CYAN, YCodes.RED, YCodes.GREY],
                                   ['=', '*', '.'],
-                                  [last-health,
+                                  [last_health,
                                    0, 
                                    20 - last_health])
     self.yprint("after {} bouts:   {} {} vs {} {}".format(i,

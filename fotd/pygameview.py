@@ -10,7 +10,7 @@ import pygame
 import pygame.freetype
 pygame.freetype.init()
 
-from pgsettings import *
+from settings_pygame import *
 import resources
 
 
@@ -20,7 +20,7 @@ from ytext import YText
 
 import rps
 import skills
-import battle_constants
+import settings_battle
 import state
 from narration import BattleNarrator
 
@@ -123,7 +123,7 @@ class InfoBox:
 
   def _disp_unit_healthline(self, unit, side):
     last_turn_size = unit.last_turn_size or unit.size_base
-    healthbar = disp_bar_day_tracker(battle_constants.ARMY_SIZE_MAX,
+    healthbar = disp_bar_day_tracker(settings_battle.ARMY_SIZE_MAX,
                                      unit.size_base,
                                      last_turn_size,
                                      unit.size)

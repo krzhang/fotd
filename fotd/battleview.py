@@ -6,7 +6,7 @@ based view.
 
 import logging
 
-import battle_constants
+import settings_battle
 import duel
 
 from colors import ctext, YCodes
@@ -339,7 +339,7 @@ class TextBattleScreen(View):
       disp_bar_morale(10, self.battle.armies[1].morale, self.battle.armies[1].last_turn_morale))
 
   def _disp_unit_healthline(self, unit, side):
-    healthbar = disp_bar_day_tracker(battle_constants.ARMY_SIZE_MAX, unit.size_base, unit.last_turn_size, unit.size)
+    healthbar = disp_bar_day_tracker(settings_battle.ARMY_SIZE_MAX, unit.size_base, unit.last_turn_size, unit.size)
     statuses = disp_unit_status_noskills(unit)
     # charstr = "{} {} Hp:{} {}".format(healthbar, disp_cha_fullname(unit.character),
     #                                   disp_unit_size(unit), statuses)

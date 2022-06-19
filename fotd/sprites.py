@@ -1,5 +1,5 @@
 import pygame as pg
-import settings
+import settings_battle
 import resources
 
 class Static(pg.sprite.Sprite):
@@ -52,7 +52,7 @@ class UnitSizeBar(pg.sprite.Sprite):
     self.view = view
     self.filename = filename
     self.unit_spr = unit_spr
-    self.size_max = settings.UNIT_MAX_SIZE
+    self.size_max = settings_battle.ARMY_SIZE_MAX
     self.image = pg.image.load(filename)
     self.layer = layer
     # self.image = pg.transform.scale(self.image, (x,y)) # good to keep in mind

@@ -5,7 +5,7 @@ import random
 testlogger = logging.getLogger("test")
 
 from utils import str_to_bool
-import battle_constants
+import settings_battle
 import contexts
 import duel
 import rps
@@ -297,7 +297,7 @@ def engage(battle, context, bv):
       # import pdb; pdb.set_trace()
       newcontext = context.copy({'skillcard':sc})
       Event(battle, sc.sc_str, newcontext).defer("Q_RESOLVE")
-  if random.random() < battle_constants.DUEL_BASE_CHANCE:
+  if random.random() < settings_battle.DUEL_BASE_CHANCE:
     if battle.automated or battle.imaginary:
       # we want to control the variance in imagined scenarios
       return
@@ -439,8 +439,8 @@ def change_morale(battle, context, bv):
     return
   morale_change = context.morale_change
   newmorale = ctarget_army.morale + morale_change
-  newmorale = min(newmorale, battle_constants.MORALE_MAX)
-  newmorale = max(newmorale, battle_constants.MORALE_MIN)
+  newmorale = min(newmorale, settings_battle.MORALE_MAX)
+  newmorale = max(newmorale, settings_battle.MORALE_MIN)
   ctarget_army.morale = newmorale
   if ctarget_army.morale <= 0:
     Event(battle, "army_collapse_from_morale", context).activate()
@@ -588,7 +588,7 @@ def panic_tactic(battle, context, bv):
   results = resolve_targetting_event(battle, context, bv, "panic_tactic", chance, _panic_tactic_success)
 
 def _flood_tactic_success(battle, context):
-  damdice = battle_constants.FLOOD_TACTIC_DAMDICE
+  damdice = settings_battle.FLOOD_TACTIC_DAMDICE
   damage = random.choice(range(damdice))
   Event(battle, "receive_damage", context.copy(
     {"damage":damage, "dmgtype":"flood", "dmglog":""})).activate()

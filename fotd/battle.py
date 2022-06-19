@@ -12,7 +12,7 @@ from contexts import Context
 from events import Event
 import rps
 import status
-import battle_constants
+import settings_battle
 import weather
 # import state as s
 
@@ -30,7 +30,7 @@ class Battle():
       a.hook(self)
     # 5 queues
     self.queues = {}
-    for qname in battle_constants.QUEUE_NAMES:
+    for qname in settings_battle.QUEUE_NAMES:
       self.queues[qname] = deque()
     # other stuff
     self.date = 0

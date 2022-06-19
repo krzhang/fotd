@@ -1,6 +1,6 @@
 import random
 
-import battle_constants
+import settings_battle
 import duel
 import insults
 import rps
@@ -102,7 +102,7 @@ class BattleNarrator(Narrator):
       damage = ctarget.size
 
     newsize = oldsize - damage
-    hpbar = disp_bar_single_hit(battle_constants.ARMY_SIZE_MAX, oldsize, newsize)
+    hpbar = disp_bar_single_hit(settings_battle.ARMY_SIZE_MAX, oldsize, newsize)
 
     ndmgstr = ""
     mode = ["console"]

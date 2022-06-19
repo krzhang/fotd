@@ -6,8 +6,11 @@ import tableau
 class Unit(object):
   def __init__(self, character, size, speed):
     self.character = character
+
     self.size_base = size
     self.size = size
+    self.last_turn_size = self.size_base
+
     self.speed = speed
     self.army = None
     self.color = None
@@ -15,7 +18,6 @@ class Unit(object):
     self.targetting = None
     self.attacked = [] # enemies attacked in a turn
     self.attacked_by = []
-    self.last_turn_size = None
     self.present_state = 'PRESENT'
     self.spr = None
     

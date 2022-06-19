@@ -370,16 +370,17 @@ class PGBattleScreen:
   #       return
 
   def new(self):
-    self.background = Static(0, 0, resources.IMAGE_PATH / "old-paper-800-600.jpg")
-    self.all_sprites.add(self.background)
+    self.background = Static(self, 0, 0, resources.IMAGE_PATH / "old-paper-800-600.jpg")
     armies = self.battle.armies
+    facing = "SOUTH"
     for j in range(2):
       v_offset = 120+240*j
       army = armies[j]
+      if j == 1:
+        facing = "NORTH"
       for i, unit in enumerate(army.units):
         h_offset = 90 + 170*i
-        spr = UnitSpr(h_offset, v_offset, resources.SPRITES_PATH / "Soldier.png", unit)
-        self.all_sprites.add(spr)
+        spr = UnitSpr(self, h_offset, v_offset, resources.SPRITES_PATH / "Soldier.png", unit, facing)
     self.run()
     
   def events(self):
@@ -496,7 +497,9 @@ class PGBattleScreen:
       last_health = health_history[i][j]
       bars[j] = disp_bar_custom([YCodes.CYAN, YCodes.RED, YCodes.GREY],
                                   ['=', '*', '.'],
-                                  [healths[j], last_health - healths[j], 20 - last_health])
+                                  [last-health,
+                                   0, 
+                                   20 - last_health])
     self.yprint("after {} bouts:   {} {} vs {} {}".format(i,
                                                           csource.color_name(),
                                                           bars[0],

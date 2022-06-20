@@ -32,7 +32,7 @@ BASE_DIR = os.getcwd()
 TITLE = "Battle"
 
 from sprites import *
-from templates import CONVERT_TEMPLATES_DISPS, convert_templates
+from templates import text_convert
 
 PAUSE_STRS = {
   # "MORE_STR": Colors.INVERT + "MORE... [hit a key]" + Colors.ENDC,
@@ -169,7 +169,41 @@ class InfoBox:
     if info[0] == "UNIT":
       self._render_unit(info[1])
 
-class Console:
+class Huddle:
+  """ an overlay for huddle-related info; right now we will make it show up in the middle  """
+
+  def __init__(self, battlescreen):
+    # upper-left-corner
+    self.x = BG_WIDTH/4
+    self.y = BG_HEIGHT/4
+    self.max_huddle_lines = 20
+    self.font_large = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 32)
+    self.font_mid = pygame.freetype.Font(None, 20)
+    self.font_small = pygame.freetype.Font(None, 12)
+    self.battlescreen = battlescreen
+    self.surface = pygame.Surface((HUDDLE_WIDTH, HUDDLE_HEIGHT))
+    self.huddle_buf = []
+
+  def _huddle_header_str(self):
+    return text_convert("{ctarget_army}'s strategy session",
+                        templates={'ctarget_army':self.battlescreen.army})
+    
+  def render(self):
+    self.surface.fill(c.BLACK)
+    to_print = []
+    x, y = 0, 0
+    # x, y = text_to_surface(self.surface, x, y, self.font_large, self._disp_statline())
+    x, y = text_to_surface(self.surface, x, y, self.font_large, self._huddle_header_str())
+    for i in range(self.max_huddle_lines):
+      if self.huddle_buf:
+        x, y = text_to_surface(self.surface, x, y, self.font_mid, self.huddle_buf[0])
+        self.huddle_buf = self.huddle_buf[1:]
+      else:
+        x, y = text_to_surface(self.surface, x, y, self.font_mid, "")
+    if self.huddle_buf:
+      self.battlescreen.pause()
+  
+class Console(object):
   """ the box on the bottom that shows updates """
 
   def __init__(self, battlescreen):
@@ -310,12 +344,10 @@ class PGBattleView:
     
     self.infobox = InfoBox(self)
     self.console = Console(self)
+    self.huddle = Huddle(self)
     self.statebox = StateBox(self)
     self.narrator = BattleNarrator(self.battle, self)
     
-    self.huddle_buf = []
-    self.order_buf = []
-
     # self.max_screen_len = 24
     # self.max_armies_len = 17
     # self.max_stat_len = 3
@@ -452,6 +484,13 @@ class PGBattleView:
       self.statebox.render()
       self.screen.blit(self.statebox.surface, (BG_WIDTH, BG_HEIGHT))
 
+      # huddle
+      if self.huddle.huddle_buf:
+        print ("Got huddles!")
+        self.huddle.render()
+        self.screen.blit(self.huddle.surface, (self.huddle.x, self.huddle.y))
+        self.pause()
+        
       pygame.display.flip()
 
 
@@ -532,23 +571,20 @@ class PGBattleView:
     # {ctarget} will always be converted to Unit for example
     if self.automated or text is None:
       return
-    if templates:
-      converted_templates = convert_templates(templates)
-      converted_text = text.format(**converted_templates)
-    else:
-      converted_text = text
-    logging.debug(converted_text) # always log this
+    converted_text = text_convert(text, templates)
     if debug and not self.debug_mode:
       return
+    # can assert we are not automated and there's text
     # so we get here if either SHOW_DEBUG or debug=False, which means we send it to the buffer
     for m in mode:
       if m == "console":
         self.console.console_buf.append(converted_text)
       elif m == "huddle":
-        self.huddle_buf.append(converted_text)
+        self.huddle.huddle_buf.append(converted_text)
       elif m == 'order_phase':
-        self.order_buf.append(converted_text)
+        pass
+        # self.order_buf.append(converted_text)
       else:
         assert m == 'AI'
         if self.show_AI:
-          self.huddle_buf.append(converted_text)
+          self.huddle.huddle_buf.append(converted_text)

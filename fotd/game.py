@@ -6,37 +6,22 @@ flog = logging.FileHandler("test.log")
 flog.setLevel(logging.DEBUG)
 logger.addHandler(flog)
 
-# handler = logging.StreamHandler(sys.stdout)
-# handler.setLevel(logging.DEBUG)
-# logger.addHandler(handler)
-
 from character import Character
-from army import Unit, Army
 from colors import YCodes
+import settings_battle
+from army import Unit, Army
+import events
+import contexts
 
 import battle
 import pygameview
 import intelligence
-import events
 import random
 import status
 import sys
+import tests
 
-
-SKILLS_IMPLEMENTED = ["counter_arrow",
-                      "chu_ko_nu",
-                      "panic_skill",
-                      "fire_skill",
-                      "jeer_skill",
-                      "lure_skill",
-                      "trymode",
-                      "water_skill"]
-
-def test_char(name, style, power, intel, pol, cha, cool, brave, skills):
-  return Character(name, style, power, intel, pol, cha, cool, brave,
-                   [s for s in skills if s in SKILLS_IMPLEMENTED])
-
-from officers import YAN_SKILLS, JING_SKILLS, YOYO_SKILLS, HAN_SKILLS, PC_ATTRS, BIZARRO_ATTRS, OTHER_ATTRS
+from tests.officers import YAN_SKILLS, JING_SKILLS, YOYO_SKILLS, HAN_SKILLS, PC_ATTRS, BIZARRO_ATTRS, OTHER_ATTRS
 
 def play(armies, debug=False, resize=False,
          first_intelligence="PLAYER", second_intelligence="AI_NASH_NASH", show_AI=False):
@@ -47,15 +32,29 @@ def play(armies, debug=False, resize=False,
   bat = battle.Battle(armies[0], armies[1],
                       debug_mode=debug, automated=automated,
                       show_AI=show_AI)
-  print("Did we get here?")
   bat.start_battle()
-  battlescreen = pygameview.PGBattleView(bat, 0, automated=automated, show_AI=show_AI)
-  bat.battlescreen = battlescreen
-  battlescreen.new()
+  view = pygameview.PGBattleView(bat, 0, automated=automated, show_AI=show_AI)
+  bat.battlescreen = view
+  view.new()
 
   # return bat.start_battle()  # eventually need to return values
-  return None
- 
+  return None 
+
+
+###########
+# Testing #
+###########
+
+def test(debug=False, resize=False, first_intelligence="PLAYER",
+         second_intelligence="AI_NASH_NASH", num_units=4, show_AI=False):
+  armies = [army_mysticsoft(0, YCodes.CYAN, first_intelligence, num_units),
+            army_bizarro(1, YCodes.MAGENTA, second_intelligence, num_units)]
+  return play(armies, debug, resize, first_intelligence, second_intelligence, show_AI)
+
+def test_char(name, style, power, intel, pol, cha, cool, brave, skills):
+  return Character(name, style, power, intel, pol, cha, cool, brave,
+                   [s for s in skills if s in settings_battle.SKILLS_IMPLEMENTED])
+
 def army_mysticsoft(armyid, color, aitype, num=4,morale=7,size=20):
   PC_UNITS = [Unit(test_char(*args), size, 10) for args in PC_ATTRS]
   return Army("Mysticsoft", PC_UNITS[:num], armyid, color, aitype, morale)
@@ -66,13 +65,7 @@ def army_bizarro(armyid, color, aitype, num=4,morale=7,size=20):
 
 def army_unknown(armyid, color, aitype, num=4,morale=7,size=20):
   OTHER_UNITS = [Unit(test_char(*args), size, 10) for args in BIZARRO_ATTRS + OTHER_ATTRS]
-  return Army("Enemy Unknown", random.sample(OTHER_UNITS, 4)[:num], armyid, color, aitype, morale)
-    
-def test(debug=False, resize=False, first_intelligence="PLAYER",
-         second_intelligence="AI_NASH_NASH", num_units=4, show_AI=False):
-  armies = [army_mysticsoft(0, YCodes.CYAN, first_intelligence, num_units),
-            army_bizarro(1, YCodes.MAGENTA, second_intelligence, num_units)]
-  return play(armies, debug, resize, first_intelligence, second_intelligence, show_AI)
+  return Army("Enemy Unknown", random.sample(OTHER_UNITS, 4)[:num], armyid, color, aitype, morale) 
 
 def test_duel(debug=False, resize=False,
          first_intelligence="PLAYER",
@@ -83,8 +76,6 @@ def test_duel(debug=False, resize=False,
   bat = battle.Battle(armies[0], armies[1], debug_mode=debug, automated=automated)
   armies[0].units[0].health = 100
   armies[1].units[1].health = 100  
-  import events
-  import contexts
   events.duel_accepted(bat, contexts.Context({
     'csource':armies[0].units[0],
     'ctarget':armies[1].units[1]}), bat.battlescreen, bat.narrator)
@@ -120,6 +111,7 @@ def test_AI_all(debug=False, resize=False, trials=100):
         continue
       results = test_AI(first_intelligence=i, second_intelligence=j, trials=trials)
       print("{} vs {}: {}".format(i, j, results))
+
 
 if __name__ == "__main__":
   test(resize=True)

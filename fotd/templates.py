@@ -1,3 +1,5 @@
+import logging
+
 #############
 # Templates #
 #############
@@ -23,3 +25,17 @@ def convert_templates(templates):
       # could just be a string
       newtemplates[key] = templates[key]
   return newtemplates
+
+def text_convert(text, templates):
+  """ 
+  this converts a YText (that might have templates) to a pure YText (no templates, but
+  possibly colors) that is ready to be rendered in the various surfaces
+  """
+  if templates:
+    converted_templates = convert_templates(templates)
+    converted_text = text.format(**converted_templates)
+  else:
+    converted_text = text
+  logging.debug(converted_text) # always log this
+  return converted_text
+

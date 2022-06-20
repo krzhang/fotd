@@ -102,6 +102,19 @@ class YText():
                  colors.PCOLOR_FROM_ASCIIMATICS[b],
                  c))
     return cm
-    
+
+
+def disp_text_activation(any_str, success=None, upper=True):
+  """
+  to display an ``activated'' string (skill, skillcard, whatever) to give a decorated 
+  context.
+  """
+  if upper:
+    newstr = any_str.upper()
+  else:
+    newstr = any_str
+  # return "<" + colors.color_bool(success) + " ".join(newstr.split("_")) + "$[7]$>"
+  return "<" + colors.color_bool(success) + " ".join(newstr.split("_")) + "$[7]$>"
+
 
 

@@ -491,21 +491,21 @@ class PGBattleView:
     self.yprint("{csource} and {ctarget} face off!",
                 templates={"csource":csource,
                            "ctarget":ctarget})
-    i = len(health_history)-2
+    i = len(health_history)-1
     bars = [None, None]
     for j in [0, 1]:
       last_health = health_history[i][j]
       bars[j] = disp_bar_custom([YCodes.CYAN, YCodes.RED, YCodes.GREY],
                                   ['=', '*', '.'],
                                   [last_health,
-                                   0, 
+                                   0,
                                    20 - last_health])
     self.yprint("after {} bouts:   {} {} vs {} {}".format(i,
                                                           csource.color_name(),
                                                           bars[0],
                                                           bars[1],
                                                           ctarget.color_name()))
-    
+
   def input_battle_order(self, order_type, armyid):
     """
     Input a list of orders. The orders are objects (probably rps.Order()) with 

@@ -66,20 +66,6 @@ class YTextBox(TextBox):
     self._start_line = max(0, max(display_line - height + 1,
                               min(self._start_line, display_line)))
     
-    # # Render visible portion of the text.
-    # for line, (text, _, _) in enumerate(display_text):
-    #   if self._start_line <= line < self._start_line + height:
-    #     self._frame.canvas.print_at(
-    #       text,
-    #       # _enforce_width(text[display_start_column:], self.width,
-    #       #                self._frame.canvas.unicode_aware),
-    #       self._x + self._offset,
-    #       self._y + line - self._start_line,
-    #       colour, attr, bg)
-        
-    # for y, l in enumerate(self.value):
-    #   self._scene.add_effect(Print(self._screen,
-    #                         StaticRenderer(images=[self._render(l)]), x=0, y=y, colour=7))
     image, colours = StaticRenderer(self.value).rendered_text
     for (i, line) in enumerate(image):
       self._frame.canvas.paint(line, self._x, self._y + i, self._colour,
@@ -87,18 +73,6 @@ class YTextBox(TextBox):
                                    bg=self._bg,
                                    transparent=self._transparent,
                                    colour_map=colours[i])
-
-    # Since we switch off the standard cursor, we need to emulate our own
-    # if we have the input focus.
-    # if self._has_focus:
-    #   line = display_text[display_line][0]
-    #   text_width = self.string_len(line[display_start_column:display_column])
-    #   self._draw_cursor(
-    #     " " if display_column >= len(line) else line[display_column],
-    #     frame_no,
-    #     self._x + self._offset + text_width,
-    #     self._y + display_line - self._start_line)
-
 
 class BattleFrame(Frame):
   def __init__(self, screen, battle):
@@ -133,10 +107,6 @@ class BattleFrame(Frame):
   def reset(self):
     # Do standard reset to clear out form, then populate with new data.
     super().reset()
-    # self.statline.value = [self._render(l) for l in self.battle.battlescreen._disp_statline()]
-    # self.armystats.value = [self._render(l) for l in self.battle.battlescreen._disp_armies()]
-    # self.console.value = [self._render(l) for l in self.battle.battlescreen._disp_console()]
-     # effects = []
         
   def process_event(self, event):
     # Do the key handling for this Frame.
@@ -144,15 +114,6 @@ class BattleFrame(Frame):
       if event.key_code in [ord('q'), ord('Q'), Screen.ctrl("c")]:
         self._quit()
       elif event.key_code in [ord("r"), ord("R")]:
-        # st = self.battle.battlescreen._disp_statline() # 2 lines
-        # ar = self.battle.battlescreen._disp_armies() # 18 lines
-        # co = self.battle.battlescreen._disp_console() # 3 lines
-        # fo = self.battle.battlescreen._disp_footerline("") # 1 line
-        # assert len(st + ar + co) == self.battle.battlescreen.max_screen_len - 1
-        # for y, l in enumerate(st + ar + co):
-        #   self._scene.add_effect(Print(self._screen,
-        #                         StaticRenderer(images=[self._render(l)]), x=0, y=y, colour=7))
-        # Force a refresh for improved responsiveness
 
         self.statline.value = [self._prerender(l) for l in self.battle.battlescreen._disp_statline()]
         self.armystats.value = [self._prerender(l) for l in self.battle.battlescreen._disp_armies()]
@@ -236,22 +197,6 @@ class Speak(Sprite):
             **kwargs)
 
 
-# class InteractiveArrow(Arrow):
-#     def __init__(self, screen):
-#         """
-#         See :py:obj:`.Sprite` for details.
-#         """
-#         super(InteractiveArrow, self).__init__(
-#             screen,
-#             path=KeyboardController(
-#                 screen, screen.width // 2, screen.height // 2),
-#             colour=Screen.COLOUR_GREEN)
-
-#     def say(self, text):
-#         self._scene.add_effect(
-#             Speak(self._screen, self._scene, self._path, text, delete_count=50))
-
-
 class CrossHairs(Sprite):
     def __init__(self, screen):
         """
@@ -274,157 +219,6 @@ class CrossHairs(Sprite):
             self._scene.add_effect(Print(
                 self._screen,
                 SpeechBubble(sound), y, x, clear=True, delete_count=50))
-
-def demo(screen):
-  scenes = []
-  centre = (screen.width // 2, screen.height // 2)
-  podium = (8, 5)
-  
-  # Scene 1.
-  path = Path()
-  path.jump_to(-20, centre[1])
-  path.move_straight_to(centre[0], centre[1], 10)
-  path.wait(30)
-  path.move_straight_to(podium[0], podium[1], 10)
-  path.wait(100)
-  
-  effects = [
-      Arrow(screen, path, colour=Screen.COLOUR_BLUE),
-      _speak(screen, "WELCOME TO ASCIIMATICS", centre, 30),
-      _speak(screen, "My name is Aristotle Arrow.", podium, 110),
-      _speak(screen,
-             "I'm here to help you learn ASCIImatics.", podium, 180),
-  ]
-  scenes.append(Scene(effects))
-  
-  # Scene 2.
-  path = Path()
-  path.jump_to(podium[0], podium[1])
-  
-  effects = [
-      Arrow(screen, path, colour=Screen.COLOUR_GREEN),
-      _speak(screen, "Let's start with the Screen...", podium, 10),
-      _speak(screen, "This is your Screen object.", podium, 80),
-      Print(screen,
-            Box(screen.width, screen.height, uni=screen.unicode_aware),
-            0, 0, start_frame=90),
-      _speak(screen, "It lets you play a Scene like this one I'm in.",
-             podium, 150),
-      _speak(screen, "A Scene contains one or more Effects.", podium, 220),
-      _speak(screen, "Like me - I'm a Sprite!", podium, 290),
-      _speak(screen, "Or these Stars.", podium, 360),
-      _speak(screen, "As you can see, the Screen handles them both at once.",
-             podium, 430),
-      _speak(screen, "It can handle as many Effects as you like.",
-             podium, 500),
-      _speak(screen, "Please press <SPACE> now.", podium, 570),
-      Stars(screen, (screen.width + screen.height) // 2, start_frame=360)
-  ]
-  scenes.append(Scene(effects, -1))
-  
-  # # Scene 3.
-  # path = Path()
-  # path.jump_to(podium[0], podium[1])
-  
-  # effects = [
-  #     Arrow(screen, path, colour=Screen.COLOUR_GREEN),
-  #     _speak(screen, "This is a new Scene.", podium, 10),
-  #     _speak(screen, "The Screen stops all Effects and clears itself between "
-  #                    "Scenes.",
-  #            podium, 70),
-  #     _speak(screen, "That's why you can't see the Stars now.", podium, 130),
-  #     _speak(screen, "(Though you can override that if you need to.)", podium,
-  #            200),
-  #     _speak(screen, "Please press <SPACE> now.", podium, 270),
-  # ]
-  # scenes.append(Scene(effects, -1))
-  
-  # # Scene 4.
-  # path = Path()
-  # path.jump_to(podium[0], podium[1])
-  
-  # effects = [
-  #     Arrow(screen, path, colour=Screen.COLOUR_GREEN),
-  #     _speak(screen, "So, how do you design your animation?", podium, 10),
-  #     _speak(screen, "1) Decide on your cinematic flow of Scenes.", podium,
-  #            80),
-  #     _speak(screen, "2) Create the Effects in each Scene.", podium, 150),
-  #     _speak(screen, "3) Pass the Scenes to the Screen to play.", podium,
-  #            220),
-  #     _speak(screen, "It really is that easy!", podium, 290),
-  #     _speak(screen, "Just look at this sample code.", podium, 360),
-  #     _speak(screen, "Please press <SPACE> now.", podium, 430),
-  # ]
-  # scenes.append(Scene(effects, -1))
-  
-  # # Scene 5.
-  # path = Path()
-  # path.jump_to(podium[0], podium[1])
-  
-  # effects = [
-  #     Arrow(screen, path, colour=Screen.COLOUR_GREEN),
-  #     _speak(screen, "There are various effects you can use.  For "
-  #                    "example...",
-  #            podium, 10),
-  #     Cycle(screen,
-  #           FigletText("Colour cycling"),
-  #           centre[1] - 5,
-  #           start_frame=100),
-  #     Cycle(screen,
-  #           FigletText("using Figlet"),
-  #           centre[1] + 1,
-  #           start_frame=100),
-  #     _speak(screen, "Look in the effects module for more...",
-  #            podium, 290),
-  #     _speak(screen, "Please press <SPACE> now.", podium, 360),
-  # ]
-  # scenes.append(Scene(effects, -1))
-  
-  # # Scene 6.
-  # path = Path()
-  # path.jump_to(podium[0], podium[1])
-  # curve_path = []
-  # for i in range(0, 11):
-  #     curve_path.append(
-  #         (centre[0] + (screen.width / 4 * math.sin(i * math.pi / 5)),
-  #          centre[1] - (screen.height / 4 * math.cos(i * math.pi / 5))))
-  # path2 = Path()
-  # path2.jump_to(centre[0], centre[1] - screen.height // 4)
-  # path2.move_round_to(curve_path, 60)
-  
-  # effects = [
-  #     Arrow(screen, path, colour=Screen.COLOUR_GREEN),
-  #     _speak(screen, "Sprites (like me) are also an Effect.", podium, 10),
-  #     _speak(screen, "We take a pre-defined Path to follow.", podium, 80),
-  #     _speak(screen, "Like this one...", podium, 150),
-  #     Plot(screen, path2, colour=Screen.COLOUR_BLUE, start_frame=160,
-  #          stop_frame=300),
-  #     _speak(screen, "My friend Sam will now follow it...", podium, 320),
-  #     Sam(screen, copy.copy(path2), start_frame=380),
-  #     _speak(screen, "Please press <SPACE> now.", podium, 420),
-  # ]
-  # scenes.append(Scene(effects, -1))
-  
-  # # Scene 7.
-  # path = Path()
-  # path.jump_to(podium[0], podium[1])
-  # path.wait(60)
-  # path.move_straight_to(-5, podium[1], 20)
-  # path.wait(300)
-  
-  # effects = [
-  #     Arrow(screen, path, colour=Screen.COLOUR_GREEN),
-  #     _speak(screen, "Goodbye!", podium, 10),
-  #     Cycle(screen,
-  #           FigletText("THE END!"),
-  #           centre[1] - 4,
-  #           start_frame=100),
-  #     Print(screen, SpeechBubble("Press X to exit"), centre[1] + 6,
-  #           start_frame=150)
-  # ]
-  # scenes.append(Scene(effects, 500))
-  
-  screen.play(scenes, stop_on_resize=True)
 
 def flood_demo(screen):
   scenes = []

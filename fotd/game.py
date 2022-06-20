@@ -1,5 +1,4 @@
 import logging
-# create logger with 'spam_application'
 logger = logging.getLogger("test")
 logger.setLevel(logging.INFO)
 
@@ -17,7 +16,6 @@ from colors import YCodes
 
 import battle
 import pygameview
-# import graphics_asciimatics
 import intelligence
 import events
 import random
@@ -40,17 +38,6 @@ def test_char(name, style, power, intel, pol, cha, cool, brave, skills):
 
 from officers import YAN_SKILLS, JING_SKILLS, YOYO_SKILLS, HAN_SKILLS, PC_ATTRS, BIZARRO_ATTRS, OTHER_ATTRS
 
-
-# def play(map_file):
-#     if map_file is None:
-#         main_menu()
-#     else:
-#         s.load_map(map_file)
-
-#     while True:
-#         actual_game()
-#         main_menu()
-        
 def play(armies, debug=False, resize=False,
          first_intelligence="PLAYER", second_intelligence="AI_NASH_NASH", show_AI=False):
   if resize:

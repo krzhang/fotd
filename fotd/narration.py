@@ -6,7 +6,6 @@ import insults
 import rps
 import skills
 import status
-# import graphics_asciimatics
 from colors import ctext, YCodes
 import colors
 from battleview import disp_bar_single_hit, disp_damage_calc
@@ -338,6 +337,7 @@ class BattleNarrator(Narrator):
       narrator_str, narrate_text = get_one(ROLLS[key], "on_fail_speech")
     if narrator_str and (narrator_str in context) and narrate_text:
       self.narrate_pair(context[narrator_str], narrate_text, context)
+    # obseolete: render with graphics_asciimatics
     # if success and not self.view.automated and 'graphics_renderer' in ROLLS[key]:
     #     getattr(graphics_asciimatics, ROLLS[key]['graphics_renderer'])()
 

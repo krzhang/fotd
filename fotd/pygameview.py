@@ -57,6 +57,15 @@ def disp_bar_custom(colors, chars, nums):
     makestr += i[1]*i[2]
   return makestr
 
+def disp_bar_morale(max_morale, cur_morale, last_turn_morale):
+  if last_turn_morale > cur_morale:
+    return disp_bar_custom([YCodes.BLUE, YCodes.FAILURE, YCodes.GREY],
+                           ['+', '*', '.'],
+                           [cur_morale, last_turn_morale-cur_morale, max_morale-last_turn_morale])
+  return disp_bar_custom([YCodes.BLUE, YCodes.SUCCESS, YCodes.GREY],
+                         ['+', '*', '.'],
+                         [last_turn_morale, cur_morale-last_turn_morale, max_morale-cur_morale])
+
 def disp_bar_day_tracker(max_pos, base, last_turn, cur):
   return disp_bar_custom([YCodes.GOOD, YCodes.RED, YCodes.GREY, YCodes.GREY],
                          ['#', '#', '.', " "],
@@ -121,6 +130,44 @@ class InfoBox:
     self.battlescreen = battlescreen
     self.surface = pygame.Surface((INFO_WIDTH, INFO_HEIGHT))
 
+  def _day_status_str(self):
+    """ Date and weather """
+    return "Day {}: {}".format(self.battlescreen.battle.date, self.battlescreen.battle.weather)
+
+  def _vs_str(self):
+    """ Armies, Morale, placed Formations, orders, etc. """
+    bat = self.battlescreen.battle
+    if bat.formations[0] and bat.formations[1]: # formation orders were given
+      form0 = bat.formations[0].color_abbrev()
+      form1 = bat.formations[1].color_abbrev()
+    else:
+      form0 = form1 = "?"
+    if bat.orders[0] and bat.orders[1]:
+      strat0 = bat.orders[0].color_abbrev()
+      strat1 = bat.orders[1].color_abbrev()
+    else:
+      strat0 = strat1 = "?"
+    if bat.yomi_winner_id == -1:
+      winner_text = "$[7,2]$VS$[7]$"
+    elif bat.yomi_winner_id == 0:
+      winner_text = "$[7,1]$>>$[7]$"
+    else:
+      winner_text = "$[7,1]$<<$[7]$"
+    p1 = "{} ({}) {} -> {}".format(disp_bar_morale(10,
+                                                   bat.armies[0].morale,
+                                                   bat.armies[0].last_turn_morale),
+                                   bat.armies[0].color_name(),
+                                   form0,
+                                   strat0)
+    p2 = " {}".format(winner_text)
+    p3 = " {} <- {} ({}) {}".format(strat1,
+                                    form1,
+                                    bat.armies[1].color_name(),
+                                    disp_bar_morale(10,
+                                                    bat.armies[1].morale,
+                                                    bat.armies[1].last_turn_morale))
+    return p1 + p2 + p3
+  
   def _disp_unit_healthline(self, unit, side):
     last_turn_size = unit.last_turn_size or unit.size_base
     healthbar = disp_bar_day_tracker(settings_battle.ARMY_SIZE_MAX,
@@ -154,7 +201,17 @@ class InfoBox:
     active_skillstr = " ".join(active_skillist + active_skillcards)
     charstr = " "*2 + active_skillstr
     return charstr
-  
+
+  def _render_default(self):
+    """
+    The default item to render if we aren't mousing over an important item. This would be
+    things in the old statline, like weather, completed orders, etc. basically the battle state:
+    """
+    self.surface.fill(c.BLACK)
+    x, y = 0, 0
+    x, y = text_to_surface(self.surface, x, y, self.font_mid, self._day_status_str())
+    x, y = text_to_surface(self.surface, x, y, self.font_mid, self._vs_str())
+
   def _render_unit(self, unit):
     self.surface.fill(c.BLACK)
     x, y = 0, 0
@@ -165,8 +222,8 @@ class InfoBox:
     
   def handle_info(self, info):
     if not info:
-      return
-    if info[0] == "UNIT":
+      self._render_default()
+    elif info[0] == "UNIT":
       self._render_unit(info[1])
 
 class Huddle:
@@ -220,49 +277,12 @@ class Console(object):
     self.surface = pygame.Surface((CONSOLE_WIDTH, CONSOLE_HEIGHT))
     self.console_buf = []
 
-  def _day_status_str(self):
-    """ what to put on top"""
-    return "Day {}: {}".format(self.battlescreen.battle.date, self.battlescreen.battle.weather)
 
-  def _vs_str(self):
-    if self.battle.formations[0] and self.battle.formations[1]: # formation orders were given
-      form0 = self.battle.formations[0].color_abbrev()
-      form1 = self.battle.formations[1].color_abbrev()
-    else:
-      form0 = form1 = "?"
-    if self.battle.orders[0] and self.battle.orders[1]:
-      strat0 = self.battle.orders[0].color_abbrev()
-      strat1 = self.battle.orders[1].color_abbrev()
-    else:
-      strat0 = strat1 = "?"
-    if self.battle.yomi_winner_id == -1:
-      winner_text = "$[7,2]$VS$[7]$"
-    elif self.battle.yomi_winner_id == 0:
-      winner_text = "$[7,1]$>>$[7]$"
-    else:
-      winner_text = "$[7,1]$<<$[7]$"
-    return "      {} ({}) {} -> {} {} {} <- {} ({}) {}".format(
-      disp_bar_morale(10, self.battle.armies[0].morale, self.battle.armies[0].last_turn_morale),
-      self.battle.armies[0].color_name(),
-      form0,
-      strat0,
-      winner_text,
-      strat1,
-      form1,
-      self.battle.armies[1].color_name(),
-      disp_bar_morale(10, self.battle.armies[1].morale, self.battle.armies[1].last_turn_morale))
-  
-  def _disp_statline(self): # 3 lines
-    vs_line = self._vs_str()
-    statline = self._day_status_str()
-    return [statline, vs_line]
-    
+      
   def render(self):
     self.surface.fill(c.BLACK)
     to_print = []
     x, y = 0, 0
-    # x, y = text_to_surface(self.surface, x, y, self.font_large, self._disp_statline())
-    x, y = text_to_surface(self.surface, x, y, self.font_large, self._day_status_str())
     for i in range(self.max_console_lines):
       if self.console_buf:
         x, y = text_to_surface(self.surface, x, y, self.font_mid, self.console_buf[0])
@@ -472,9 +492,8 @@ class PGBattleView:
           mouseover = spr.mouseover_info()
           break
 
-      if mouseover:
-        self.infobox.handle_info(mouseover)
-        self.screen.blit(self.infobox.surface, (BG_WIDTH, 0))
+      self.infobox.handle_info(mouseover)
+      self.screen.blit(self.infobox.surface, (BG_WIDTH, 0))
 
       # console
       self.console.render()

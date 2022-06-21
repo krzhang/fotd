@@ -77,22 +77,22 @@ def text_to_surface(surf, x, y, font, ytext_str):
 class InfoBox:
   """ the box on the right that shows mouseover info """
 
-  def __init__(self, battlescreen):
+  def __init__(self, view):
     # upper-left-corner
     self.x = BG_WIDTH
     self.y = 0
     self.font_mid = pygame.freetype.Font(None, 20)
     self.font_small = pygame.freetype.Font(None, 12)
-    self.battlescreen = battlescreen
+    self.view = view
     self.surface = pygame.Surface((INFO_WIDTH, INFO_HEIGHT))
 
   def _day_status_str(self):
     """ Date and weather """
-    return "Day {}: {}".format(self.battlescreen.battle.date, self.battlescreen.battle.weather)
+    return "Day {}: {}".format(self.view.battle.date, self.view.battle.weather)
 
   def _vs_str(self):
     """ Armies, Morale, placed Formations, orders, etc. """
-    bat = self.battlescreen.battle
+    bat = self.view.battle
     if bat.formations[0] and bat.formations[1]: # formation orders were given
       form0 = bat.formations[0].color_abbrev()
       form1 = bat.formations[1].color_abbrev()
@@ -149,7 +149,7 @@ class InfoBox:
                                               success=None, upper=False)
                        for s in unit.character.skills if
                        bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
-    active_skillcards = [sc.str_seen_by_army(self.battlescreen.army) for sc in unit.army.tableau.bulbed_by(unit)]
+    active_skillcards = [sc.str_seen_by_army(self.view.army) for sc in unit.army.tableau.bulbed_by(unit)]
     if inactive_skillstr:
       sepstr = " | "
     else:
@@ -185,7 +185,7 @@ class InfoBox:
 class Huddle:
   """ an overlay for huddle-related info; right now we will make it show up in the middle  """
 
-  def __init__(self, battlescreen):
+  def __init__(self, view):
     # upper-left-corner
     self.x = BG_WIDTH/4
     self.y = BG_HEIGHT/4
@@ -193,13 +193,13 @@ class Huddle:
     self.font_large = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 32)
     self.font_mid = pygame.freetype.Font(None, 20)
     self.font_small = pygame.freetype.Font(None, 12)
-    self.battlescreen = battlescreen
+    self.view = view
     self.surface = pygame.Surface((HUDDLE_WIDTH, HUDDLE_HEIGHT))
     self.huddle_buf = []
 
   def _huddle_header_str(self):
     return text_convert("{ctarget_army}'s strategy session",
-                        templates={'ctarget_army':self.battlescreen.army})
+                        templates={'ctarget_army':self.view.army})
     
   def render(self):
     self.surface.fill(PColors.BLACK)
@@ -214,12 +214,12 @@ class Huddle:
       else:
         x, y = text_to_surface(self.surface, x, y, self.font_mid, "")
     if self.huddle_buf:
-      self.battlescreen.pause()
+      self.view.pause()
   
 class Console(object):
   """ the box on the bottom that shows updates """
 
-  def __init__(self, battlescreen):
+  def __init__(self, view):
     # upper-left-corner
     self.x = 0
     self.y = BG_HEIGHT
@@ -229,7 +229,7 @@ class Console(object):
     # self.font_small = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 12)
     self.font_mid = pygame.freetype.Font(None, 20)
     self.font_small = pygame.freetype.Font(None, 12)
-    self.battlescreen = battlescreen
+    self.view = view
     self.surface = pygame.Surface((CONSOLE_WIDTH, CONSOLE_HEIGHT))
     self.console_buf = []
 
@@ -246,7 +246,7 @@ class Console(object):
       else:
         x, y = text_to_surface(self.surface, x, y, self.font_mid, "")
     if self.console_buf:
-      self.battlescreen.pause()
+      self.view.pause()
 
       # we can ignore the statline for now
       # st = self._disp_statline()
@@ -264,7 +264,7 @@ class Console(object):
 
 class StateBox:
   """ the lower-right corner to tell the player what's going on """
-  def __init__(self, battlescreen):
+  def __init__(self, view):
     # upper-left-corner
     self.x = BG_WIDTH
     self.y = BG_HEIGHT
@@ -273,10 +273,10 @@ class StateBox:
     # self.font_small = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 12)
     self.font_mid = pygame.freetype.Font(None, 20)
     self.font_small = pygame.freetype.Font(None, 12)
-    self.battlescreen = battlescreen
+    self.view = view
     self.surface = pygame.Surface((STATE_WIDTH, STATE_HEIGHT))
 
   def render(self):
     self.surface.fill(PColors.BLACK)
-    cur_state = self.battlescreen.battle.state_stack[-1]
+    cur_state = self.view.battle.state_stack[-1]
     text_to_surface(self.surface, 0, 0, self.font_large, str(cur_state))

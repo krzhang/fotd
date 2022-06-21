@@ -79,13 +79,13 @@ class Event():
     # if self.battle.imaginary and self.battle.battlescreen.show_AI: #  stupid hack
     #   testlogger.debug(self.event_name)
     # else:
-    if self.battle.battlescreen: # possible its not up there yet
-      self.battle.battlescreen.narrator.notify(self, *args)
+    if self.battle.view: # possible its not up there yet
+      self.battle.view.narrator.notify(self, *args)
     # time to activate this event on the queue; note the event has its own context, battle, etc.
     if self.event_func:
       self.event_func(self.battle,
                       self.context,
-                      self.battle.battlescreen,
+                      self.battle.view,
                       *args)
 
   def defer(self, queue_name, args=None):

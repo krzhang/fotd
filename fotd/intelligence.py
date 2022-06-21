@@ -128,11 +128,11 @@ class ArtificialIntelligence(Intelligence):
     """
     advises outreading the enemy's state
     """
-    bat.battlescreen.yprint("AI uses yomi 2", mode=['AI'])
+    bat.view.yprint("AI uses yomi 2", mode=['AI'])
     player_priors = self.evaluate_state(bat, bat.armies[1-self.army.armyid])
-    bat.battlescreen.yprint("  AI evaluates player's strength (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*player_priors), mode=['AI'])
+    bat.view.yprint("  AI evaluates player's strength (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*player_priors), mode=['AI'])
     counters = counter_strat(player_priors)
-    bat.battlescreen.yprint("  AI counterpicks    (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters), mode=['AI'])
+    bat.view.yprint("  AI counterpicks    (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters), mode=['AI'])
     return counters
 
   def expert_yomi_3(self, bat):
@@ -140,12 +140,12 @@ class ArtificialIntelligence(Intelligence):
     advises outreading opponent who is reading you
     """
     self_priors_to_enemy = self.evaluate_state(bat, self.army) # eventually disguise; right now info is leaking
-    bat.battlescreen.yprint("AI uses yomi 3", mode=['AI'])
-    bat.battlescreen.yprint("  AI evaluates player evaluating AI (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*self_priors_to_enemy), mode=['AI'])
+    bat.view.yprint("AI uses yomi 3", mode=['AI'])
+    bat.view.yprint("  AI evaluates player evaluating AI (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*self_priors_to_enemy), mode=['AI'])
     enemy_counters = counter_strat(self_priors_to_enemy)
-    bat.battlescreen.yprint("  AI evaluates player's counterpick (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*enemy_counters), mode=['AI'])
+    bat.view.yprint("  AI evaluates player's counterpick (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*enemy_counters), mode=['AI'])
     counters_to_counters = counter_strat(enemy_counters)
-    bat.battlescreen.yprint("  AI counterpick (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters_to_counters), mode=['AI'])
+    bat.view.yprint("  AI counterpick (A/D/I): {:4.3f}/{:4.3f}/{:4.3f}".format(*counters_to_counters), mode=['AI'])
     return counters_to_counters
 
   def get_formation(self, bat):

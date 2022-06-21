@@ -23,7 +23,7 @@ class Battle():
     self.debug_mode = debug_mode
     self.state_stack = [state.GenesisState(self)]
 
-    self.battlescreen = MockBattleView(self, 0, automated=automated, show_AI = show_AI) # to be hooked later
+    self.view = MockBattleView(self, 0, automated=automated, show_AI = show_AI) # to be hooked later
 
     self.armies = [army1, army2]
     for a in self.armies:
@@ -48,7 +48,7 @@ class Battle():
       a.unhook()
     self.armies = []
     self.narrator = None
-    self.battlescreen = None
+    self.view = None
     
   def imaginary_copy(self, intelligence_type):
     """

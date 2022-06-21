@@ -34,7 +34,7 @@ def play(armies, debug=False, resize=False,
                       show_AI=show_AI)
   bat.start_battle()
   view = pygameview.PGBattleView(bat, 0, automated=automated, show_AI=show_AI)
-  bat.battlescreen = view
+  bat.view = view
   view.new()
 
   # return bat.start_battle()  # eventually need to return values
@@ -78,7 +78,7 @@ def test_duel(debug=False, resize=False,
   armies[1].units[1].health = 100  
   events.duel_accepted(bat, contexts.Context({
     'csource':armies[0].units[0],
-    'ctarget':armies[1].units[1]}), bat.battlescreen, bat.narrator)
+    'ctarget':armies[1].units[1]}), bat.view, bat.narrator)
   return 0
 
 def test_AI(debug=False, resize=False, first_intelligence="AI_NASH_NASH",

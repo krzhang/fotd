@@ -1,5 +1,5 @@
 """
-The Battlescreen is something that takes care of all rendering-related tasks,
+The View is something that takes care of all rendering-related tasks,
 so it is the view in MVC. This file is for the default text (Asciimatics)
 based view.
 """
@@ -198,7 +198,7 @@ def disp_bar_day_tracker(max_pos, base, last_turn, cur):
 
 class MockBattleView(View):
   """
-  a mock battlescreen (for e.g. AI imagination where we need no output)
+  a mock view (for e.g. AI imagination where we need no output)
   """
   
   def __init__(self, battle, armyid, automated=False, show_AI=False):
@@ -265,7 +265,7 @@ class MockBattleView(View):
 
 class TextBattleView(View):
   """ 
-  Default ASCII-oriented Battlescreen. 
+  Default ASCII-oriented View. 
   """
   def __init__(self, battle, armyid, automated=False, show_AI=False):
     super().__init__(automated=automated)

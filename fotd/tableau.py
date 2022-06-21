@@ -85,7 +85,7 @@ class Tableau():
   @property
   def bv(self):
     # remove later
-    return self.battle.battlescreen
+    return self.battle.view
   
   def clear(self):
     """

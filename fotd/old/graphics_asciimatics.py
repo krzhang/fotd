@@ -115,9 +115,9 @@ class BattleFrame(Frame):
         self._quit()
       elif event.key_code in [ord("r"), ord("R")]:
 
-        self.statline.value = [self._prerender(l) for l in self.battle.battlescreen._disp_statline()]
-        self.armystats.value = [self._prerender(l) for l in self.battle.battlescreen._disp_armies()]
-        self.console.value = [self._prerender(l) for l in self.battle.battlescreen._disp_console()]
+        self.statline.value = [self._prerender(l) for l in self.battle.view._disp_statline()]
+        self.armystats.value = [self._prerender(l) for l in self.battle.view._disp_armies()]
+        self.console.value = [self._prerender(l) for l in self.battle.view._disp_console()]
         
         self._last_frame = 0
 
@@ -139,7 +139,7 @@ class BattleFrame(Frame):
       sys.exit(0)
     
 def battle_screen(screen, battle):
-  battle.battlescreen.screen = screen
+  battle.view.screen = screen
   screen.play([Scene([BattleFrame(screen, battle)], -1)], stop_on_resize=True)
     
 # Screen.wrapper(BattleFrame)

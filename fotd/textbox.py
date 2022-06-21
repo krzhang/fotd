@@ -179,29 +179,44 @@ class InfoBox(TextBox):
       self._render_unit(info[1])
 
 class Huddle(TextBox):
-  """ an overlay for huddle-related info; right now we will make it show up in the middle  """
+  """ 
+  an overlay for huddle-related info; right now we will make it show up in the middle.
+
+  Used to show huddle and orders.
+  """
 
   def __init__(self, view):
     super().__init__(view, HUDDLE_WIDTH, HUDDLE_HEIGHT)
     self.font_large = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 32)
-    self.max_huddle_lines = 20
+    self.lines_max = 20
     self.huddle_buf = []
+    self.order_buf = []
 
   def _huddle_header_str(self):
     return text_convert("{ctarget_army}'s strategy session",
                         templates={'ctarget_army':self.view.army})
     
-  def render(self):
+  def render(self, target):
+    """ [target] can be "order" or "huddle" """
     self.clear()
+    if target == "huddle":
+      buf = self.huddle_buf
+    else:
+      assert target == "order"
+      buf = self.order_buf
     # self.text_to_surface(self.surface, x, y, self.font_large, self._disp_statline())
-    self.text_to_surface(self.font_large, self._huddle_header_str())
-    for i in range(self.max_huddle_lines):
-      if self.huddle_buf:
-        self.text_to_surface(self.font_mid, self.huddle_buf[0])
-        self.huddle_buf = self.huddle_buf[1:]
+    if target == "huddle":
+      self.text_to_surface(self.font_large, self._huddle_header_str())
+    else:
+      assert target == "order"
+      self.text_to_surface(self.font_large, "Order phase playout:")
+    for i in range(self.lines_max):
+      if buf:
+        self.text_to_surface(self.font_mid, buf[0])
+        buf.pop(0)
       else:
         self.text_to_surface(self.font_mid, "")
-    if self.huddle_buf:
+    if buf:
       self.view.pause()
   
 class Console(TextBox):

@@ -85,15 +85,8 @@ class PGBattleView:
     self.statebox = StateBox(self)
     self.narrator = BattleNarrator(self.battle, self)
     
-    # self.max_screen_len = 24
-    # self.max_armies_len = 17
-    # self.max_stat_len = 3
-    # self.max_console_len = 3
-    # self.max_footer_len = 1
-    
     self.debug_mode = self.battle.debug_mode
     self.armyid = armyid
-    # self.army = self.battle.armies[armyid]
     self.automated = automated
     self.show_AI = show_AI
 
@@ -115,28 +108,6 @@ class PGBattleView:
   @property
   def army(self):
     return self.battle.armies[self.armyid]
-
-  # def _get_input(self, pause_str, accepted_inputs):
-  #   pygame.event.clear()
-  #   while True:
-  #     event = pygame.event.wait()
-  #     if event.type == pygame.QUIT:
-  #       pygame.quit()
-  #       sys.exit()
-  #     elif event.type == pygame.KEYDOWN:
-  #       kn = pygame.key.name(event.key)
-  #       if kn.upper() in accepted_inputs:
-  #         return kn.upper()
-
-  # def pause_and_display(self, pause_str=None):
-  #   if self.automated:
-  #     return
-  #   self.draw()
-  #   pygame.event.clear()
-  #   while True:
-  #     event = pygame.event.wait()
-  #     if event.type == pygame.KEYDOWN:
-  #       return
 
   def new(self):
     self.background = Static(self, 0, 0, resources.IMAGE_PATH / "old-paper-800-600.jpg")
@@ -191,11 +162,6 @@ class PGBattleView:
 
     if self.playing:
 
-      # if self.huddle_buf:
-      #   self._render_and_pause_huddle()
-      # if self.order_buf:
-      #   self._render_and_pause_order()
-
       self.screen.fill(PColors.BLACK)
 
       # sprites
@@ -221,13 +187,15 @@ class PGBattleView:
 
       # huddle
       if self.huddle.huddle_buf:
-        print ("Got huddles!")
-        self.huddle.render()
+        self.huddle.render("huddle")
         self.screen.blit(self.huddle.surface, (BG_WIDTH/4, BG_HEIGHT/4))
         self.pause()
-        
-      pygame.display.flip()
+      elif self.huddle.order_buf:
+        self.huddle.render("order")
+        self.screen.blit(self.huddle.surface, (BG_WIDTH/4, BG_HEIGHT/4))
+        self.pause()
 
+      pygame.display.flip()
 
   def run(self):
     while self.playing:
@@ -291,7 +259,7 @@ class PGBattleView:
     else:
       assert order_type == 'FINAL_ORDER'
       order_list = [rps.FinalOrder(s) for s in rps.FINAL_ORDER_LIST]
-    
+
     pausestr_1 = PAUSE_STRS[order_type].format(**{"armyid":armyid})
     render_list = [order.color_abbrev() for order in order_list]
     pausestr_2 = " ({}):$[7]$".format("/".join(render_list))
@@ -317,8 +285,7 @@ class PGBattleView:
       elif m == "huddle":
         self.huddle.huddle_buf.append(converted_text)
       elif m == 'order_phase':
-        pass
-        # self.order_buf.append(converted_text)
+        self.huddle.order_buf.append(converted_text)
       else:
         assert m == 'AI'
         if self.show_AI:

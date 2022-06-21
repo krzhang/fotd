@@ -58,6 +58,7 @@ SKILLS = {
   "chu_ko_nu": {
     "ai_eval": (1, 0, 1),
     "rank": 'A',
+    "desc": "This officer's arrows have a chance to fire multiple times",
     "activation": "passive",
     "short": 'c-k-nu'
   },
@@ -81,6 +82,7 @@ SKILLS = {
   "lure_skill": {
     "ai_eval": (0, 0, 1),
     "short": ' lure ',
+    "desc": "This officer can lure multiple enemies into a tactic.",
     "activation": "passive",
   },
   "jeer_skill": {
@@ -104,6 +106,7 @@ SKILLS = {
   },
   "trymode": {
     "ai_eval": (3, 0, 0),
+    "desc": "This officer can enter temporary modes of extreme competence.",
     "short": ' try-m',
     "activation": "passive",
   },
@@ -120,6 +123,7 @@ SKILLCARDS = {
     "illegal_weather": ["raining"],
     "power": 5,
     "short": ' fire ',
+    "desc": "When successful, makes the enemy burn continuously until the fire is put out.",
     "skill": "fire_skill",
     "on_bulb": {
       'D': "When they attack, these traps should burn them up.",
@@ -135,6 +139,7 @@ SKILLCARDS = {
     "bulb": {'A':0.2, 'D':0.2, 'I':0.2},
     "illegal_weather": [],
     "power": 2,
+    "desc": "When successful, berserks the enemy and makes them attack randomly.",
     "short": ' jeer ',
     "skill": "jeer_skill",
     "on_bulb": {
@@ -151,6 +156,7 @@ SKILLCARDS = {
     "bulb": {'A':0.25, 'D':0, 'I':0.25},
     "illegal_weather": [],
     "power": 5,
+    "desc": "When successful, panics the enemy and put them into inaction.",
     "short": ' panic',
     "skill": "panic_skill",
     "on_bulb": {
@@ -167,6 +173,7 @@ SKILLCARDS = {
     "bulb": {'A':0, 'D':0.6, 'I':0},
     "illegal_weather": ["sunny", "hot"],
     "power": 8,
+    "desc": "When successful, floods the enemy for massive damage.",
     "short": ' flood',
     "skill": "water_skill",
     "on_bulb": {

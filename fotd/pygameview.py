@@ -11,9 +11,8 @@ import pygame
 from settings_pygame import *
 import resources
 
-from colors import PColors
-# from colors import color_bool, YCodes
-from ytext import YText, disp_text_activation
+from colors import PColors, YCodes
+from ytext import YText, disp_text_activation, disp_bar_custom
 
 from templates import text_convert
 

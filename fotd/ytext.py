@@ -116,5 +116,16 @@ def disp_text_activation(any_str, success=None, upper=True):
   # return "<" + colors.color_bool(success) + " ".join(newstr.split("_")) + "$[7]$>"
   return "<" + colors.color_bool(success) + " ".join(newstr.split("_")) + "$[7]$>"
 
-
-
+def disp_bar_custom(colors, chars, nums):
+  """
+  all iterators, to make bars like this: '####$$$$----@@@@@@@@' etc.
+  k colors
+  k chars
+  k nums
+  the nums are meant to go from large to small, so max size first, etc.
+  """
+  makestr = ""
+  for i in zip(colors, chars, nums):
+    makestr += i[0]
+    makestr += i[1]*i[2]
+  return makestr

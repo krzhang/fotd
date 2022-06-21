@@ -3,26 +3,12 @@ import pygame.freetype
 pygame.freetype.init()
 
 from colors import PColors, color_bool, YCodes
-from ytext import YText, disp_text_activation
+from ytext import YText, disp_text_activation, disp_bar_custom
 
 from settings_pygame import *
 import resources
 
 from templates import text_convert
-
-def disp_bar_custom(colors, chars, nums):
-  """
-  all iterators, to make bars like this: '####$$$$----@@@@@@@@' etc.
-  k colors
-  k chars
-  k nums
-  the nums are meant to go from large to small, so max size first, etc.
-  """
-  makestr = ""
-  for i in zip(colors, chars, nums):
-    makestr += i[0]
-    makestr += i[1]*i[2]
-  return makestr
 
 def disp_bar_morale(max_morale, cur_morale, last_turn_morale):
   if last_turn_morale > cur_morale:
@@ -206,7 +192,7 @@ class Huddle(TextBox):
                         templates={'ctarget_army':self.view.army})
     
   def render(self):
-    self.surface.fill(PColors.BLACK)
+    self.clear()
     # self.text_to_surface(self.surface, x, y, self.font_large, self._disp_statline())
     self.text_to_surface(self.font_large, self._huddle_header_str())
     for i in range(self.max_huddle_lines):

@@ -48,6 +48,7 @@ class InputController(object):
     self.cooldown = 0
     
   def disable(self):
+    """ disable the input; used to not queue up commands and to add pauses """
     self.cooldown = INPUT_COOLDOWN_WINDOW
     
   def is_enabled(self):
@@ -175,7 +176,6 @@ class PGBattleView:
             pygame.quit()
             sys.exit(0)
           pt = pygame.time.get_ticks()
-          print(pt)
           if self.input_controller.is_enabled():
             self.actions[kn] = True
             self.input_controller.disable()
@@ -224,7 +224,7 @@ class PGBattleView:
       if self.huddle.huddle_buf:
         print ("Got huddles!")
         self.huddle.render()
-        self.screen.blit(self.huddle.surface, (self.huddle.x, self.huddle.y))
+        self.screen.blit(self.huddle.surface, (BG_WIDTH/4, BG_HEIGHT/4))
         self.pause()
         
       pygame.display.flip()

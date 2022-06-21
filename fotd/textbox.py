@@ -39,52 +39,64 @@ def disp_bar_day_tracker(max_pos, base, last_turn, cur):
                          [cur, last_turn-cur, base-last_turn, max_pos-base])
 
 
-def text_to_surface(surf, x, y, font, ytext_str):
-  """ 
-  Given a YText string and a pygame [surface], render the text to it (with colors).
 
-  We return the final place for the cursor (only y is really important, since it tells us if
-  we shifted vertically) 
+class TextBox:
+
+  def __init__(self, view, width, height):
+    self.tx = 0 # this is where the "cursor" is
+    self.ty = 0
+    self.view = view
+    self.font_mid = pygame.freetype.Font(None, 20)
+    self.font_small = pygame.freetype.Font(None, 12)
+    self.surface = pygame.Surface((width, height))
+
+  def clear(self):
+    # these are the "cursors"
+    self.surface.fill(PColors.BLACK)
+    self.tx = 0
+    self.ty = 0
+
+  def text_to_surface(self, font, ytext_str):
+    """ 
+    Given a YText string and a pygame [surface], render the text to it (with colors).
+
+    We return the final place for the cursor (only y is really important, since it tells us if
+    we shifted vertically) 
   
-  useful picture for font:
-  https://user-images.githubusercontent.com/41798797/53959995-0e870780-4120-11e9-84b5-1dde7fa995ec.png
+    useful picture for font:
+    https://user-images.githubusercontent.com/41798797/53959995-0e870780-4120-11e9-84b5-1dde7fa995ec.png
 
-  Return the offset for where the "cursor" should be next
+    See https://www.pygame.org/docs/ref/freetype.html#pygame.freetype.Font.render_to
 
-  See https://www.pygame.org/docs/ref/freetype.html#pygame.freetype.Font.render_to
+    For styles, see https://www.pygame.org/docs/ref/freetype.html#pygame.freetype.Font.style
+    """
+    surf = self.surface
+    font.origin = True
+    # this means everything is with respect to the origin. See link at beginning
+    # of file for details
+    ytext = YText(ytext_str)
+    text, attrs = ytext.raw_str, ytext.pcolor_map
+    # recall the triple is (foreground, background, attribute)
+    width, height = surf.get_size()
+    line_spacing = (font.get_sized_height() + 2)
+    for i, t in enumerate(text):
+      bounds = font.get_rect(t)
+      if self.tx + bounds.width + bounds.x >= width:
+        self.tx, self.ty = 0, self.ty + line_spacing
+      style = pygame.freetype.STYLE_DEFAULT
+      if attrs[i][2] == 1: # BOLD
+        style = pygame.freetype.STYLE_STRONG
+      font.render_to(surf, (self.tx, self.ty + line_spacing), None, fgcolor=attrs[i][0], bgcolor=attrs[i][1], style=style)
+      self.tx += bounds.width
+    self.tx = 0
+    self.ty += line_spacing
 
-  For styles, see https://www.pygame.org/docs/ref/freetype.html#pygame.freetype.Font.style
-  """
-  font.origin = True
-  # this means everything is with respect to the origin. See link at beginning
-  # of file for details
-  ytext = YText(ytext_str)
-  text, attrs = ytext.raw_str, ytext.pcolor_map
-  # recall the triple is (foreground, background, attribute)
-  width, height = surf.get_size()
-  line_spacing = (font.get_sized_height() + 2)
-  for i, t in enumerate(text):
-    bounds = font.get_rect(t)
-    if x + bounds.width + bounds.x >= width:
-      x, y = 0, y + line_spacing
-    style = pygame.freetype.STYLE_DEFAULT
-    if attrs[i][2] == 1: # BOLD
-      style = pygame.freetype.STYLE_STRONG
-    font.render_to(surf, (x, y + line_spacing), None, fgcolor=attrs[i][0], bgcolor=attrs[i][1], style=style)
-    x += bounds.width
-  return 0, y + line_spacing # the new cursor has things shifted
-
-class InfoBox:
+    
+class InfoBox(TextBox):
   """ the box on the right that shows mouseover info """
 
   def __init__(self, view):
-    # upper-left-corner
-    self.x = BG_WIDTH
-    self.y = 0
-    self.font_mid = pygame.freetype.Font(None, 20)
-    self.font_small = pygame.freetype.Font(None, 12)
-    self.view = view
-    self.surface = pygame.Surface((INFO_WIDTH, INFO_HEIGHT))
+    super().__init__(view, INFO_WIDTH, INFO_HEIGHT)
 
   def _day_status_str(self):
     """ Date and weather """
@@ -163,18 +175,16 @@ class InfoBox:
     The default item to render if we aren't mousing over an important item. This would be
     things in the old statline, like weather, completed orders, etc. basically the battle state:
     """
-    self.surface.fill(PColors.BLACK)
-    x, y = 0, 0
-    x, y = text_to_surface(self.surface, x, y, self.font_mid, self._day_status_str())
-    x, y = text_to_surface(self.surface, x, y, self.font_mid, self._vs_str())
+    self.clear()
+    self.text_to_surface(self.font_mid, self._day_status_str())
+    self.text_to_surface(self.font_mid, self._vs_str())
 
   def _render_unit(self, unit):
-    self.surface.fill(PColors.BLACK)
-    x, y = 0, 0
-    x, y = text_to_surface(self.surface, x, y, self.font_mid, unit.character.full_name_fancy())
-    x, y = text_to_surface(self.surface, x, y, self.font_mid, self._disp_unit_healthline(unit, 0))
-    x, y = text_to_surface(self.surface, x, y, self.font_mid, self._disp_unit_status_noskills(unit))
-    x, y = text_to_surface(self.surface, x, y, self.font_mid, self._disp_unit_skills(unit, unit.army.armyid))
+    self.clear()
+    self.text_to_surface(self.font_mid, unit.character.full_name_fancy())
+    self.text_to_surface(self.font_mid, self._disp_unit_healthline(unit, 0))
+    self.text_to_surface(self.font_mid, self._disp_unit_status_noskills(unit))
+    self.text_to_surface(self.surface, x, y, self.font_mid, self._disp_unit_skills(unit, unit.army.armyid))
     
   def handle_info(self, info):
     if not info:
@@ -182,19 +192,13 @@ class InfoBox:
     elif info[0] == "UNIT":
       self._render_unit(info[1])
 
-class Huddle:
+class Huddle(TextBox):
   """ an overlay for huddle-related info; right now we will make it show up in the middle  """
 
   def __init__(self, view):
-    # upper-left-corner
-    self.x = BG_WIDTH/4
-    self.y = BG_HEIGHT/4
-    self.max_huddle_lines = 20
+    super().__init__(view, HUDDLE_WIDTH, HUDDLE_HEIGHT)
     self.font_large = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 32)
-    self.font_mid = pygame.freetype.Font(None, 20)
-    self.font_small = pygame.freetype.Font(None, 12)
-    self.view = view
-    self.surface = pygame.Surface((HUDDLE_WIDTH, HUDDLE_HEIGHT))
+    self.max_huddle_lines = 20
     self.huddle_buf = []
 
   def _huddle_header_str(self):
@@ -203,80 +207,45 @@ class Huddle:
     
   def render(self):
     self.surface.fill(PColors.BLACK)
-    to_print = []
-    x, y = 0, 0
-    # x, y = text_to_surface(self.surface, x, y, self.font_large, self._disp_statline())
-    x, y = text_to_surface(self.surface, x, y, self.font_large, self._huddle_header_str())
+    # self.text_to_surface(self.surface, x, y, self.font_large, self._disp_statline())
+    self.text_to_surface(self.font_large, self._huddle_header_str())
     for i in range(self.max_huddle_lines):
       if self.huddle_buf:
-        x, y = text_to_surface(self.surface, x, y, self.font_mid, self.huddle_buf[0])
+        self.text_to_surface(self.font_mid, self.huddle_buf[0])
         self.huddle_buf = self.huddle_buf[1:]
       else:
-        x, y = text_to_surface(self.surface, x, y, self.font_mid, "")
+        self.text_to_surface(self.font_mid, "")
     if self.huddle_buf:
       self.view.pause()
   
-class Console(object):
+class Console(TextBox):
   """ the box on the bottom that shows updates """
 
-  def __init__(self, view):
-    # upper-left-corner
-    self.x = 0
-    self.y = BG_HEIGHT
+  def __init__(self, view): 
+    super().__init__(view, CONSOLE_WIDTH, CONSOLE_HEIGHT)
     self.max_console_lines = 10
     self.font_large = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 32)
-    # self.font_mid = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 20)
-    # self.font_small = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 12)
-    self.font_mid = pygame.freetype.Font(None, 20)
-    self.font_small = pygame.freetype.Font(None, 12)
-    self.view = view
-    self.surface = pygame.Surface((CONSOLE_WIDTH, CONSOLE_HEIGHT))
     self.console_buf = []
 
-
-      
   def render(self):
-    self.surface.fill(PColors.BLACK)
-    to_print = []
-    x, y = 0, 0
+    self.clear()
     for i in range(self.max_console_lines):
       if self.console_buf:
-        x, y = text_to_surface(self.surface, x, y, self.font_mid, self.console_buf[0])
+        self.text_to_surface(self.font_mid, self.console_buf[0])
         self.console_buf = self.console_buf[1:]
       else:
-        x, y = text_to_surface(self.surface, x, y, self.font_mid, "")
+        self.text_to_surface(self.font_mid, "")
     if self.console_buf:
       self.view.pause()
 
-      # we can ignore the statline for now
-      # st = self._disp_statline()
-
-      # we can just print an area for the console
-      # co = self._disp_console() 
-      # fo = self._disp_footerline(pause_str) # 1 line, string
-      # meat = ar + st + co # meat of the print job, not counting the final string
-      # assert len(meat) == self.max_screen_len - 1
-      # # effects = []
-      # for y, li in enumerate(meat):
-      #   print(self._render(li))
-      #   print(self._render(fo), end="", flush=True)
-      #   self.console_buf = []
-
-class StateBox:
+class StateBox(TextBox):
   """ the lower-right corner to tell the player what's going on """
   def __init__(self, view):
-    # upper-left-corner
-    self.x = BG_WIDTH
-    self.y = BG_HEIGHT
+    super().__init__(view, STATE_WIDTH, STATE_HEIGHT)
     self.font_large = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 32)
-    # self.font_mid = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 20)
-    # self.font_small = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 12)
-    self.font_mid = pygame.freetype.Font(None, 20)
-    self.font_small = pygame.freetype.Font(None, 12)
     self.view = view
-    self.surface = pygame.Surface((STATE_WIDTH, STATE_HEIGHT))
 
   def render(self):
-    self.surface.fill(PColors.BLACK)
+    self.clear()
     cur_state = self.view.battle.state_stack[-1]
-    text_to_surface(self.surface, 0, 0, self.font_large, str(cur_state))
+    self.text_to_surface(self.font_large, str(cur_state))

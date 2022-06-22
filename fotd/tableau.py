@@ -1,3 +1,8 @@
+"""
+Information related to the skillcards. Each army in a battle has a tableau, and they
+form the 'card game' part of the battle.
+"""
+
 import random
 
 import rps
@@ -140,6 +145,29 @@ class Tableau():
           visible_dict[key] = True
     return visible_dict
 
+  def get_unit_cards(self, unit):
+    """ 
+    returns {"active": [], "inactive": []}, where each item is a list of skillcards.
+    """
+    # inactive means skills that are not bulbed
+    inactive_skillist = [s.str_fancy(success=False)
+                         for s in unit.character.skills if
+                         not bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
+    inactive_skillstr = " ".join(inactive_skillist)
+    # 'passive' means skills that are used and are not bulbed, meaning they *are* active
+    active_skillist = [disp_text_activation(('*:' + s.short()),
+                                              success=None, upper=False)
+                       for s in unit.character.skills if
+                       bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
+    active_skillcards = [sc.str_seen_by_army(self.army) for sc in unit.army.tableau.bulbed_by(unit)]
+    if inactive_skillstr:
+      sepstr = " | "
+    else:
+      sepstr = "| "
+    active_skillstr = " ".join(active_skillist + active_skillcards)
+
+
+    
   def bulbed_cards(self):
     return [key for key in self.sc_dict if self.sc_dict]
   

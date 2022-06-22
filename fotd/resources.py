@@ -25,6 +25,7 @@ LOCALE_PATH =  RESOURCES_PATH / 'locale'
 MAPS_PATH =    RESOURCES_PATH / 'maps'
 SPRITES_PATH = RESOURCES_PATH / 'sprites'
 DATA_PATH =    RESOURCES_PATH / 'data'
+SKILLS_PATH = IMAGE_PATH / "skillcards"
 
 __logger = logging.getLogger(__name__)
 

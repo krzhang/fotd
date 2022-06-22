@@ -114,7 +114,7 @@ class PGBattleView:
     armies = self.battle.armies
     facing = "SOUTH"
     for j in range(2):
-      v_offset = 120+240*j
+      v_offset = 210+120*j
       army = armies[j]
       if j == 1:
         facing = "NORTH"

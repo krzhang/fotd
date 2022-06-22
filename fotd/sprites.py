@@ -33,7 +33,20 @@ class UnitSpr(Static):
     self.size_bar_back = UnitSizeBar(view, resources.SPRITES_PATH / "health-red.png", self, "MAX")
     self.size_bar_mid = UnitSizeBar(view, resources.SPRITES_PATH / "health-yellow.png", self, "LAST_TURN")
     self.size_bar_front = UnitSizeBar(view, resources.SPRITES_PATH / "health-green.png", self, "CURRENT")
-    
+
+    x = self.rect.left - 10
+    if self.facing == "SOUTH":
+      y = self.rect.top - 70
+      y_inc = -45 # how much space to allocate for each skill sprite
+    else:
+      y = self.rect.bottom + 30
+      y_inc = 45
+    self.skill_sprs = []
+    for i, s in enumerate(unit.skills):
+      self.skill_sprs.append(SkillSpr(view, x, y, resources.SKILLS_PATH / (str(s) + ".png"),
+                                      self, s))
+      y += y_inc
+
   def mouseover_info(self):
     return ("UNIT", self.unit)
 
@@ -82,3 +95,17 @@ class UnitSizeBar(pg.sprite.Sprite):
     else:
       assert self.unit_spr.facing == "NORTH"
       self.rect.centery = self.unit_spr.rect.bottom + 10
+
+class SkillSpr(Static):
+  """ a skill sprite """
+  def __init__(self, view, x, y, filename, unit_spr, skill):
+    super().__init__(view, x, y, filename)
+    self.image = pg.transform.scale(self.image, (40, 40))
+    self.unit_spr = unit_spr
+    self.skill = skill
+    view.all_sprites.add(self)
+    self.infobox = False # change to True later
+
+  def update(self):
+    pass # these never change!
+  

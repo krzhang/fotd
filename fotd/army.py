@@ -52,7 +52,28 @@ class Unit(object):
 
   def is_commander(self):
     return self.has_unit_status("is_commander")
-  
+
+  def skills_inactive(self):
+    return [s for s in unit.character.skills if
+            not bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
+
+  def skills_active(self):
+    """ 
+    returns active skills, which right now are just passive skills, since non-passive
+    skills only activate by making skillcards instead
+    """
+    return [s for s in unit.character.skills if
+            bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
+
+  def skillcards_active(self, visible_to=None):
+    """
+    returns active skillcards; since this can be imperfect information, the argument
+    [visible_to] can be used to talk about whose army is viewing the infomration.
+    """
+    if visible_to is None:
+      visible_to = self.army
+    return [sc for sc in self.army.tableau.bulbed_by(self) if sc.visible_to(visible_to)]
+
   def color_name(self):
     return "{}{}$[7]$".format(self.color, self.name)
     # return "$[{}]${}$[7]$".format(self.color, self.name)

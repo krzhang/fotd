@@ -6,7 +6,9 @@ from colors import PColors, color_bool, YCodes
 from ytext import YText, disp_text_activation, disp_bar_custom
 
 from settings_pygame import *
+import settings_battle
 import resources
+import skills
 
 from templates import text_convert
 
@@ -170,7 +172,7 @@ class InfoBox(TextBox):
     self.text_to_surface(self.font_mid, unit.character.full_name_fancy())
     self.text_to_surface(self.font_mid, self._disp_unit_healthline(unit, 0))
     self.text_to_surface(self.font_mid, self._disp_unit_status_noskills(unit))
-    self.text_to_surface(self.surface, x, y, self.font_mid, self._disp_unit_skills(unit, unit.army.armyid))
+    self.text_to_surface(self.font_mid, self._disp_unit_skills(unit, unit.army.armyid))
     
   def handle_info(self, info):
     if not info:

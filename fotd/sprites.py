@@ -130,7 +130,6 @@ class SkillSpr(Static):
                                 order)
           self.skillcard_sprs[order] = sc_spr
           x_ctr += 45
-          print("made skillcard for " + skill.skill_str)
 
   def update(self):
     pass # these never change!

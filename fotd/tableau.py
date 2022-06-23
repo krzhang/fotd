@@ -30,7 +30,7 @@ class SkillCard():
     self.visibility = {0:False, 1:False}
 
   def copy(self, unit):
-    # this is important as we are creating an imaginary card for a different unit
+    # this is important for e.g. creating an imaginary card for a different unit
     return SkillCard(self.sc_str, unit, self.order)
 
   def __hash__(self):
@@ -118,7 +118,8 @@ class Tableau():
 
   def draw_cards(self):
     """
-    draw hands from the deck of skillcards. Done twice: before the first formation call and once
+    draw hands from the deck of skillcards. 
+    Done twice: once before the formation call and once before the final order call
 
     """
     new_cards = []
@@ -175,8 +176,6 @@ class Tableau():
       sepstr = "| "
     active_skillstr = " ".join(active_skillist + active_skillcards)
 
-
-    
   def bulbed_cards(self):
     return [key for key in self.sc_dict if self.sc_dict]
   

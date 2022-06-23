@@ -7,6 +7,9 @@ from ytext import YText, disp_text_activation, disp_bar_custom
 
 from settings_pygame import *
 import settings_battle
+
+import state
+
 import resources
 import skills
 import battle
@@ -45,6 +48,9 @@ class TextBox:
     self.tx = 0
     self.ty = 0
 
+  def get_current_state(self):
+    return self.view.battle.state_stack[-1]
+    
   def text_to_surface(self, font, ytext_str):
     """ 
     Given a YText string and a pygame [surface], render the text to it (with colors).
@@ -80,7 +86,9 @@ class TextBox:
     self.tx = 0
     self.ty += line_spacing
 
-    
+  def update(self, actions):
+    pass
+  
 class InfoBox(TextBox):
   """ the box on the right that shows mouseover info """
 
@@ -193,14 +201,16 @@ class Huddle(TextBox):
     self.lines_max = 20
     self.huddle_buf = []
     self.order_buf = []
-
+    self.paused = False
+    
   def _huddle_header_str(self):
     return text_convert("{ctarget_army}'s strategy session",
                         templates={'ctarget_army':self.view.army})
     
   def render(self, target):
     """ [target] can be "order" or "huddle" """
-    self.clear()
+    if self.paused:
+      return
     if target == "huddle":
       buf = self.huddle_buf
     else:
@@ -219,8 +229,17 @@ class Huddle(TextBox):
       else:
         self.text_to_surface(self.font_mid, "")
     if buf:
-      self.view.pause()
-  
+      self.view.pause(self, pause_str="[MORE (huddle)... ]")
+    self.paused = True  
+
+  def update(self, actions):
+    if actions and any(actions.values()):
+      # the first check is if actions is None (since we are async we could be catching it
+      # before its infomation is filled)
+      self.paused = False
+      self.clear()
+    
+      
 class Console(TextBox):
   """ the box on the bottom that shows updates """
 
@@ -229,18 +248,52 @@ class Console(TextBox):
     self.max_console_lines = 10
     self.font_large = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 32)
     self.console_buf = []
+    self.paused = False
+    self.clear()
+
+  # def render(self):
+  #   if self.paused:
+  #     return
+  #   for i in range(self.max_console_lines):
+  #     if self.console_buf:
+  #       text = self.console_buf[0]
+  #       self.text_to_surface(self.font_mid, self.console_buf[0])
+  #       self.console_buf = self.console_buf[1:]
+  #     else:
+  #       self.text_to_surface(self.font_mid, "")
+  #   if self.console_buf:
+  #     self.view.pause(self, pause_str="[MORE (console)... ]")
+  #   print ("console paused!")
+  #   self.paused = True  
+
+  # def update(self, actions):
+  #   if actions and any(actions.values()):
+  #     print("console unpaused!")
+  #     self.paused = False
+  #     self.clear()
 
   def render(self):
-    self.clear()
+    if self.paused:
+      return
+    self.clear() # need to reinitiate cursor
     for i in range(self.max_console_lines):
-      if self.console_buf:
-        self.text_to_surface(self.font_mid, self.console_buf[0])
-        self.console_buf = self.console_buf[1:]
+      if len(self.console_buf) > i:
+        self.text_to_surface(self.font_mid, self.console_buf[i])
       else:
         self.text_to_surface(self.font_mid, "")
-    if self.console_buf:
-      self.view.pause()
+    if len(self.console_buf) >= self.max_console_lines:
+      self.view.pause(self, pause_str="[MORE (console)... ]")
+      self.paused = True
+      print ("console paused!")
 
+  def update(self, actions):
+    if self.paused and actions and any(actions.values()):
+      print("console unpaused!")
+      assert len(self.console_buf) >= self.max_console_lines
+      self.console_buf = self.console_buf[self.max_console_lines:]
+      self.paused = False
+      self.clear()
+    
 class StateBox(TextBox):
   """ the lower-right corner to tell the player what's going on """
   def __init__(self, view):
@@ -250,10 +303,14 @@ class StateBox(TextBox):
 
   def render(self):
     self.clear()
-    cur_state = self.view.battle.state_stack[-1]
+    cur_state = self.get_current_state()
     self.text_to_surface(self.font_large, str(cur_state))
-    if isinstance(cur_state, battle.FormationTurn) or isinstance(cur_state, battle.OrderTurn):
+    pause_str = ""
+    if isinstance(cur_state, state.Pause):
+      if cur_state.pause_str:
+        pause_str = cur_state.pause_str
+      else:
+        pause_str = "[Press a key...]"
+    elif isinstance(cur_state, battle.FormationTurn) or isinstance(cur_state, battle.OrderTurn):
       pause_str = "[$[1]$A / $[4]$D / $[3]$I...]"      
-    else:
-      pause_str = "[press any key...]"
     self.text_to_surface(self.font_large, pause_str)

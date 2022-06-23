@@ -71,25 +71,23 @@ class PGBattleView:
     self.huddle = Huddle(self)
     self.statebox = StateBox(self)
     self.narrator = BattleNarrator(self.battle, self)
+
+    self.view_elements = [self.infobox, self.console, self.huddle, self.statebox, self.narrator]
     
     self.debug_mode = self.battle.debug_mode
     self.armyid = armyid
     self.automated = automated
     self.show_AI = show_AI
 
-    self.actions = {"A": False,
-                    "D": False,
-                    "I": False,
-                    "Q": False}
-    
+    self.actions = None 
     self.all_sprites = pygame.sprite.Group()
     
   @property
   def state_stack(self):
     return self.battle.state_stack
 
-  def pause(self):
-    pause = state.Pause(self.battle)
+  def pause(self, pauser=None, pause_str=None):
+    pause = state.Pause(self.battle, pauser=pauser, pause_str=pause_str)
     pause.enter_state()
   
   @property
@@ -123,6 +121,8 @@ class PGBattleView:
     self.state_stack[-1].update(self.actions)
     dt = self.clock.tick()
     self.input_controller.update(dt)
+    for ve in self.view_elements:
+      ve.update(self.actions)
     
   def draw(self, pause_str=None):
     if self.automated:
@@ -157,11 +157,9 @@ class PGBattleView:
       if self.huddle.huddle_buf:
         self.huddle.render("huddle")
         self.screen.blit(self.huddle.surface, (BG_WIDTH/4, BG_HEIGHT/4))
-        self.pause()
       elif self.huddle.order_buf:
         self.huddle.render("order")
         self.screen.blit(self.huddle.surface, (BG_WIDTH/4, BG_HEIGHT/4))
-        self.pause()
 
       pygame.display.flip()
 

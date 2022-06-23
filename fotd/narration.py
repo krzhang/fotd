@@ -33,6 +33,9 @@ class Narrator():
   def chara_narrate(self, character, text, context):
     self.view.disp_chara_speech(character, text, context)
 
+  def update(self, actions):
+    pass
+    
 class BattleNarrator(Narrator):
 
   def __init__(self, battle, battleview):

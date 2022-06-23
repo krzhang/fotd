@@ -3,8 +3,8 @@ import pygame as pg
 import sys
 
 class State():
-  def __init__(self, controller): # a battle is a controller
-    self.controller = controller
+  def __init__(self, battle): # a battle is a controller
+    self.battle = battle
     self.prev_state = None
 
   def update(self, action):
@@ -17,13 +17,15 @@ class State():
     return ""
   
   def enter_state(self):
-    if len(self.controller.state_stack) > 1:
-      self.prev_state = self.controller.state_stack[-1]
-    self.controller.state_stack.append(self)
+    #print ("entered state " + str(self) + "({})".format(self.battle))
+    if len(self.battle.state_stack) > 1:
+      self.prev_state = self.battle.state_stack[-1]
+    self.battle.state_stack.append(self)
 
   def exit_state(self):
-    self.controller.state_stack.pop()
-
+    self.battle.state_stack.pop()
+    #print ("exited state " + str(self) + "({})".format(self.battle))
+    
   def update(self, actions):
     pass
 
@@ -43,13 +45,13 @@ class QuitState(State):
   
 # class UserInput(State):
 
-#   def __init__(self, controller, callback):
-#     super().__init__(controller)
+#   def __init__(self, battle, callback):
+#     super().__init__(battle)
 #     self.callback = callback
     
 #   def update(self, actions):
 #     if actions['Q']:
-#       quitting = QuitState(self.controller)
+#       quitting = QuitState(self.battle)
 #       quitting.enter_state()
 #     elif any(actions.values()):
 #       for k in actions:
@@ -58,14 +60,18 @@ class QuitState(State):
 #           callback(k)
 
 class Pause(State):
-  def __init__(self, controller):
-    super().__init__(controller)
+  def __init__(self, battle, pauser=None, pause_str=""):
+    """ the [pauser] is the view (Console, main view, etc.) that generated the pause. """
+    super().__init__(battle)
     pg.event.clear()
+    self.pauser = pauser
+    self.pause_str = pause_str
     
   def __str__(self):
     return "Paused"
 
   def update(self, actions):
-    for key in actions:
-      if actions[key]: # got any key!
-        self.exit_state()
+    if actions and any(actions.values()):
+      self.exit_state()
+        # if self.pauser:
+        #   self.pauser.unpause()

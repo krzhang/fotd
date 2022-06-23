@@ -42,6 +42,14 @@ class Battle():
     self.imaginary = False # happening as part of an AI's mind in simulation
     self.show_AI = show_AI
 
+  def __str__(self):
+    my_str = ""
+    if self.automated:
+      my_str += "automated,"
+    if self.imaginary:
+      my_str += "imaginary"
+    return my_str
+
   def close(self):
     self.queues = []
     for a in self.armies:
@@ -236,17 +244,6 @@ class Battle():
     Event(self, "turn_end", {"game_end":game_end}).activate()
     return game_end
 
-      # def take_turn(self):
-  #   """
-  #   The main function which takes one turn of this battle.
-  #   returns whether the battle is over
-  #   """
-  #   # formations
-  #   self._init_day()
-  #   self._get_formations()
-  #   self._get_orders()
-  #   return self.resolve_orders()
-  # # exposed methods
   
   def start_battle(self):
     print("Let's start the battle!")
@@ -268,7 +265,7 @@ class FormationTurn(state.State):
     super().__init__(battle)
     self.army = battle.armies[armyid]
     self.armyid = armyid
-    self.controller.armies[armyid].intelligence.await_formation(self.controller)
+    self.battle.armies[armyid].intelligence.await_formation(self.battle)
 
   def __str__(self):
     return "Waiting for formations from {}".format(self.armyid)
@@ -276,28 +273,33 @@ class FormationTurn(state.State):
   def update(self, actions):
     if self.army.formation:
       if self.armyid == 0:
-        self.exit_state()
         print("Got formation " + str(self.army.formation) + " for " + str(self.armyid))
-        formation_turn = FormationTurn(self.controller, 1)
-        formation_turn.enter_state()
+        self.armyid = 1
+        self.army = self.battle.armies[self.armyid]
+        self.army.intelligence.await_formation(self.battle)
       else:
         assert self.armyid == 1
         self.exit_state()
-        Event(self.controller, "formation_completed", Context({})).activate()
+        Event(self.battle, "formation_completed", Context({})).activate()
         print("Got formation " + str(self.army.formation) + " for " + str(self.armyid))
-        self.controller.start_orders()
+        self.battle.start_orders()
     else:
-      if any(actions.values()):
-        for k in actions:
-          if actions[k]:
-            self.army.formation = rps.FormationOrder(k)
+      if self.army.intelligence_type == 'PLAYER':
+        if actions and any(actions.values()):
+          for k in actions:
+            if k in ["A", "D", "I"] and actions[k]:
+              self.army.formation = rps.FormationOrder(k)
+      else:
+        pass
+        # if it's AI, its probably taking its turn right now; just let it wait.
 
+            
 class OrderTurn(state.State):
   def __init__(self, battle, armyid):
     super().__init__(battle)
     self.army = battle.armies[armyid]
     self.armyid = armyid
-    self.controller.armies[armyid].intelligence.await_final(self.controller)
+    self.battle.armies[armyid].intelligence.await_final(self.battle)
 
   def __str__(self):
     return "Waiting for orders from {}".format(self.armyid)
@@ -305,33 +307,39 @@ class OrderTurn(state.State):
   def update(self, actions):
     if self.army.order:
       if self.armyid == 0:
-        self.exit_state()
-        order_turn = OrderTurn(self.controller, 1)
-        order_turn.enter_state()
+        self.armyid = 1
+        self.army = self.battle.armies[self.armyid]
+        self.army.intelligence.await_final(self.battle)
       else:
         assert self.armyid == 1
         self.exit_state()
-        Event(self.controller, "order_completed", Context({})).activate()
-        self.controller.resolve_orders()
+        Event(self.battle, "order_completed", Context({})).activate()
+        print("Got orders " + str(self.army.order) + " for " + str(self.armyid))
+        self.battle.resolve_orders()
     else:
-      assert self.army.intelligence_type == 'PLAYER'
-      if any(actions.values()):
-        for k in actions:
-          if actions[k]:
-            self.army.order = rps.FinalOrder(k)
+      if self.army.intelligence_type == 'PLAYER':
+        if actions and any(actions.values()):
+          for k in actions:
+            if k in ["A", "D", "I"] and actions[k]:
+              self.army.order = rps.FinalOrder(k)
+      else:
+        pass
+        # if it's AI, its probably taking its turn right now; just let it wait.
 
 class Resolution(state.State):
   def __init__(self, battle):
     super().__init__(battle)
 
   def __str__(self):
-    return "Resolution"
+    return "Resolving Turn"
 
   def update(self, actions):
     # gotta kill these updates if this is imaginary
-    if any(actions.values()):
+    if actions and any(actions.values()):
       # update on any key
-      self.controller._init_day()
+      self.exit_state()
+      self.battle._init_day()
+      
   # TODO: IMPLEMENT THESE
         
   # def _get_orders(self):

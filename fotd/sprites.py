@@ -127,6 +127,7 @@ class SkillSpr(Static):
                                 filename,
                                 self,
                                 skill.skill_str,
+                                skill.skillcard,
                                 order)
           self.skillcard_sprs[order] = sc_spr
           x_ctr += 45
@@ -139,7 +140,7 @@ class SkillCardSpr(pg.sprite.Sprite):
   skillcards sprites. These have colors since they correspond to phases
   """
 
-  def __init__(self, view, x, y, filename, skill_spr, skill_str, order):
+  def __init__(self, view, x, y, filename, skill_spr, skill_str, sc_str, order):
     
     pg.sprite.Sprite.__init__(self)
     self.view = view
@@ -148,8 +149,11 @@ class SkillCardSpr(pg.sprite.Sprite):
     self.image.set_colorkey(self.image.get_at((0, 0)))
     # hack; this sets the upper left pixel's color (probably white) to the transparency color
     self.skill_spr = skill_spr
+    self.army = self.skill_spr.unit_spr.unit.army
     self.rect = self.image.get_rect()
     self.rect.left, self.rect.top = x, y
+    self.x = x
+    self.y = y
     color_image = pg.Surface(self.image.get_size()).convert_alpha()
     if order == "A":
       background = colors.PColors.RED
@@ -160,10 +164,16 @@ class SkillCardSpr(pg.sprite.Sprite):
     color_image.fill(background)
     self.image.blit(color_image, (0,0), special_flags=pg.BLEND_RGBA_MULT)
     self.skill_str = skill_str
+    self.sc_str = sc_str
     self.order = order
-    self.infobox = False # does not need infobox yet.
     view.all_sprites.add(self)
     self.infobox = False
 
   def update(self):
-    pass
+    if self.army.tableau.visible_skillcard(self.view.army,
+                                           self.skill_spr.unit_spr.unit,
+                                           self.sc_str,
+                                           self.order):
+      self.rect.left, self.rect.top = self.x, self.y
+    else:
+      self.rect.left, self.rect.top = 2000, 2000

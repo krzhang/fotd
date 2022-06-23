@@ -100,7 +100,7 @@ class Tableau():
   def bv(self):
     # remove later
     return self.battle.view
-  
+
   def clear(self):
     """
     Wipes state; kills everything except deck. used when we clear state before a turn.
@@ -115,7 +115,8 @@ class Tableau():
             sc = SkillCard(sc_str, un, rps.FinalOrder(order_str))
             self.sc_dict[sc] = False # in our deck, not yet drawn
         # now the deck has all the possible skillcards
-
+    # TODO: tell the view what to do
+    
   def draw_cards(self):
     """
     draw hands from the deck of skillcards. 
@@ -147,6 +148,18 @@ class Tableau():
           scouted_cards.append(sc)
     return scouted_cards
 
+  def visible_skillcard(self, viewer_army, unit, skillcard_str, order):
+    """
+    Mostly for the view: can [viewer_army] see the activation for [skillcard] for
+    a particular [order]?
+    """
+    for sc in self.visible_bulbed_cards(viewer_army):
+      if (sc.sc_str == skillcard_str and
+          sc.unit == unit and
+          sc.order == order):
+        return True
+    return False
+  
   def visible_bulbed_cards(self, viewer_army):
     visible_dict = {}
     for key in self.sc_dict:

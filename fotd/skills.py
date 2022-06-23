@@ -30,7 +30,7 @@ class Skill():
     """
     Ex: < fire >
     """
-    return "<" + colors.color_bool(success) + skill_info(self.skill_str, "short") + "$[7]$>"
+    return "<" + colors.color_bool(success) + self.short + "$[7]$>"
 
 
 SKILLS = {

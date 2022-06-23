@@ -142,7 +142,7 @@ class InfoBox(TextBox):
     # inactive means skills that are not bulbed
     inactive_skillist = [s.str_fancy(success=False)
                          for s in unit.character.skills if
-                         not bool(s.activation) == 'passive']
+                         bool(s.activation) != 'passive']
     inactive_skillstr = " ".join(inactive_skillist)
     # 'passive' means skills that are used and are not bulbed, meaning they *are* active
     active_skillist = [disp_text_activation(('*:' + s.short()),

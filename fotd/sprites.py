@@ -1,6 +1,15 @@
 import pygame as pg
 import settings_battle
 import resources
+import skills
+import colors
+
+sprite_cache = {}
+
+def get_image(filename):
+  if not filename in sprite_cache:
+    sprite_cache[filename] = pg.image.load(filename)
+  return sprite_cache[filename]
 
 class Static(pg.sprite.Sprite):
   """ thin wrapper around pg. sprite used for boring sprites """
@@ -8,7 +17,7 @@ class Static(pg.sprite.Sprite):
   def __init__(self, view, x, y, filename):
     pg.sprite.Sprite.__init__(self)
     self.view = view
-    self.image = pg.image.load(filename).convert_alpha()
+    self.image = get_image(filename).convert_alpha()
     self.rect = self.image.get_rect()
     self.rect.left, self.rect.top = x, y
     self.infobox = False # does not need infobox
@@ -66,7 +75,7 @@ class UnitSizeBar(pg.sprite.Sprite):
     self.filename = filename
     self.unit_spr = unit_spr
     self.size_max = settings_battle.ARMY_SIZE_MAX
-    self.image = pg.image.load(filename)
+    self.image = get_image(filename)
     self.layer = layer
     # self.image = pg.transform.scale(self.image, (x,y)) # good to keep in mind
     # self.rect = self.image.get_rect()
@@ -105,7 +114,57 @@ class SkillSpr(Static):
     self.skill = skill
     view.all_sprites.add(self)
     self.infobox = False # change to True later
+    
+    # create potential skillcards
+    self.skillcard_sprs = {}
+    if skill.skillcard:
+      sc_abs = skills.SKILLCARDS[skill.skillcard]
+      x_ctr = self.rect.left + 45
+      for order in ['A', 'D', 'I']:
+        if sc_abs["bulb"][order]:
+          filename = resources.SKILLS_PATH / (str(skill.skillcard) + ".png")
+          sc_spr = SkillCardSpr(view, x_ctr, y,
+                                filename,
+                                self,
+                                skill.skill_str,
+                                order)
+          self.skillcard_sprs[order] = sc_spr
+          x_ctr += 45
+          print("made skillcard for " + skill.skill_str)
 
   def update(self):
     pass # these never change!
-  
+
+class SkillCardSpr(pg.sprite.Sprite):
+  """ 
+  skillcards sprites. These have colors since they correspond to phases
+  """
+
+  def __init__(self, view, x, y, filename, skill_spr, skill_str, order):
+    
+    pg.sprite.Sprite.__init__(self)
+    self.view = view
+    self.filename = filename
+    self.image = pg.transform.scale(get_image(filename), ((40, 40))) # copy
+    self.image.set_colorkey(self.image.get_at((0, 0)))
+    # hack; this sets the upper left pixel's color (probably white) to the transparency color
+    self.skill_spr = skill_spr
+    self.rect = self.image.get_rect()
+    self.rect.left, self.rect.top = x, y
+    color_image = pg.Surface(self.image.get_size()).convert_alpha()
+    if order == "A":
+      background = colors.PColors.RED
+    elif order == "D":
+      background = colors.PColors.BLUE
+    elif order == 'I':
+      background = colors.PColors.YELLOW
+    color_image.fill(background)
+    self.image.blit(color_image, (0,0), special_flags=pg.BLEND_RGBA_MULT)
+    self.skill_str = skill_str
+    self.order = order
+    self.infobox = False # does not need infobox yet.
+    view.all_sprites.add(self)
+    self.infobox = False
+
+  def update(self):
+    pass

@@ -14,7 +14,16 @@ class SkillCard():
   """
   def __init__(self, sc_str, unit, order):
     self.sc_str = sc_str
-    self.skill = skills.Skill(skills.skillcard_info(sc_str, "skill"))
+    self.bulb = None
+    self.illegal_weather = None
+    self.power = None
+    self.desc = None
+    self.short = None
+    self.skill = None
+    self.on_bulb = None
+    for key in skills.SKILLCARDS[sc_str]:
+      setattr(self, key, skills.SKILLCARDS[sc_str][key])
+
     self.unit = unit
     self.order = order
     self.armyid = unit.army.armyid
@@ -34,7 +43,7 @@ class SkillCard():
     if self.visible_to(army):
       return "<{}{}:{}$[7]$>".format(rps.order_info(self.order, "color_bulbed"),
                                      self.order,
-                                     self.skill.short())
+                                     self.skill)
     else:
       return "<$[7,3]$?:??????$[7]$>"
     
@@ -100,7 +109,7 @@ class Tableau():
     # self.stacks = {'A':[], 'D':[], 'I':[]}
     for un in self.army.present_units():
       for sk in un.skills:
-        sc_str = skills.get_skillcard(sk)
+        sc_str = sk.skillcard
         if sc_str:
           for order_str in ['A', 'D', 'I']:
             sc = SkillCard(sc_str, un, rps.FinalOrder(order_str))
@@ -115,9 +124,9 @@ class Tableau():
     new_cards = []
     for sc in self.sc_dict:
       if self.sc_dict[sc] == False: # not yet drawn
-        proc_chance = skills.skillcard_info(sc.sc_str, "bulb")[str(sc.order)]
+        proc_chance = sc.bulb[str(sc.order)]
         if ((random.random() < proc_chance) and
-            (self.battle.weather.text not in skills.skillcard_info(sc.sc_str, "illegal_weather"))):
+            (self.battle.weather.text not in sc.illegal_weather)):
           # a new legal card is drawn
           self.sc_dict[sc] = True
           sc.make_visible_to(self.army)
@@ -152,13 +161,13 @@ class Tableau():
     # inactive means skills that are not bulbed
     inactive_skillist = [s.str_fancy(success=False)
                          for s in unit.character.skills if
-                         not bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
+                         not bool(s.activation) == 'passive']
     inactive_skillstr = " ".join(inactive_skillist)
     # 'passive' means skills that are used and are not bulbed, meaning they *are* active
     active_skillist = [disp_text_activation(('*:' + s.short()),
                                               success=None, upper=False)
                        for s in unit.character.skills if
-                       bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
+                       bool(s.activation) == 'passive']
     active_skillcards = [sc.str_seen_by_army(self.army) for sc in unit.army.tableau.bulbed_by(unit)]
     if inactive_skillstr:
       sepstr = " | "

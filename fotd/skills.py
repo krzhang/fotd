@@ -5,7 +5,20 @@ class Skill():
 
   def __init__(self, skill_str):
     self.skill_str = skill_str
-
+    self.ai_eval = None
+    self.desc = None
+    self.short = None
+    self.activation = None
+    self.skillcard = None
+    for key in SKILLS[skill_str]:
+      setattr(self, key, SKILLS[skill_str][key])
+    # I used to do the above with 
+    # def skill_info(skill_str, key):
+    #  if key in SKILLS[skill_str]:
+    #    return SKILLS[skill_str][key]
+    #  return None
+    # which was much clunkier.
+    
   def __str__(self):
     return self.skill_str
 
@@ -13,35 +26,12 @@ class Skill():
     # this allows us to e.g. remove
     return self.skill_str == other.skill_str
 
-  def short(self):
-    return skill_info(self.skill_str, "short")
-
   def str_fancy(self, success=None):
     """
     Ex: < fire >
     """
     return "<" + colors.color_bool(success) + skill_info(self.skill_str, "short") + "$[7]$>"
-  
-def skill_info(skill_str, key):
-  if key in SKILLS[skill_str]:
-    return SKILLS[skill_str][key]
-  return None
 
-def skillcard_info(skill_str, key):
-  if key in SKILLCARDS[skill_str]:
-    return SKILLCARDS[skill_str][key]
-  return None
-
-def get_skillcard(skill):
-  return skill_info(skill.skill_str, "skillcard")
-
-def get_skill_speech(skillstr, key):
-  """Give a random speech from a skillcard."""
-  return random.choice(skill_info(skillstr, key))
-
-def get_skillcard_speech(skillcard, key):
-  """Give a random speech from a skillcard."""
-  return random.choice(skillcard_info(skillcard, key))
 
 SKILLS = {
   "chaos_arrow": {

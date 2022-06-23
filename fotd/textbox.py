@@ -9,6 +9,7 @@ from settings_pygame import *
 import settings_battle
 import resources
 import skills
+import battle
 
 from templates import text_convert
 
@@ -142,13 +143,12 @@ class InfoBox(TextBox):
     # inactive means skills that are not bulbed
     inactive_skillist = [s.str_fancy(success=False)
                          for s in unit.character.skills if
-                         bool(s.activation) != 'passive']
+                         (s.activation != 'passive')]
     inactive_skillstr = " ".join(inactive_skillist)
     # 'passive' means skills that are used and are not bulbed, meaning they *are* active
-    active_skillist = [disp_text_activation(('*:' + s.short()),
-                                              success=None, upper=False)
+    active_skillist = [disp_text_activation(('*:' + s.short), success=None, upper=False)
                        for s in unit.character.skills if
-                       bool(s.activation) == 'passive']
+                       (s.activation == 'passive')]
     active_skillcards = [sc.str_seen_by_army(self.view.army) for sc in unit.army.tableau.bulbed_by(unit)]
     if inactive_skillstr:
       sepstr = " | "
@@ -252,3 +252,8 @@ class StateBox(TextBox):
     self.clear()
     cur_state = self.view.battle.state_stack[-1]
     self.text_to_surface(self.font_large, str(cur_state))
+    if isinstance(cur_state, battle.FormationTurn) or isinstance(cur_state, battle.OrderTurn):
+      pause_str = "[$[1]$A / $[4]$D / $[3]$I...]"      
+    else:
+      pause_str = "[press any key...]"
+    self.text_to_surface(self.font_large, pause_str)

@@ -133,6 +133,7 @@ class Tableau():
           self.sc_dict[sc] = True
           sc.make_visible_to(self.army)
           new_cards.append(sc)
+    print("drew cards for " + str(self.army))
     return new_cards
   
   def scouted_by(self, army):

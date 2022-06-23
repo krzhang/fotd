@@ -20,6 +20,8 @@ import rps
 import skills
 import settings_battle
 import state
+
+import input_controller
 from textbox import InfoBox, Huddle, Console, StateBox
 from narration import BattleNarrator
 
@@ -40,21 +42,6 @@ PAUSE_STRS = {
   "FINAL_ORDER": "Input Orders"
 }
 
-
-class InputController(object):
-  def __init__(self, view):
-    self.view = view # typically the battlescreen
-    self.cooldown = 0
-    
-  def disable(self):
-    """ disable the input; used to not queue up commands and to add pauses """
-    self.cooldown = INPUT_COOLDOWN_WINDOW
-    
-  def is_enabled(self):
-    return (self.cooldown == 0)
-
-  def update(self, time_taken):
-    self.cooldown = max(self.cooldown - time_taken, 0)
   
 class PGBattleView:
   """ a Pygame View + Controller for a battle object """
@@ -66,7 +53,7 @@ class PGBattleView:
     self.screen = pygame.display.set_mode((self.game_width, self.game_height))
     pygame.display.set_caption(TITLE)
 
-    self.input_controller = InputController(self)
+    self.input_controller = input_controller.InputController(self)
     
     self.running = True
     self.playing = True
@@ -123,33 +110,14 @@ class PGBattleView:
         spr = UnitSpr(self, h_offset, v_offset, resources.SPRITES_PATH / "Soldier.png", unit, facing)
     self.run()
     
-  def events(self):
-
+  def input_events(self):
+    """ 
+    we turn input events (keyboard, mouse, etc.) into a digestible [actions] dictionary
+    which then is handled by the state machine
+    """
+    self.actions = self.input_controller.events() 
     # this code should go to the input_controller
-    
-    self.actions = {"A": False,
-                    "D": False,
-                    "I": False,
-                    "Q": False}    
-
-    for event in pygame.event.get():
-      if event.type == pygame.QUIT:
-        self.playing = False
-
-      # key detection
-      if event.type == pygame.KEYDOWN:
-        kr = pygame.key.name(event.key)
-        kn = kr.upper()
-        print(kn)
-        if kn in self.actions:
-          if kn == 'Q':
-            pygame.quit()
-            sys.exit(0)
-          pt = pygame.time.get_ticks()
-          if self.input_controller.is_enabled():
-            self.actions[kn] = True
-            self.input_controller.disable()
-            
+             
   def update(self):
     self.all_sprites.update()
     self.state_stack[-1].update(self.actions)
@@ -200,7 +168,7 @@ class PGBattleView:
   def run(self):
     while self.playing:
       # self.clock.tick(self.fps)
-      self.events()
+      self.input_events()
       self.update()
       self.draw()
 

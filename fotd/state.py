@@ -60,14 +60,12 @@ class QuitState(State):
 class Pause(State):
   def __init__(self, controller):
     super().__init__(controller)
-
+    pg.event.clear()
+    
   def __str__(self):
     return "Paused"
 
   def update(self, actions):
-    pg.event.clear()
-    while True:
-      event = pg.event.wait()
-      if event.type == pg.KEYDOWN:
+    for key in actions:
+      if actions[key]: # got any key!
         self.exit_state()
-        return

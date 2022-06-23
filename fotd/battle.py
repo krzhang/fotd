@@ -124,12 +124,8 @@ class Battle():
         u.targetting = None
         # TODO: same here
         u.last_turn_size = u.size
-    print("flushed formation")
-    print(self.armies[0].formation)
-    print(self.armies[1].formation)
-    
-    formation_turn = FormationTurn(self, 0)
-    formation_turn.enter_state()
+    print("Day initialized")
+    self.start_formations()
 
   def _draw_and_scout(self):
     ids = [0, 1]

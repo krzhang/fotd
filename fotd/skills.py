@@ -10,6 +10,7 @@ class Skill():
     self.short = None
     self.activation = None
     self.skillcard = None
+    self.rank = None
     for key in SKILLS[skill_str]:
       setattr(self, key, SKILLS[skill_str][key])
     # I used to do the above with 
@@ -59,6 +60,9 @@ SKILLS = {
   "panic_skill": {
     "ai_eval": (0, 0, 2),
     "short": ' panic',
+    "rank": "C",
+    "desc": "This officer can target the enemies' hearts, making them useless in battle.",
+    "activation": "skillcard",
     "skillcard": "panic_tactic",
   },
   "cheer": {
@@ -67,6 +71,8 @@ SKILLS = {
   "fire_skill": {
     "ai_eval": (0, 0, 1),
     "short": ' fire ',
+    "activation": "skillcard",
+    "desc": "This officer can set enemies ablaze.",
     "skillcard": "fire_tactic",
   },
   "lure_skill": {
@@ -78,6 +84,8 @@ SKILLS = {
   "jeer_skill": {
     "ai_eval": (0, 0, 2),
     "short": ' jeer ',
+    "desc": "This officer can taunt opponents to become berserked.",
+    "activation": "skillcard",
     "skillcard": "jeer_tactic",
   },
   "manuever": {
@@ -103,9 +111,26 @@ SKILLS = {
   "water_skill": {
     "ai_eval": (0, 0, 1),
     "short": ' water',
+    "desc": "This officer is able to plan flooding attacks during rainy days.",
+    "activation": "skillcard",
     "skillcard": "flood_tactic",
   }
 }
+
+class SkillCard(object):
+  """
+  an abstract skillcard
+  """
+  def __init__(self, sc_str):
+    self.sc_str = sc_str
+    self.illegal_weather = None
+    self.power = None
+    self.desc = None
+    self.short = None
+    self.skill = None
+    self.on_bulb = None
+    for key in SKILLCARDS[sc_str]:
+      setattr(self, key, SKILLCARDS[sc_str][key])
 
 SKILLCARDS = {
   "fire_tactic": {

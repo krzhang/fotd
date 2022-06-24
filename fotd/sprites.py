@@ -113,7 +113,7 @@ class SkillSpr(Static):
     self.unit_spr = unit_spr
     self.skill = skill
     view.all_sprites.add(self)
-    self.infobox = False # change to True later
+    self.infobox = True
     
     # create potential skillcards
     self.skillcard_sprs = {}
@@ -132,6 +132,9 @@ class SkillSpr(Static):
           self.skillcard_sprs[order] = sc_spr
           x_ctr += 45
 
+  def mouseover_info(self):
+    return ("SKILL", self.skill)
+          
   def update(self):
     pass # these never change!
 

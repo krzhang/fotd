@@ -38,6 +38,7 @@ class TextBox:
     self.tx = 0 # this is where the "cursor" is
     self.ty = 0
     self.view = view
+    self.font_large = pygame.freetype.Font(None, 32)
     self.font_mid = pygame.freetype.Font(None, 20)
     self.font_small = pygame.freetype.Font(None, 12)
     self.surface = pygame.Surface((width, height))
@@ -210,6 +211,21 @@ class InfoBox(TextBox):
     charstr = " "*2 + active_skillstr
     return charstr
 
+  def _render_skill(self, skill):
+    self.clear()
+    self.text_to_surface(self.font_large, "Skill: " + skill.skill_str)
+    self.text_to_surface(self.font_large, "")
+    self.text_to_surface(self.font_mid, "Activation: " + skill.activation)
+    self.text_to_surface(self.font_mid, "")
+    self.text_to_surface(self.font_mid, skill.desc)
+    if skill.skillcard:
+      sc = skills.SkillCard(skill.skillcard)
+      self.text_to_surface(self.font_mid, "")
+      self.text_to_surface(self.font_large, "Skillcard: " +sc.sc_str)
+      bulb_str = "Bulb rates: $[1]$A$[7]$:{}, $[4]$A$[7]$:{}, $[3]$A$[7]$:{}".format(sc.bulb['A'], sc.bulb['D'], sc.bulb['I'])
+      self.text_to_surface(self.font_mid, "")
+      self.text_to_surface(self.font_mid, sc.desc)
+  
   def _render_default(self):
     """
     The default item to render if we aren't mousing over an important item. This would be
@@ -231,6 +247,10 @@ class InfoBox(TextBox):
       self._render_default()
     elif self.mouseover[0] == "UNIT":
       self._render_unit(self.mouseover[1])
+    elif self.mouseover[0] == "SKILL":
+      self._render_skill(self.mouseover[1])
+    elif self.mouseover[0] == "SKILLCARD":
+      self._render_skill(self.mouseover[1])
       
 class Huddle(BufferTextBox):
   """ 

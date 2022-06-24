@@ -8,21 +8,12 @@ import random
 import rps
 import skills
 
-class SkillCard():
+class SkillCard(skills.SkillCard):
   """
   a single skillcard that can be bulbed up.
   """
   def __init__(self, sc_str, unit, order):
-    self.sc_str = sc_str
-    self.bulb = None
-    self.illegal_weather = None
-    self.power = None
-    self.desc = None
-    self.short = None
-    self.skill = None
-    self.on_bulb = None
-    for key in skills.SKILLCARDS[sc_str]:
-      setattr(self, key, skills.SKILLCARDS[sc_str][key])
+    super().__init__(sc_str)
 
     self.unit = unit
     self.order = order

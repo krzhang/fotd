@@ -180,7 +180,7 @@ class Battle():
         for sta in tuple(unit.unit_status):
           ctxt = Context({"ctarget":unit})
           ss = sta.stat_str
-          func_list = status.status_info(ss, func_key)
+          func_list = getattr(sta, func_key)
           if func_list: # found a function (func_name, kwargs)
             # convert arguments into context
             event_name = func_list[0]

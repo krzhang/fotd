@@ -1,44 +1,12 @@
+"""
+The main thing we expose is Statuses, which is a dictionary [str]:[Status object]
+"""
+
 from colors import ctext
 import skills
 
-STATUSES = {}
-
-class Status(object):
-
-  def __init__(self, stat_str):
-    self.stat_str = stat_str
-
-  def __eq__(self, other):
-    # this allows us to e.g. remove
-    return self.stat_str == other.stat_str
-
-  def __str__(self):
-    return self.stat_str
-
-  def __repr__(self):
-    return self.stat_str
-
-  def stat_viz(self):
-    if "viz" in STATUSES[self.stat_str]:
-      return STATUSES[self.stat_str]["viz"]
-    else:
-      return ctext(self.stat_str, "$[3]$")
-
-  def is_skill(self):
-    return self.stat_str in skills.SKILLS
-#    return self.stat_str.endswith("_STATUS") and self.stat_str[:-7] in skill.Skill.SKILLS
-
-def status_info(status_str, key):
-  """ Main auxiliary function; gets a piece of info about a status type, return None otherwise """
-  if (status_str in STATUSES) and (key in STATUSES[status_str]):
-    return STATUSES[status_str][key]
-  return None
-
-  # @classmethod
-  # def FromSkillName(cls, skillstr):
-  #   return cls(skillstr + "_STATUS", skill_str=skillstr)
-
-STATUSES_BATTLE = {
+# the RAW dictionaries are just plain text
+STATUSES_BATTLE_RAW = {
   # "berserk": {
   #   "eot":("remove_status_probabilistic", {"fizzle_prob":0.8}),
   #   "on_receive": "{ctarget}'s units fall into a confused rage and is now {stat_viz}!",
@@ -88,12 +56,53 @@ STATUSES_BATTLE = {
 }
 
 # these are statuses that are just about having skills, not about activating them
-STATUSES_FROM_SKILLS = {
+STATUSES_SKILLS_RAW = {
   "trymode": {
     "bot":("trymode_status_bot", {})
   }
 }
 
-STATUSES = dict(list(STATUSES_BATTLE.items()) +
-                list(STATUSES_FROM_SKILLS.items()))
+STATUSES_RAW = dict(list(STATUSES_BATTLE_RAW.items()) +
+                    list(STATUSES_SKILLS_RAW.items()))
 
+class Status(object):
+
+  def __init__(self, stat_str):
+    self.stat_str = stat_str
+    self.bot = (None, {})
+    self.eot = (None, {})
+    self.on_receive = None
+    self.on_remove = None
+    self.on_retain = None
+    self.viz = None
+    if stat_str in STATUSES_RAW and STATUSES_RAW[stat_str]:
+      for key in STATUSES_RAW[stat_str]:
+        setattr(self, key, STATUSES_RAW[stat_str][key])
+
+  def __eq__(self, other):
+    # this allows us to e.g. remove
+    return self.stat_str == other.stat_str
+
+  def __str__(self):
+    return self.stat_str
+
+  def __repr__(self):
+    return self.stat_str
+
+  def stat_viz(self):
+    if self.viz:
+      return self.viz
+    else:
+      return ctext(self.stat_str, "$[3]$")
+
+  def is_skill(self):
+    return self.stat_str in skills.SKILLS
+#    return self.stat_str.endswith("_STATUS") and self.stat_str[:-7] in skill.Skill.SKILLS
+
+# def status_info(status_str, key):
+#   """ Main auxiliary function; gets a piece of info about a status type, return None otherwise """
+#   if (status_str in STATUSES) and (key in STATUSES[status_str]):
+#     return STATUSES[status_str][key]
+#   return None
+
+STATUSES = {s:Status(s) for s in STATUSES_RAW}

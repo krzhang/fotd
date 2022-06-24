@@ -281,7 +281,7 @@ class BattleNarrator(Narrator):
       if status.STATUSES[stat_str][key] is None: # user says to not do anything
         return
       else:
-        self.view.yprint(status.status_info(stat_str, key), templates=newcontext)
+        self.view.yprint(status.STATUSES[stat_str][key], templates=newcontext)
     else:
       # use a default
       self.view.yprint(BattleNarrator.STATUS_DEFAULTS[key], templates=newcontext)

@@ -105,7 +105,7 @@ class Unit(object):
     return stat_str in [s.stat_str for s in self.unit_status]
 
   def add_unit_status(self, stat_str):
-    """ as strings. DON'T USE WITH SKILLS """
+    """ add a Status object. DON'T USE WITH SKILLS """
     if not self.has_unit_status(stat_str):
       self.unit_status.append(status.Status(stat_str))
 

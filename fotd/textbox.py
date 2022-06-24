@@ -117,7 +117,7 @@ class BufferTextBox(TextBox):
       else:
         self.text_to_surface(self.font_mid, "")
     if len(self.buf) >= self.lines_max:
-      self.view.pause(self, pause_str="[MORE ({})... ]".format(self.name))
+      # self.view.pause(self, pause_str="[MORE ({})... ]".format(self.name))
       self.paused = True
       # this paused is a marker to self to not print more text.
 
@@ -224,6 +224,7 @@ class InfoBox(TextBox):
       self.text_to_surface(self.font_large, "Skillcard: " +sc.sc_str)
       bulb_str = "Bulb rates: $[1]$A$[7]$:{}, $[4]$A$[7]$:{}, $[3]$A$[7]$:{}".format(sc.bulb['A'], sc.bulb['D'], sc.bulb['I'])
       self.text_to_surface(self.font_mid, "")
+      self.text_to_surface(self.font_mid, bulb_str)
       self.text_to_surface(self.font_mid, sc.desc)
   
   def _render_default(self):

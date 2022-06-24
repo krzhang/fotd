@@ -103,17 +103,21 @@ class PGBattleView:
   
   def _top_action_receiver(self):
     """
-    This is used to decide which thing receives the actions
+    This is used to decide which thing receives the actions. It's a bit hackish right now.
+
+    First, we look at the overlays; they take precedence and need to be flushed before the things
+    on bottom activate.    
     """
-    ts = self.top_state()
-    if isinstance(ts, state.Pause):
-      return ts
-    elif self.manueverbox.buf:
+    if self.manueverbox.buf:
       return self.manueverbox
     elif self.huddlebox.buf:
       return self.huddlebox
-    else:
-      return ts
+    elif self.console.buf:
+      return self.console
+    ts = self.top_state()
+    # if isinstance(ts, state.Pause):
+    #   return ts
+    return ts
 
   def pause(self, pauser=None, pause_str=None):
     pause = state.Pause(self.battle, pauser=pauser, pause_str=pause_str)

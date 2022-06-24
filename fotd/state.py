@@ -73,5 +73,5 @@ class Pause(State):
   def update(self, actions):
     if actions and any(actions.values()):
       self.exit_state()
-        # if self.pauser:
-        #   self.pauser.unpause()
+      if self.pauser:
+        self.pauser.update(actions)

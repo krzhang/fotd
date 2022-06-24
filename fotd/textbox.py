@@ -34,14 +34,16 @@ def disp_bar_day_tracker(max_pos, base, last_turn, cur):
 
 class TextBox:
 
-  def __init__(self, view, width, height):
+  def __init__(self, view, width, height, name, header=""):
     self.tx = 0 # this is where the "cursor" is
     self.ty = 0
     self.view = view
     self.font_mid = pygame.freetype.Font(None, 20)
     self.font_small = pygame.freetype.Font(None, 12)
     self.surface = pygame.Surface((width, height))
-
+    self.name = name
+    self.header = header
+    
   def clear(self):
     # these are the "cursors"
     self.surface.fill(PColors.BLACK)
@@ -86,15 +88,57 @@ class TextBox:
     self.tx = 0
     self.ty += line_spacing
 
+  def render(self):
+    pass
+
   def update(self, actions):
     pass
-  
+    
+class BufferTextBox(TextBox):
+  """ This is a slightly extended Textbox that allows an internal buffer which pauses
+  automatically when filled"""
+  def __init__(self, view, width, height, name, lines_max, header=""):
+    super().__init__(view, width, height, name)
+    self.lines_max = lines_max
+    self.header = header
+    self.buf = []
+    self.paused = False
+
+  def render(self):
+    if self.paused:
+      return
+    self.clear()
+    if self.header:
+      self.text_to_surface(self.font_large, self.header)
+    for i in range(self.lines_max):
+      if len(self.buf) > i:
+        self.text_to_surface(self.font_mid, self.buf[i])
+      else:
+        self.text_to_surface(self.font_mid, "")
+    if len(self.buf) >= self.lines_max:
+      self.view.pause(self, pause_str="[MORE ({})... ]".format(self.name))
+      self.paused = True
+      # this paused is a marker to self to not print more text.
+
+  def update(self, actions):
+    if (actions and any(actions.values())):
+      # the first check is if actions is None (since we are async we could be catching it
+      # before its infomation is filled)
+      # we are not in a paused state, but we should still flush
+      if len(self.buf) >= self.lines_max:
+        self.buf = self.buf[self.lines_max:]
+      else:
+        self.buf = []
+      self.paused = False
+      self.clear()    
+      
 class InfoBox(TextBox):
   """ the box on the right that shows mouseover info """
 
   def __init__(self, view):
-    super().__init__(view, INFO_WIDTH, INFO_HEIGHT)
-
+    super().__init__(view, INFO_WIDTH, INFO_HEIGHT, "info", 50)
+    self.mouseover = None
+    
   def _day_status_str(self):
     """ Date and weather """
     return "Day {}: {}".format(self.view.battle.date, self.view.battle.weather)
@@ -181,123 +225,35 @@ class InfoBox(TextBox):
     self.text_to_surface(self.font_mid, self._disp_unit_healthline(unit, 0))
     self.text_to_surface(self.font_mid, self._disp_unit_status_noskills(unit))
     self.text_to_surface(self.font_mid, self._disp_unit_skills(unit, unit.army.armyid))
-    
-  def handle_info(self, info):
-    if not info:
-      self._render_default()
-    elif info[0] == "UNIT":
-      self._render_unit(info[1])
 
-class Huddle(TextBox):
+  def render(self):
+    if not self.mouseover:
+      self._render_default()
+    elif self.mouseover[0] == "UNIT":
+      self._render_unit(self.mouseover[1])
+      
+class Huddle(BufferTextBox):
   """ 
   an overlay for huddle-related info; right now we will make it show up in the middle.
 
   Used to show huddle and orders.
   """
 
-  def __init__(self, view):
-    super().__init__(view, HUDDLE_WIDTH, HUDDLE_HEIGHT)
+  def __init__(self, view, name, header):
+    super().__init__(view, HUDDLE_WIDTH, HUDDLE_HEIGHT, name, 20, header=header)
     self.font_large = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 32)
-    self.lines_max = 20
-    self.huddle_buf = []
-    self.order_buf = []
-    self.paused = False
-    
-  def _huddle_header_str(self):
-    return text_convert("{ctarget_army}'s strategy session",
-                        templates={'ctarget_army':self.view.army})
-    
-  def render(self, target):
-    """ [target] can be "order" or "huddle" """
-    if self.paused:
-      return
-    if target == "huddle":
-      buf = self.huddle_buf
-    else:
-      assert target == "order"
-      buf = self.order_buf
-    # self.text_to_surface(self.surface, x, y, self.font_large, self._disp_statline())
-    if target == "huddle":
-      self.text_to_surface(self.font_large, self._huddle_header_str())
-    else:
-      assert target == "order"
-      self.text_to_surface(self.font_large, "Order phase playout:")
-    for i in range(self.lines_max):
-      if buf:
-        self.text_to_surface(self.font_mid, buf[0])
-        buf.pop(0)
-      else:
-        self.text_to_surface(self.font_mid, "")
-    if buf:
-      self.view.pause(self, pause_str="[MORE (huddle)... ]")
-    self.paused = True  
-
-  def update(self, actions):
-    if actions and any(actions.values()):
-      # the first check is if actions is None (since we are async we could be catching it
-      # before its infomation is filled)
-      self.paused = False
-      self.clear()
-    
       
-class Console(TextBox):
+class Console(BufferTextBox):
   """ the box on the bottom that shows updates """
 
   def __init__(self, view): 
-    super().__init__(view, CONSOLE_WIDTH, CONSOLE_HEIGHT)
-    self.max_console_lines = 10
+    super().__init__(view, CONSOLE_WIDTH, CONSOLE_HEIGHT, "console", 10)
     self.font_large = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 32)
-    self.console_buf = []
-    self.paused = False
-    self.clear()
-
-  # def render(self):
-  #   if self.paused:
-  #     return
-  #   for i in range(self.max_console_lines):
-  #     if self.console_buf:
-  #       text = self.console_buf[0]
-  #       self.text_to_surface(self.font_mid, self.console_buf[0])
-  #       self.console_buf = self.console_buf[1:]
-  #     else:
-  #       self.text_to_surface(self.font_mid, "")
-  #   if self.console_buf:
-  #     self.view.pause(self, pause_str="[MORE (console)... ]")
-  #   print ("console paused!")
-  #   self.paused = True  
-
-  # def update(self, actions):
-  #   if actions and any(actions.values()):
-  #     print("console unpaused!")
-  #     self.paused = False
-  #     self.clear()
-
-  def render(self):
-    if self.paused:
-      return
-    self.clear() # need to reinitiate cursor
-    for i in range(self.max_console_lines):
-      if len(self.console_buf) > i:
-        self.text_to_surface(self.font_mid, self.console_buf[i])
-      else:
-        self.text_to_surface(self.font_mid, "")
-    if len(self.console_buf) >= self.max_console_lines:
-      self.view.pause(self, pause_str="[MORE (console)... ]")
-      self.paused = True
-      print ("console paused!")
-
-  def update(self, actions):
-    if self.paused and actions and any(actions.values()):
-      print("console unpaused!")
-      assert len(self.console_buf) >= self.max_console_lines
-      self.console_buf = self.console_buf[self.max_console_lines:]
-      self.paused = False
-      self.clear()
-    
+     
 class StateBox(TextBox):
   """ the lower-right corner to tell the player what's going on """
   def __init__(self, view):
-    super().__init__(view, STATE_WIDTH, STATE_HEIGHT)
+    super().__init__(view, STATE_WIDTH, STATE_HEIGHT, "state", 5)
     self.font_large = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 32)
     self.view = view
 
@@ -314,3 +270,4 @@ class StateBox(TextBox):
     elif isinstance(cur_state, battle.FormationTurn) or isinstance(cur_state, battle.OrderTurn):
       pause_str = "[$[1]$A / $[4]$D / $[3]$I...]"      
     self.text_to_surface(self.font_large, pause_str)
+    self.text_to_surface(self.font_small, "[top elt: {}]".format(self.view._top_action_receiver()))

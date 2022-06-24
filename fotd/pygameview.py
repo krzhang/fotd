@@ -65,17 +65,29 @@ class PGBattleView:
     pygame.mixer.init()
 
     self.battle = battle
+
+    self.armyid = armyid
     
     self.infobox = InfoBox(self)
     self.console = Console(self)
-    self.huddle = Huddle(self)
+    self.huddlebox = Huddle(self, "huddle",
+                            header=text_convert("{ctarget_army}'s strategy session",
+                                                templates={'ctarget_army':self.army}))
+    self.manueverbox = Huddle(self, "manuevers",
+                              header="Manuever recap")
     self.statebox = StateBox(self)
     self.narrator = BattleNarrator(self.battle, self)
 
-    self.view_elements = [self.infobox, self.console, self.huddle, self.statebox, self.narrator]
+    self.view_elements = [self.infobox,
+                          self.console,
+                          self.huddlebox,
+                          self.manueverbox,
+                          self.statebox,
+                          self.narrator]
+
+    self.view_stack = [self.console]
     
     self.debug_mode = self.battle.debug_mode
-    self.armyid = armyid
     self.automated = automated
     self.show_AI = show_AI
 
@@ -85,6 +97,23 @@ class PGBattleView:
   @property
   def state_stack(self):
     return self.battle.state_stack
+
+  def top_state(self):
+    return self.state_stack[-1]
+  
+  def _top_action_receiver(self):
+    """
+    This is used to decide which thing receives the actions
+    """
+    ts = self.top_state()
+    if isinstance(ts, state.Pause):
+      return ts
+    elif self.manueverbox.buf:
+      return self.manueverbox
+    elif self.huddlebox.buf:
+      return self.huddlebox
+    else:
+      return ts
 
   def pause(self, pauser=None, pause_str=None):
     pause = state.Pause(self.battle, pauser=pauser, pause_str=pause_str)
@@ -107,22 +136,25 @@ class PGBattleView:
         h_offset = 90 + 170*i
         spr = UnitSpr(self, h_offset, v_offset, resources.SPRITES_PATH / "Soldier.png", unit, facing)
     self.run()
-    
+
   def input_events(self):
     """ 
     we turn input events (keyboard, mouse, etc.) into a digestible [actions] dictionary
     which then is handled by the state machine
     """
-    self.actions = self.input_controller.events() 
+    self.actions = self.input_controller.events()
+    
     # this code should go to the input_controller
-             
+
   def update(self):
     self.all_sprites.update()
-    self.state_stack[-1].update(self.actions)
     dt = self.clock.tick()
     self.input_controller.update(dt)
-    for ve in self.view_elements:
-      ve.update(self.actions)
+
+    # decide which thing receives the actions
+
+    ve = self._top_action_receiver()
+    ve.update(self.actions)
     
   def draw(self, pause_str=None):
     if self.automated:
@@ -136,13 +168,13 @@ class PGBattleView:
       self.all_sprites.draw(self.screen)
 
       # infobox
-      mouseover = None
+      self.infobox.mouseover = None
       for spr in self.all_sprites:
         if spr.infobox and spr.rect.collidepoint(pygame.mouse.get_pos()):
-          mouseover = spr.mouseover_info()
+          self.infobox.mouseover = spr.mouseover_info()
           break
 
-      self.infobox.handle_info(mouseover)
+      self.infobox.render()
       self.screen.blit(self.infobox.surface, (BG_WIDTH, 0))
 
       # console
@@ -154,12 +186,12 @@ class PGBattleView:
       self.screen.blit(self.statebox.surface, (BG_WIDTH, BG_HEIGHT))
 
       # huddle
-      if self.huddle.huddle_buf:
-        self.huddle.render("huddle")
-        self.screen.blit(self.huddle.surface, (BG_WIDTH/4, BG_HEIGHT/4))
-      elif self.huddle.order_buf:
-        self.huddle.render("order")
-        self.screen.blit(self.huddle.surface, (BG_WIDTH/4, BG_HEIGHT/4))
+      if self.huddlebox.buf:
+        self.huddlebox.render()
+        self.screen.blit(self.huddlebox.surface, (10, 10))
+      elif self.manueverbox.buf:
+        self.manueverbox.render()
+        self.screen.blit(self.manueverbox.surface, (10, 10))
 
       pygame.display.flip()
 
@@ -247,12 +279,12 @@ class PGBattleView:
     # so we get here if either SHOW_DEBUG or debug=False, which means we send it to the buffer
     for m in mode:
       if m == "console":
-        self.console.console_buf.append(converted_text)
+        self.console.buf.append(converted_text)
       elif m == "huddle":
-        self.huddle.huddle_buf.append(converted_text)
+        self.huddlebox.buf.append(converted_text)
       elif m == 'order_phase':
-        self.huddle.order_buf.append(converted_text)
+        self.manueverbox.buf.append(converted_text)
       else:
         assert m == 'AI'
         if self.show_AI:
-          self.huddle.huddle_buf.append(converted_text)
+          self.console.console_buf.append(converted_text)

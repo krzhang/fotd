@@ -282,6 +282,7 @@ class FormationTurn(state.State):
         self.exit_state()
         Event(self.battle, "formation_completed", Context({})).activate()
         print("Got formation " + str(self.army.formation) + " for " + str(self.armyid))
+        
         self.battle.start_orders()
     else:
       if self.army.intelligence_type == 'PLAYER':

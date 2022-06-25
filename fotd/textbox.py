@@ -30,8 +30,6 @@ def disp_bar_day_tracker(max_pos, base, last_turn, cur):
                          ['#', '#', '.', " "],
                          [cur, last_turn-cur, base-last_turn, max_pos-base])
 
-
-
 class TextBox:
 
   def __init__(self, view, width, height, name, header=""):
@@ -53,8 +51,14 @@ class TextBox:
 
   def get_current_state(self):
     return self.view.battle.state_stack[-1]
-    
-  def text_to_surface(self, font, ytext_str):
+
+  def image_to_surface(self, filename, width, height):
+    surf = self.surface
+    image = pygame.transform.scale(pygame.image.load(filename), (width, height))
+    surf.blit(image, (self.tx, self.ty))
+    self.tx += width
+  
+  def text_to_surface(self, ytext_str, font=None):
     """ 
     Given a YText string and a pygame [surface], render the text to it (with colors).
 
@@ -68,6 +72,8 @@ class TextBox:
 
     For styles, see https://www.pygame.org/docs/ref/freetype.html#pygame.freetype.Font.style
     """
+    if font is None:
+      font = self.font_mid
     surf = self.surface
     font.origin = True
     # this means everything is with respect to the origin. See link at beginning
@@ -89,6 +95,7 @@ class TextBox:
     self.tx = 0
     self.ty += line_spacing
 
+    
   def render(self):
     pass
 
@@ -110,12 +117,12 @@ class BufferTextBox(TextBox):
       return
     self.clear()
     if self.header:
-      self.text_to_surface(self.font_large, self.header)
+      self.text_to_surface(self.header, font=self.font_large)
     for i in range(self.lines_max):
       if len(self.buf) > i:
-        self.text_to_surface(self.font_mid, self.buf[i])
+        self.text_to_surface(self.buf[i])
       else:
-        self.text_to_surface(self.font_mid, "")
+        self.text_to_surface("")
     if len(self.buf) >= self.lines_max:
       # self.view.pause(self, pause_str="[MORE ({})... ]".format(self.name))
       self.paused = True
@@ -194,14 +201,11 @@ class InfoBox(TextBox):
   
   def _disp_unit_skills(self, unit, side):
     # inactive means skills that are not bulbed
-    inactive_skillist = [s.str_fancy(success=False)
-                         for s in unit.character.skills if
-                         (s.activation != 'passive')]
+    inactive_skillist = [s.str_fancy(success=False) for s in unit.skills_inactive()]
     inactive_skillstr = " ".join(inactive_skillist)
     # 'passive' means skills that are used and are not bulbed, meaning they *are* active
     active_skillist = [disp_text_activation(('*:' + s.short), success=None, upper=False)
-                       for s in unit.character.skills if
-                       (s.activation == 'passive')]
+                       for s in unit.skills_active()]
     active_skillcards = [sc.str_seen_by_army(self.view.army) for sc in unit.army.tableau.bulbed_by(unit)]
     if inactive_skillstr:
       sepstr = " | "
@@ -212,44 +216,49 @@ class InfoBox(TextBox):
     return charstr
 
   def _render_skill(self, skill):
-    self.clear()
-    self.text_to_surface(self.font_large, "Skill: " + skill.skill_str)
-    self.text_to_surface(self.font_large, "")
-    self.text_to_surface(self.font_mid, "Activation: " + skill.activation)
-    self.text_to_surface(self.font_mid, "")
-    self.text_to_surface(self.font_mid, skill.desc)
+    self.image_to_surface(resources.skill_filename(skill), 40, 40)
+    self.text_to_surface("$ [7]${}$[8]$: ".format(skill.skill_str), font=self.font_large)
+    self.text_to_surface("$[5]$({})$[8]$ {}".format(skill.activation, skill.desc))
+
+  def _render_skillcard(self, skillcard):
+    self.text_to_surface("")
+    self.text_to_surface("Skillcard: " +skillcard.sc_str, font=self.font_large)
+    bulb_str = "Bulb rates: $[1]$A$[7]$:{}, $[4]$A$[7]$:{}, $[3]$A$[7]$:{}".format(skillcard.bulb['A'], skillcard.bulb['D'], skillcard.bulb['I'])
+    self.text_to_surface("")
+    self.text_to_surface(bulb_str)
+    self.text_to_surface(skillcard.desc)
+    
+  def _render_skill_verbose(self, skill):
+    self._render_skill(skill)
     if skill.skillcard:
       sc = skills.SkillCard(skill.skillcard)
-      self.text_to_surface(self.font_mid, "")
-      self.text_to_surface(self.font_large, "Skillcard: " +sc.sc_str)
-      bulb_str = "Bulb rates: $[1]$A$[7]$:{}, $[4]$A$[7]$:{}, $[3]$A$[7]$:{}".format(sc.bulb['A'], sc.bulb['D'], sc.bulb['I'])
-      self.text_to_surface(self.font_mid, "")
-      self.text_to_surface(self.font_mid, bulb_str)
-      self.text_to_surface(self.font_mid, sc.desc)
+      self._render_skillcard(sc)
   
   def _render_default(self):
     """
     The default item to render if we aren't mousing over an important item. This would be
     things in the old statline, like weather, completed orders, etc. basically the battle state:
     """
-    self.clear()
-    self.text_to_surface(self.font_mid, self._day_status_str())
-    self.text_to_surface(self.font_mid, self._vs_str())
+    self.text_to_surface(self._day_status_str())
+    self.text_to_surface(self._vs_str())
 
   def _render_unit(self, unit):
-    self.clear()
-    self.text_to_surface(self.font_mid, unit.character.full_name_fancy())
-    self.text_to_surface(self.font_mid, self._disp_unit_healthline(unit, 0))
-    self.text_to_surface(self.font_mid, self._disp_unit_status_noskills(unit))
-    self.text_to_surface(self.font_mid, self._disp_unit_skills(unit, unit.army.armyid))
-
+    self.text_to_surface(unit.character.full_name_fancy())
+    self.text_to_surface(self._disp_unit_healthline(unit, 0))
+    self.text_to_surface(self._disp_unit_status_noskills(unit))
+    self.text_to_surface(self._disp_unit_skills(unit, unit.army.armyid))
+    for s in unit.skills:
+      self.text_to_surface("")
+      self._render_skill(s)
+    
   def render(self):
+    self.clear()
     if not self.mouseover:
       self._render_default()
     elif self.mouseover[0] == "UNIT":
       self._render_unit(self.mouseover[1])
     elif self.mouseover[0] == "SKILL":
-      self._render_skill(self.mouseover[1])
+      self._render_skill_verbose(self.mouseover[1])
     elif self.mouseover[0] == "SKILLCARD":
       self._render_skill(self.mouseover[1])
       
@@ -281,7 +290,7 @@ class StateBox(TextBox):
   def render(self):
     self.clear()
     cur_state = self.get_current_state()
-    self.text_to_surface(self.font_large, str(cur_state))
+    self.text_to_surface(str(cur_state), font=self.font_large)
     pause_str = ""
     if isinstance(cur_state, state.Pause):
       if cur_state.pause_str:
@@ -290,5 +299,5 @@ class StateBox(TextBox):
         pause_str = "[Press a key...]"
     elif isinstance(cur_state, battle.FormationTurn) or isinstance(cur_state, battle.OrderTurn):
       pause_str = "[$[1]$A / $[4]$D / $[3]$I...]"      
-    self.text_to_surface(self.font_large, pause_str)
-    self.text_to_surface(self.font_small, "[top elt: {}]".format(self.view._top_action_receiver()))
+    self.text_to_surface(pause_str, self.font_large)
+    self.text_to_surface("[top elt: {}]".format(self.view._top_action_receiver()), font=self.font_small)

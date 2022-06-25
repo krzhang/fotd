@@ -121,8 +121,8 @@ class SkillSpr(Static):
       sc_abs = skills.SKILLCARDS[skill.skillcard]
       x_ctr = self.rect.left + 45
       for order in ['A', 'D', 'I']:
-        if sc_abs["bulb"][order]:
-          filename = resources.SKILLS_PATH / (str(skill.skillcard) + ".png")
+        if sc_abs.bulb[order]:
+          filename = resources.skillcard_filename(sc_abs) 
           sc_spr = SkillCardSpr(view, x_ctr, y,
                                 filename,
                                 self,

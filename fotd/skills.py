@@ -11,8 +11,8 @@ class Skill():
     self.activation = None
     self.skillcard = None
     self.rank = None
-    for key in SKILLS[skill_str]:
-      setattr(self, key, SKILLS[skill_str][key])
+    for key in SKILLS_RAW[skill_str]:
+      setattr(self, key, SKILLS_RAW[skill_str][key])
     # I used to do the above with 
     # def skill_info(skill_str, key):
     #  if key in SKILLS[skill_str]:
@@ -34,7 +34,7 @@ class Skill():
     return "<" + colors.color_bool(success) + self.short + "$[7]$>"
 
 
-SKILLS = {
+SKILLS_RAW = {
   "chaos_arrow": {
     "ai_eval": (1, 0, 1),
     "desc": "A devastating skill that unleashes arrows at all enemy combatants. Used when attacking.",
@@ -117,6 +117,8 @@ SKILLS = {
   }
 }
 
+SKILLS = {s:Skill(s) for s in SKILLS_RAW}
+
 class SkillCard(object):
   """
   an abstract skillcard
@@ -129,10 +131,10 @@ class SkillCard(object):
     self.short = None
     self.skill = None
     self.on_bulb = None
-    for key in SKILLCARDS[sc_str]:
-      setattr(self, key, SKILLCARDS[sc_str][key])
+    for key in SKILLCARDS_RAW[sc_str]:
+      setattr(self, key, SKILLCARDS_RAW[sc_str][key])
 
-SKILLCARDS = {
+SKILLCARDS_RAW = {
   "fire_tactic": {
     "bulb": {'A':0, 'D':0.15, 'I':0.3},
     "illegal_weather": ["raining"],
@@ -201,3 +203,5 @@ SKILLCARDS = {
     #                    ("ctarget", "No need to play with fire, {csource}!")],
   },
 }
+
+SKILLCARDS = {s:SkillCard(s) for s in SKILLCARDS_RAW}

@@ -53,17 +53,23 @@ class Unit(object):
   def is_commander(self):
     return self.has_unit_status("is_commander")
 
+  ##################
+  # Skills methods #
+  ##################
+  
   def skills_inactive(self):
-    return [s for s in unit.character.skills if
-            not bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
+    """
+    returns inactive skills, which right now are the skillcard skills (since they
+    have no passive ability)
+    """
+    return [s for s in self.skills if (s.activation != 'passive')]
 
   def skills_active(self):
     """ 
     returns active skills, which right now are just passive skills, since non-passive
     skills only activate by making skillcards instead
     """
-    return [s for s in unit.character.skills if
-            bool(skills.skill_info(s.skill_str, 'activation') == 'passive')]
+    return [s for s in self.skills if (s.activation == 'passive')]
 
   def skillcards_active(self, visible_to=None):
     """

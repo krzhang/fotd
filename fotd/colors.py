@@ -43,7 +43,8 @@ class YCodes:
   CYAN = "$[6]$"
   WHITE = "$[7]$"
   GREY = "$[8]$"
-
+  RESET = "$[8]$"
+  
   # by functionality
   # inspired by colorama, where
   # 1 = BOLD, 2 = NORMAL, 3 = REVERSE, 4 = UNDERLINE
@@ -54,6 +55,18 @@ class YCodes:
   POOR = "$[3]$"
   FAILURE = "$[1]$"
 
+
+DEFAULT_COLORS = {
+  "A":"$[1]$",
+  "D":"$[4]$",
+  "I":"$[3]$",
+  "passive":"$[5]$",
+  "skillcard":"$[3]$"
+}
+  
+def colorify(text):
+  """ This takes recurring text and puts them in a default color """
+  return DEFAULT_COLORS[text] + text + "$[8]$"
   
 def ctext(text, colornumstr):
   return(colornumstr + text + "$[8]$")

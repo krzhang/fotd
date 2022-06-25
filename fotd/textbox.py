@@ -2,7 +2,7 @@ import pygame
 import pygame.freetype
 pygame.freetype.init()
 
-from colors import PColors, color_bool, YCodes
+from colors import PColors, color_bool, YCodes, colorify
 from ytext import YText, disp_text_activation, disp_bar_custom
 
 from settings_pygame import *
@@ -217,8 +217,9 @@ class InfoBox(TextBox):
 
   def _render_skill(self, skill):
     self.image_to_surface(resources.skill_filename(skill), 40, 40)
-    self.text_to_surface("$ [7]${}$[8]$: ".format(skill.skill_str), font=self.font_large)
-    self.text_to_surface("$[5]$({})$[8]$ {}".format(skill.activation, skill.desc))
+    self.text_to_surface("  $[7]${}$[8]$: ".format(skill.skill_str), font=self.font_large)
+    activation = colorify(skill.activation)
+    self.text_to_surface("({}) {}".format(activation, skill.desc))
 
   def _render_skillcard(self, skillcard):
     self.text_to_surface("")

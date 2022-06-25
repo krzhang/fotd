@@ -32,7 +32,11 @@ def disp_bar_day_tracker(max_pos, base, last_turn, cur):
 
 class TextBox:
 
-  def __init__(self, view, width, height, name, header=""):
+  def __init__(self, view, width, height, x, y, name, header=""):
+    self.x = x
+    self.y = y
+    self.width = width
+    self.height = height
     self.tx = 0 # this is where the "cursor" is
     self.ty = 0
     self.view = view
@@ -95,9 +99,18 @@ class TextBox:
     self.tx = 0
     self.ty += line_spacing
 
-    
-  def render(self):
+
+  def _render(self):
+    # the internal function
     pass
+  
+  def render(self):
+    """ 
+    The outward facing function. Thin wrapper around the internal, plus a blit that
+    every TextBox would perform.
+    """
+    self._render()
+    self.view.screen.blit(self.surface, (self.x, self.y))
 
   def update(self, actions):
     pass
@@ -105,14 +118,16 @@ class TextBox:
 class BufferTextBox(TextBox):
   """ This is a slightly extended Textbox that allows an internal buffer which pauses
   automatically when filled"""
-  def __init__(self, view, width, height, name, lines_max, header=""):
-    super().__init__(view, width, height, name)
+  def __init__(self, view, width, height, x, y, name, lines_max, header=""):
+    super().__init__(view, width, height, x, y, name)
     self.lines_max = lines_max
     self.header = header
     self.buf = []
     self.paused = False
 
-  def render(self):
+  def _render(self):
+    if not self.buf:
+      return
     if self.paused:
       return
     self.clear()
@@ -144,7 +159,7 @@ class InfoBox(TextBox):
   """ the box on the right that shows mouseover info """
 
   def __init__(self, view):
-    super().__init__(view, INFO_WIDTH, INFO_HEIGHT, "info", 50)
+    super().__init__(view, INFO_WIDTH, INFO_HEIGHT, INFO_X, INFO_Y, "info", 50)
     self.mouseover = None
     
   def _day_status_str(self):
@@ -252,7 +267,7 @@ class InfoBox(TextBox):
       self.text_to_surface("")
       self._render_skill(s)
     
-  def render(self):
+  def _render(self):
     self.clear()
     if not self.mouseover:
       self._render_default()
@@ -271,24 +286,24 @@ class Huddle(BufferTextBox):
   """
 
   def __init__(self, view, name, header):
-    super().__init__(view, HUDDLE_WIDTH, HUDDLE_HEIGHT, name, 20, header=header)
+    super().__init__(view, HUDDLE_WIDTH, HUDDLE_HEIGHT, HUDDLE_X, HUDDLE_Y, name, 20, header=header)
     self.font_large = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 32)
       
 class Console(BufferTextBox):
   """ the box on the bottom that shows updates """
 
   def __init__(self, view): 
-    super().__init__(view, CONSOLE_WIDTH, CONSOLE_HEIGHT, "console", 10)
+    super().__init__(view, CONSOLE_WIDTH, CONSOLE_HEIGHT, CONSOLE_X, CONSOLE_Y, "console", 10)
     self.font_large = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 32)
      
 class StateBox(TextBox):
   """ the lower-right corner to tell the player what's going on """
   def __init__(self, view):
-    super().__init__(view, STATE_WIDTH, STATE_HEIGHT, "state", 5)
+    super().__init__(view, STATE_WIDTH, STATE_HEIGHT, STATE_X, STATE_Y, "state", 5)
     self.font_large = pygame.freetype.Font(resources.FONTS_PATH / 'Mastji/Mastji.ttf', 32)
     self.view = view
 
-  def render(self):
+  def _render(self):
     self.clear()
     cur_state = self.get_current_state()
     self.text_to_surface(str(cur_state), font=self.font_large)

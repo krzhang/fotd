@@ -108,7 +108,7 @@ class Tableau():
         # now the deck has all the possible skillcards
     # TODO: tell the view what to do
     
-  def draw_cards(self):
+  def draw_cards(self, phase):
     """
     draw hands from the deck of skillcards. 
     Done twice: once before the formation call and once before the final order call
@@ -121,10 +121,10 @@ class Tableau():
         if ((random.random() < proc_chance) and
             (self.battle.weather.text not in sc.illegal_weather)):
           # a new legal card is drawn
-          self.sc_dict[sc] = True
+          self.sc_dict[sc] = phase
           sc.make_visible_to(self.army)
           new_cards.append(sc)
-    print("drew cards for " + str(self.army))
+    print("drew cards for " + str(self.army) + " for phase:" + phase)
     return new_cards
   
   def scouted_by(self, army):

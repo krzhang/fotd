@@ -178,24 +178,14 @@ class PGBattleView:
           self.infobox.mouseover = spr.mouseover_info()
           break
 
+      # refactor later by going through view_elements
       self.infobox.render()
-      self.screen.blit(self.infobox.surface, (BG_WIDTH, 0))
-
-      # console
       self.console.render()
-      self.screen.blit(self.console.surface, (0, BG_HEIGHT))
-
-      # state
       self.statebox.render()
-      self.screen.blit(self.statebox.surface, (BG_WIDTH, BG_HEIGHT))
-
-      # huddle
       if self.huddlebox.buf:
         self.huddlebox.render()
-        self.screen.blit(self.huddlebox.surface, (10, 10))
       elif self.manueverbox.buf:
         self.manueverbox.render()
-        self.screen.blit(self.manueverbox.surface, (10, 10))
 
       pygame.display.flip()
 

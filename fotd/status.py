@@ -37,8 +37,8 @@ STATUSES_BATTLE_RAW = {
   "defended": {
     "eot":("remove_status_probabilistic", {"fizzle_prob":1.1}), # round up for floating error
     # "on_receive": "{ctarget}: staying put, {stat_viz};",
-    "on_receive": None,
-    "on_remove": None,
+    "on_receive": "",
+    "on_remove": "",
   },
   "is_commander": {
     "viz":"$[3]$commander$[7]$",
@@ -46,7 +46,7 @@ STATUSES_BATTLE_RAW = {
   "trymode_activated": {
     # "eot":[],
     "on_receive": "{ctarget} is actually trying now; they are brimming with power.",    
-    "on_remove": None,
+    "on_remove": "",
     "viz":"$[2,1]$tRyInG$[7]$",
   },
   "received_physical_attack": {
@@ -69,8 +69,8 @@ class Status(object):
 
   def __init__(self, stat_str):
     self.stat_str = stat_str
-    self.bot = (None, {})
-    self.eot = (None, {})
+    self.bot = None
+    self.eot = None
     self.on_receive = None
     self.on_remove = None
     self.on_retain = None

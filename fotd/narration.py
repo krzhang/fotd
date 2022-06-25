@@ -275,16 +275,28 @@ class BattleNarrator(Narrator):
     this intercepts the context and puts in 'stat_viz' and routes the narration to
     text in status.py, since it's more structured
     """
+    stat = status.STATUSES[stat_str]
     newcontext = context.copy(
-      {"stat_str":stat_str, "stat_viz":status.Status(stat_str).stat_viz()})
-    if key in status.STATUSES[stat_str]:
-      if status.STATUSES[stat_str][key] is None: # user says to not do anything
-        return
-      else:
-        self.view.yprint(status.STATUSES[stat_str][key], templates=newcontext)
-    else:
+      {"stat_str":stat_str, "stat_viz":stat.stat_viz()})
+    field = getattr(stat, key)
+    if field:
+      self.view.yprint(field, templates=newcontext) 
+    elif field == None:
       # use a default
       self.view.yprint(BattleNarrator.STATUS_DEFAULTS[key], templates=newcontext)
+    elif field == "":
+      # this is different from default; this means the user specifically said to say nothing
+      # (example, defended)
+      return
+      
+#     if key in status.STATUSES[stat_str]:
+#       if status.STATUSES[stat_str][key] is None: # user says to not do anything
+#         return
+#       else:
+#         self.view.yprint(status.STATUSES[stat_str][key], templates=newcontext)
+#     else:
+#       # use a default
+#       self.view.yprint(BattleNarrator.STATUS_DEFAULTS[key], templates=newcontext)
 
   ###################
   # Targetted Rolls #

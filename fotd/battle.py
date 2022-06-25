@@ -135,12 +135,12 @@ class Battle():
     print("Day initialized")
     self.start_formations()
 
-  def _draw_and_scout(self):
+  def _draw_and_scout(self, phase):
     ids = [0, 1]
     drawn_cards = [None, None]
     scouted_cards = [None, None]
     for i in ids:
-      drawn_cards[i] = self.armies[i].tableau.draw_cards()
+      drawn_cards[i] = self.armies[i].tableau.draw_cards(phase)
       scouted_cards[i] = self.armies[i].tableau.scouted_by(self.armies[1-i])
     return (drawn_cards, scouted_cards)
   
@@ -208,16 +208,14 @@ class Battle():
       event.activate(*args)
 
   def start_formations(self):
-    drawn_cards, scouted_cards = self._draw_and_scout()
+    drawn_cards, scouted_cards = self._draw_and_scout("formations")
     Event(self, "scout_completed", Context({})).activate(drawn_cards, scouted_cards)
-    formation_turn = FormationTurn(self, 0)
-    formation_turn.enter_state()
+    FormationTurn(self, 0).enter_state()
 
   def start_orders(self):
-    drawn_cards, scouted_cards = self._draw_and_scout()
+    drawn_cards, scouted_cards = self._draw_and_scout("orders")
     Event(self, "scout_completed", Context({})).activate(drawn_cards, scouted_cards)
-    order_turn = OrderTurn(self, 0)
-    order_turn.enter_state()
+    OrderTurn(self, 0).enter_state()
       
   def resolve_orders(self):
     """

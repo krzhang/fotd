@@ -304,10 +304,12 @@ class InfoBox(TextBox):
   def _render_tableaucard(self, tableaucard_spr):
     sc = tableaucard_spr.tableaucard.skillcard
     self.image_to_surface(tableaucard_spr.image, 40, 40)
-    self.text_to_surface("  $[7]${}$[8]$ ({}) ".format(
-      sc.sc_str, colorify(sc.order)), font=self.font_large)
-    self.text_to_surface(sc.desc)
-    
+    if tableaucard_spr.tableaucard.visibility[self.view.army.armyid]:
+      self.text_to_surface("  $[7]${}$[8]$ ({}) ".format(
+        sc.sc_str, colorify(sc.order)), font=self.font_large)
+      self.text_to_surface(sc.desc)
+    else:
+      self.text_to_surface("  (unknown skillcard)", font=self.font_large)
   def _render_skill_verbose(self, skill):
     self._render_skill(skill)
     if skill.skillcard:

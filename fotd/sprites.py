@@ -162,6 +162,8 @@ class TableauCardSpr(pg.sprite.Sprite):
       background = colors.PColors.YELLOW
     color_image.fill(background)
     self.image.blit(color_image, (0,0), special_flags=pg.BLEND_RGBA_MULT)
+    self.image_seen = self.image.copy()
+    self.image_unseen = pg.transform.scale(resources.get_image_misc("unknown"), (40, 40))
     view.all_sprites.add(self)
     self.infobox = True
 
@@ -169,10 +171,15 @@ class TableauCardSpr(pg.sprite.Sprite):
     return ("TABLEAUCARD", self)
     
   def update(self):
-    visibility = self.tableaucard.visibility[self.view.army.armyid]
-    if not visibility:
+    drawn = self.tableaucard.visibility[self.army.armyid]
+    if not drawn:
       self.rect.left, self.rect.top = 2000, 2000
     else:
+      visible = self.tableaucard.visibility[self.view.army.armyid]
+      if visible:
+        self.image = self.image_seen
+      else:
+        self.image = self.image_unseen
       # make copy of self and put it on that surface. A bit janky
       # self.imagebox.image_to_surface(self.image, 40, 40)
       self.imagebox.sprite_to_surface(self)

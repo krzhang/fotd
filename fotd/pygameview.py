@@ -229,7 +229,7 @@ class PGBattleView:
     if self.automated:
       return
 
-    if self.playing:
+    if self.battle.playing:
 
       self.screen.fill(PColors.BLACK)
 
@@ -257,12 +257,15 @@ class PGBattleView:
       pygame.display.flip()
 
   def run(self):
-    while self.playing:
+    while self.battle.playing:
       # self.clock.tick(self.fps)
       self.input_events()
       self.update()
       self.draw()
-
+    if self.battle.result[0]:
+      print("You win!")
+    else:
+      print("You lose!")
   def disp_activated_narration(self, activated_text, other_str, success=None):
     """ 
     What to display when we want to make a narration involving a skill / skillcard

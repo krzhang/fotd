@@ -18,17 +18,17 @@ class State():
     return str(self)
   
   def enter_state(self):
-    print ("entered state " + str(self) + "({})".format(self.battle))
+    # print ("entered state " + str(self) + "({})".format(self.battle))
     if len(self.battle.state_stack) > 1:
       self.prev_state = self.battle.state_stack[-1]
     self.battle.state_stack.append(self)
-    print ("  state stack: {}".format(self.battle.state_stack))
+    # print ("  state stack: {}".format(self.battle.state_stack))
 
   def exit_state(self):
-    print ("  state stack: {}".format(self.battle.state_stack))
+    # print ("  state stack: {}".format(self.battle.state_stack))
     self.battle.state_stack.pop()
-    print ("exited state " + str(self) + "({})".format(self.battle))
-    print ("  state stack: {}".format(self.battle.state_stack))
+    # print ("exited state " + str(self) + "({})".format(self.battle))
+    # print ("  state stack: {}".format(self.battle.state_stack))
     
   def update(self, actions):
     pass

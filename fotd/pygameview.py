@@ -260,11 +260,11 @@ class PGBattleView:
       self.infobox.render()
       self.console.render()
       self.statebox.render()
+      self.tableau_view.render()
       if self.huddlebox.buf:
         self.huddlebox.render()
       elif self.manueverbox.buf:
         self.manueverbox.render()
-      self.tableau_view.render()
       
       pygame.display.flip()
 

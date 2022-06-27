@@ -144,13 +144,6 @@ class Battle():
       scouted_cards[i] = self.armies[i].tableau.scouted_by(self.armies[1-i], phase)
     return (drawn_cards, scouted_cards)
   
-  # def _get_formations(self):
-  #   drawn_cards, scouted_cards = self._draw_and_scout()
-  #   Event(self, "scout_completed", Context({})).activate(drawn_cards, scouted_cards)
-  #   for i in [0, 1]:
-  #     self.armies[i].formation = self.armies[i].intelligence.get_formation(self)
-  #   Event(self, "formation_completed", Context({})).activate()
-
   
   def _handle_yomi(self):
     for i in [0, 1]:
@@ -222,8 +215,7 @@ class Battle():
     The battle logic that happens after logic is selected.
     Is public because AI also uses it to run mental simulations
     """
-    resolution = Resolution(self)
-    resolution.enter_state()
+    Resolution(self).enter_state()
     self._handle_yomi()
     # preloading events
     self._run_status_handlers("bot") # should be queue later
@@ -340,15 +332,3 @@ class Resolution(state.State):
       # update on any key
       self.exit_state()
       self.battle._init_day()
-      
-  # TODO: IMPLEMENT THESE
-        
-  # def _get_orders(self):
-  #   for i in [0, 1]:
-  #     self.armies[i].order = self.armies[i].intelligence.get_final(self)
-
-      
-  # def _get_formations(self):
-  #   for i in [0, 1]:
-  #     self.armies[i].formation = self.armies[i].intelligence.get_formation(self)
-  #   Event(self, "formation_completed", Context({})).activate()

@@ -14,9 +14,9 @@ Officers for testing purposes.
 # ZhugeLiang.equip("SLEEVE_DARTS")
 
 YAN_SKILLS = ["pincer_specialist", "perfect_defense", "water_skill", "empty_castle_skill", "drop_rocks", "counter_skill", "lure_skill"]
-JING_SKILLS = ["trymode", "counter_arrow", "fire_skill", "chu_ko_nu"]
+JING_SKILLS = ["trymode", "counter_arrow", "fire_skill"]
 YOYO_SKILLS = ["cheer", "attack_supplies", "dash", "fire_skill", "panic_skill", "chaos"]
-HAN_SKILLS = ["sneak_attack", "dash", "jeer_skill", "chaos_arrow", "headhunter"]
+HAN_SKILLS = ["sneak_attack", "dash", "jeer_skill", "chaos_arrow", "headhunter", "chu_ko_nu"]
 
 # power/intel/pol/cha/coolness/bravery
 PC_ATTRS = [ # First Name Last Name, since we are from the future

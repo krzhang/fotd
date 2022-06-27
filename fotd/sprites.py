@@ -166,7 +166,7 @@ class TableauCardSpr(pg.sprite.Sprite):
     self.infobox = True
 
   def mouseover_info(self):
-    return ("SKILLCARD", self.skillcard)
+    return ("TABLEAUCARD", self)
     
   def update(self):
     visibility = self.tableaucard.visibility[self.view.army.armyid]

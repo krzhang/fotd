@@ -82,7 +82,10 @@ class CursorBox:
     
 class ImageBox(CursorBox):
   """
-  (uniform images only) a grid container for uniform images of dimensions width_single*height_single
+  (uniform images only) a grid container for uniform images of dimensions 
+  width_single*height_single
+
+  
   """
   def __init__(self, view, width, height, width_single, height_single, x, y, name, header=""):
     super().__init__(view, width, height, x, y, name, header=header)
@@ -100,7 +103,9 @@ class ImageBox(CursorBox):
     self.ty = 0
 
   def sprite_to_surface(self, sprite):
-    """ Like image_to_surface, but pulls a sprite into the right place """
+    """ 
+    Like image_to_surface, but pulls a sprite into the right place;
+    """
     surf = self.surface
     surf_width, surf_height = surf.get_size()
     width = self.width_single
@@ -288,15 +293,20 @@ class InfoBox(TextBox):
     self.image_to_surface(resources.get_image_skill(skill), 40, 40)
     self.text_to_surface("  $[7]${}$[8]$: ".format(skill.skill_str), font=self.font_large)
     activation = colorify(skill.activation)
+    if skill.skillcard:
+      skillcard = skills.SkillCard(skill.skillcard)
+      bulb_str = "Bulb rates: $[1]$A$[7]$:{}, $[4]$A$[7]$:{}, $[3]$A$[7]$:{}".format(
+        skillcard.bulb['A'], skillcard.bulb['D'], skillcard.bulb['I'])
+      activation += " " + bulb_str
     self.text_to_surface("({}) {}".format(activation, skill.desc))
 
-  def _render_skillcard(self, skillcard):
-    self.text_to_surface("")
-    self.text_to_surface("Skillcard: " +skillcard.sc_str, font=self.font_large)
-    bulb_str = "Bulb rates: $[1]$A$[7]$:{}, $[4]$A$[7]$:{}, $[3]$A$[7]$:{}".format(skillcard.bulb['A'], skillcard.bulb['D'], skillcard.bulb['I'])
-    self.text_to_surface("")
-    self.text_to_surface(bulb_str)
-    self.text_to_surface(skillcard.desc)
+    
+  def _render_tableaucard(self, tableaucard_spr):
+    sc = tableaucard_spr.tableaucard.skillcard
+    self.image_to_surface(tableaucard_spr.image, 40, 40)
+    self.text_to_surface("  $[7]${}$[8]$ ({}) ".format(
+      sc.sc_str, colorify(sc.order)), font=self.font_large)
+    self.text_to_surface(sc.desc)
     
   def _render_skill_verbose(self, skill):
     self._render_skill(skill)
@@ -329,8 +339,8 @@ class InfoBox(TextBox):
       self._render_unit(self.mouseover[1])
     elif self.mouseover[0] == "SKILL":
       self._render_skill_verbose(self.mouseover[1])
-    elif self.mouseover[0] == "SKILLCARD":
-      self._render_skillcard(self.mouseover[1])
+    elif self.mouseover[0] == "TABLEAUCARD":
+      self._render_tableaucard(self.mouseover[1])
       
 class Huddle(BufferTextBox):
   """ 

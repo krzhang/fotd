@@ -43,22 +43,6 @@ class QuitState(State):
   def update(self, actions):
     pg.quit()
     sys.exit()
-  
-# class UserInput(State):
-
-#   def __init__(self, battle, callback):
-#     super().__init__(battle)
-#     self.callback = callback
-    
-#   def update(self, actions):
-#     if actions['Q']:
-#       quitting = QuitState(self.battle)
-#       quitting.enter_state()
-#     elif any(actions.values()):
-#       for k in actions:
-#         if actions[k]:
-#           self.exit_state()
-#           callback(k)
 
 class Pause(State):
   def __init__(self, battle, pauser=None, pause_str=""):

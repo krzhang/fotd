@@ -20,9 +20,9 @@ import rps
 import skills
 import settings_battle
 import state
-
+import sprites
 import input_controller
-from textbox import InfoBox, Huddle, Console, StateBox
+from textbox import InfoBox, Huddle, Console, StateBox, ImageBox
 from narration import BattleNarrator
 
 # move to settings later
@@ -42,7 +42,70 @@ PAUSE_STRS = {
   "FINAL_ORDER": "Input Orders"
 }
 
+class TableauView(object):
+
+  """ A viewer for the Tableau """
   
+  def __init__(self, battle, view):
+    self.battle = battle
+    self.view = view
+    self.armyid = self.view.armyid
+    self.army = self.battle.armies[self.armyid]
+    # when initiated, makes one card for each card in the 2 tableau, and then
+    self.tableaus = {i:self.battle.armies[i].tableau for i in [0,1]}
+    self.imageboxes = {i: {} for i in [0,1]}
+    # each of this will be a collection
+    # of one deck for each unit, like a tableau
+    self.decks = {i:{} for i in [0, 1]}
+    
+    for i in [0,1]:
+      self._generate_tableau_view(i)
+
+  def _generate_tableau_view(self, armyid):
+    army = self.battle.armies[armyid]
+    tableau = self.tableaus[armyid]
+    decks = self.decks[armyid]
+    imageboxes = self.imageboxes[armyid]
+    for unit_spr in self.view.army_groups[armyid]:
+      u = unit_spr.unit
+      print(u)
+      decks[u] = []
+      x = unit_spr.rect.left
+      if unit_spr.facing == "SOUTH":
+        y = unit_spr.rect.top - 350
+      else:
+        y = unit_spr.rect.bottom + 30
+      imageboxes[u] = ImageBox(self.view, 82, 162, 40, 40, x, y, "imagebox[{}]".format(u.name))      
+      for tc in tableau.decks[u]:
+        sc = tc.skillcard
+        tcs = sprites.TableauCardSpr(self.view, 2000, 2000,
+                                     resources.skillcard_filename(sc),
+                                     tc)
+        decks[u].append(tcs)
+  
+  def update(self):
+    """ 
+    update the placement/visibility of the cards. They will then render themselves
+    as they are sprites.
+    """
+    viewing_army = self.view.army
+    # careful! Not the same as self.army, which is who owns the card.
+    for i in [0,1]:
+      decks = self.decks[i]
+      for unit_spr in self.view.army_groups[i]:
+        u = unit_spr.unit
+        for tcs in decks[u]:
+          card_army = tcs.army
+          visibility = tcs.tableaucard.visibility[viewing_army.armyid]
+        if not visibility:
+          # tcs.rect.left, tcs.rect.top = 2000, 2000
+          pass
+        else:
+          imagebox = self.imageboxes[card_army.armyid][u]
+          imagebox.image_to_surface(tcs.filename, 40, 40)
+          
+
+
 class PGBattleView:
   """ a Pygame View + Controller for a battle object """
 
@@ -67,7 +130,28 @@ class PGBattleView:
     self.battle = battle
 
     self.armyid = armyid
-    
+
+    self.all_sprites = pygame.sprite.Group()
+    self.army_groups = [pygame.sprite.Group(), pygame.sprite.Group()]
+    # a list of unit sprits for each army. Should probably be sprite groups.
+
+
+    # sprites and stuff
+    # 1. remember the order of sprites matters! I accidentally put background last and
+    #    it covered all the units
+    self.background = Static(self, 0, 0, resources.IMAGE_PATH / "old-paper-800-600.jpg")
+ 
+    facing = "SOUTH"
+    for j in range(2):
+      v_offset = 210+120*j
+      army = self.battle.armies[j]
+      if j == 1:
+        facing = "NORTH"
+      for i, unit in enumerate(army.units):
+        h_offset = 90 + 170*i
+        spr = UnitSpr(self, h_offset, v_offset, resources.SPRITES_PATH / "Soldier.png", unit, facing)
+        self.army_groups[j].add(spr)
+
     self.infobox = InfoBox(self)
     self.console = Console(self)
     self.huddlebox = Huddle(self, "huddle",
@@ -77,8 +161,10 @@ class PGBattleView:
                               header="Manuever recap")
     self.statebox = StateBox(self)
     self.narrator = BattleNarrator(self.battle, self)
-
-    self.view_elements = [self.infobox,
+    self.tableau_view = TableauView(self.battle, self)
+    
+    self.view_elements = [self.tableau_view,
+                          self.infobox,
                           self.console,
                           self.huddlebox,
                           self.manueverbox,
@@ -92,7 +178,8 @@ class PGBattleView:
     self.show_AI = show_AI
 
     self.actions = None 
-    self.all_sprites = pygame.sprite.Group()
+    
+    
     
   @property
   def state_stack(self):
@@ -128,17 +215,6 @@ class PGBattleView:
     return self.battle.armies[self.armyid]
 
   def new(self):
-    self.background = Static(self, 0, 0, resources.IMAGE_PATH / "old-paper-800-600.jpg")
-    armies = self.battle.armies
-    facing = "SOUTH"
-    for j in range(2):
-      v_offset = 210+120*j
-      army = armies[j]
-      if j == 1:
-        facing = "NORTH"
-      for i, unit in enumerate(army.units):
-        h_offset = 90 + 170*i
-        spr = UnitSpr(self, h_offset, v_offset, resources.SPRITES_PATH / "Soldier.png", unit, facing)
     self.run()
 
   def input_events(self):
@@ -151,12 +227,14 @@ class PGBattleView:
     # this code should go to the input_controller
 
   def update(self):
+    # things that always update
     self.all_sprites.update()
     dt = self.clock.tick()
     self.input_controller.update(dt)
-
-    # decide which thing receives the actions
-
+    self.tableau_view.update()
+    
+    # things that update only when receiving input; we must decide
+    # which thing receives the actions
     ve = self._top_action_receiver()
     ve.update(self.actions)
     
@@ -179,6 +257,7 @@ class PGBattleView:
           break
 
       # refactor later by going through view_elements
+      # self.tableau_view.render() this renders through the update
       self.infobox.render()
       self.console.render()
       self.statebox.render()

@@ -4,20 +4,13 @@ import resources
 import skills
 import colors
 
-sprite_cache = {}
-
-def get_image(filename):
-  if not filename in sprite_cache:
-    sprite_cache[filename] = pg.image.load(filename)
-  return sprite_cache[filename]
-
 class Static(pg.sprite.Sprite):
   """ thin wrapper around pg. sprite used for boring sprites """
   
   def __init__(self, view, x, y, filename):
     pg.sprite.Sprite.__init__(self)
     self.view = view
-    self.image = get_image(filename).convert_alpha()
+    self.image = resources.get_image(filename).convert_alpha()
     self.rect = self.image.get_rect()
     self.rect.left, self.rect.top = x, y
     self.infobox = False # does not need infobox
@@ -44,17 +37,17 @@ class UnitSpr(Static):
     self.size_bar_front = UnitSizeBar(view, resources.SPRITES_PATH / "health-green.png", self, "CURRENT")
 
     x = self.rect.left - 10
-    if self.facing == "SOUTH":
-      y = self.rect.top - 70
-      y_inc = -45 # how much space to allocate for each skill sprite
-    else:
-      y = self.rect.bottom + 30
-      y_inc = 45
-    self.skill_sprs = []
-    for i, s in enumerate(unit.skills):
-      self.skill_sprs.append(SkillSpr(view, x, y, resources.SKILLS_PATH / (str(s) + ".png"),
-                                      self, s))
-      y += y_inc
+    # if self.facing == "SOUTH":
+    #   y = self.rect.top - 70
+    #   y_inc = -45 # how much space to allocate for each skill sprite
+    # else:
+    #   y = self.rect.bottom + 30
+    #   y_inc = 45
+    # self.skill_sprs = []
+    # for i, s in enumerate(unit.skills):
+    #   self.skill_sprs.append(SkillSpr(view, x, y, resources.SKILLS_PATH / (str(s) + ".png"),
+    #                                   self, s))
+    #   y += y_inc
 
   def mouseover_info(self):
     return ("UNIT", self.unit)
@@ -75,7 +68,7 @@ class UnitSizeBar(pg.sprite.Sprite):
     self.filename = filename
     self.unit_spr = unit_spr
     self.size_max = settings_battle.ARMY_SIZE_MAX
-    self.image = get_image(filename)
+    self.image = resources.get_image(filename)
     self.layer = layer
     # self.image = pg.transform.scale(self.image, (x,y)) # good to keep in mind
     # self.rect = self.image.get_rect()
@@ -105,78 +98,71 @@ class UnitSizeBar(pg.sprite.Sprite):
       assert self.unit_spr.facing == "NORTH"
       self.rect.centery = self.unit_spr.rect.bottom + 10
 
-class SkillSpr(Static):
-  """ a skill sprite """
-  def __init__(self, view, x, y, filename, unit_spr, skill):
-    super().__init__(view, x, y, filename)
-    self.image = pg.transform.scale(self.image, (40, 40))
-    self.unit_spr = unit_spr
-    self.skill = skill
-    view.all_sprites.add(self)
-    self.infobox = True
+# class SkillSpr(Static):
+#   """ a skill sprite """
+#   def __init__(self, view, x, y, filename, unit_spr, skill):
+#     super().__init__(view, x, y, filename)
+#     self.image = pg.transform.scale(self.image, (40, 40))
+#     self.unit_spr = unit_spr
+#     self.skill = skill
+#     view.all_sprites.add(self)
+#     self.infobox = True
     
-    # create potential skillcards
-    self.skillcard_sprs = {}
-    if skill.skillcard:
-      sc_abs = skills.SKILLCARDS[skill.skillcard]
-      x_ctr = self.rect.left + 45
-      for order in ['A', 'D', 'I']:
-        if sc_abs.bulb[order]:
-          filename = resources.skillcard_filename(sc_abs) 
-          sc_spr = SkillCardSpr(view, x_ctr, y,
-                                filename,
-                                self,
-                                skill.skill_str,
-                                skill.skillcard,
-                                order)
-          self.skillcard_sprs[order] = sc_spr
-          x_ctr += 45
+#     # create potential skillcards
+#     self.skillcard_sprs = {}
+#     if skill.skillcard:
+#       sc_abs = skills.SKILLCARDS[skill.skillcard]
+#       x_ctr = self.rect.left + 45
+#       for order in ['A', 'D', 'I']:
+#         if sc_abs.bulb[order]:
+#           filename = resources.skillcard_filename(sc_abs) 
+#           sc_spr = SkillCardSpr(view, x_ctr, y,
+#                                 filename,
+#                                 self,
+#                                 skill.skill_str,
+#                                 skill.skillcard,
+#                                 order)
+#           self.skillcard_sprs[order] = sc_spr
+#           x_ctr += 45
 
-  def mouseover_info(self):
-    return ("SKILL", self.skill)
+#   def mouseover_info(self):
+#     return ("SKILL", self.skill)
           
-  def update(self):
-    pass # these never change!
+#   def update(self):
+#     pass # these never change!
 
-class SkillCardSpr(pg.sprite.Sprite):
+class TableauCardSpr(pg.sprite.Sprite):
   """ 
   skillcards sprites. These have colors since they correspond to phases
   """
 
-  def __init__(self, view, x, y, filename, skill_spr, skill_str, sc_str, order):
+  def __init__(self, view, x, y, filename, tableaucard):
     
     pg.sprite.Sprite.__init__(self)
     self.view = view
     self.filename = filename
-    self.image = pg.transform.scale(get_image(filename), ((40, 40))) # copy
+    self.image = pg.transform.scale(resources.get_image(filename), ((40, 40))) # copy
     self.image.set_colorkey(self.image.get_at((0, 0)))
     # hack; this sets the upper left pixel's color (probably white) to the transparency color
-    self.skill_spr = skill_spr
-    self.army = self.skill_spr.unit_spr.unit.army
+    self.tableaucard = tableaucard
+    self.skillcard = tableaucard.skillcard
+    self.army = self.tableaucard.unit.army
+    self.order = self.skillcard.order
     self.rect = self.image.get_rect()
     self.rect.left, self.rect.top = x, y
     self.x = x
     self.y = y
     color_image = pg.Surface(self.image.get_size()).convert_alpha()
-    if order == "A":
+    if self.order == "A":
       background = colors.PColors.RED
-    elif order == "D":
+    elif self.order == "D":
       background = colors.PColors.BLUE
-    elif order == 'I':
+    elif self.order == 'I':
       background = colors.PColors.YELLOW
     color_image.fill(background)
     self.image.blit(color_image, (0,0), special_flags=pg.BLEND_RGBA_MULT)
-    self.skill_str = skill_str
-    self.sc_str = sc_str
-    self.order = order
     view.all_sprites.add(self)
     self.infobox = False
 
   def update(self):
-    if self.army.tableau.visible_skillcard(self.view.army,
-                                           self.skill_spr.unit_spr.unit,
-                                           self.sc_str,
-                                           self.order):
-      self.rect.left, self.rect.top = self.x, self.y
-    else:
-      self.rect.left, self.rect.top = 2000, 2000
+    pass

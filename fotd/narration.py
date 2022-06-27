@@ -149,24 +149,26 @@ class BattleNarrator(Narrator):
   def narrate_scout_completed(self, context, drawn_cards, scouted_cards):
     myarmy = self.view.army
     self.view.yprint("{} strategizing...".format(myarmy.color_name()), mode=["huddle"])
-    for sc in drawn_cards[myarmy.armyid]:
-      unit = sc.unit
+    for tc in drawn_cards[myarmy.armyid]:
+      sc = tc.skillcard
+      unit = tc.unit
       sc_str = sc.sc_str
       order_str = str(sc.order)
-      self.view.yprint("{} {}: '".format(sc.str_seen_by_army(myarmy),
-                                         unit.color_name()) +
-                       sc.on_bulb[order_str] + "'",
-                       mode=["huddle"])
-    self.view.yprint("", mode=["huddle"])
-    self.view.yprint("{} scouting...".format(myarmy.color_name()), mode=["huddle"])
-    for sc in drawn_cards[1-myarmy.armyid]:
-      if sc in scouted_cards[1-myarmy.armyid]:
-        self.view.yprint("{} we find one of {}'s prepped tactics!".format(
-          sc.str_seen_by_army(myarmy), sc.unit.color_name()), mode=['huddle'])
-          # self.battle.armies[1-myarmy.armyid].color_name()), mode=["huddle"])
-      else:
-        self.view.yprint("{} suspicious activity...".format(
-          sc.str_seen_by_army(myarmy)), mode=["huddle"])      
+    #   self.view.yprint("{} {}: '".format(sc.str_seen_by_army(myarmy),
+    #                                      unit.color_name()) +
+    #                    sc.on_bulb[order_str] + "'",
+    #                    mode=["huddle"])
+    # self.view.yprint("", mode=["huddle"])
+    # self.view.yprint("{} scouting...".format(myarmy.color_name()), mode=["huddle"])
+    for tc in drawn_cards[1-myarmy.armyid]:
+      sc = tc.skillcard
+      # if sc in scouted_cards[1-myarmy.armyid]:
+      #   self.view.yprint("{} we find one of {}'s prepped tactics!".format(
+      #     sc.str_seen_by_army(myarmy), sc.unit.color_name()), mode=['huddle'])
+      #     # self.battle.armies[1-myarmy.armyid].color_name()), mode=["huddle"])
+      # else:
+      #   self.view.yprint("{} suspicious activity...".format(
+      #     sc.str_seen_by_army(myarmy)), mode=["huddle"])      
       
   def narrate_formation_completed(self, context):
     self.view.yprint("", mode=["huddle"])

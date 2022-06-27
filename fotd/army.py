@@ -24,6 +24,9 @@ class Unit(object):
   def __eq__(self, other):
     return hasattr(self, "character") and hasattr(other, "character") and self.character == other.character
 
+  def __hash__(self):
+    return self.character.__hash__()
+  
   def __repr__(self):
     return self.name
   

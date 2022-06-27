@@ -1,7 +1,7 @@
 """ 
 Resource loader
 
-stolen from Ice Emblem
+format stolen from Ice Emblem
 """
 
 from typing import List, Tuple
@@ -11,9 +11,6 @@ import logging
 
 from pathlib import Path
 from xml.etree import ElementTree
-
-if not pygame.font.get_init():
-  pygame.font.init()
 
 RESOURCES_PATH = Path(__file__).absolute().parent / 'resources'  #: resources directory
 IMAGE_PATH =   RESOURCES_PATH / 'images'  #: images directory
@@ -36,6 +33,12 @@ def skillcard_filename(skillcard):
 #   __load_log(path)
 #   return pygame.image.load(path)
 
+IMAGE_CACHE= {}
+
+def get_image(filename):
+  if not filename in IMAGE_CACHE:
+    IMAGE_CACHE[filename] = pygame.image.load(filename)
+  return IMAGE_CACHE[filename]
 
 
 # def sprite_path(name: str):

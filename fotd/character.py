@@ -25,6 +25,9 @@ class Character(object):
     self.calc_attributes()
     self.color = "" # this is a
 
+  def __hash__(self):
+    return hash(self.id)
+  
   def __eq__(self, other):
     return hasattr(self, "id") and hasattr(other, "id") and self.id == other.id
     

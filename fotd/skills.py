@@ -33,6 +33,12 @@ class Skill():
     """
     return "<" + colors.color_bool(success) + self.short + "$[7]$>"
 
+  def possible_skillcards(self):
+    """ return (sc, order) tuples for possible skillcards """
+    if not self.skillcard:
+      return []
+    sc = SKILLCARDS[self.skillcard]
+    return [SkillCard(sc.sc_str, order=order) for order in ['A', 'D', 'I'] if sc.bulb[order]]
 
 SKILLS_RAW = {
   "chaos_arrow": {
@@ -123,7 +129,7 @@ class SkillCard(object):
   """
   an abstract skillcard
   """
-  def __init__(self, sc_str):
+  def __init__(self, sc_str, order=None):
     self.sc_str = sc_str
     self.illegal_weather = None
     self.power = None
@@ -131,9 +137,19 @@ class SkillCard(object):
     self.short = None
     self.skill = None
     self.on_bulb = None
+    self.order = order
     for key in SKILLCARDS_RAW[sc_str]:
       setattr(self, key, SKILLCARDS_RAW[sc_str][key])
 
+  def __hash__(self):
+    return hash((self.sc_str, self.order))
+
+  def __eq__(self, other):
+    return (self.sc_str, self.order) == (other.sc_str, other.order)
+
+  def copy(self):
+    return SkillCard(self.sc_str, self.order)
+  
 SKILLCARDS_RAW = {
   "fire_tactic": {
     "bulb": {'A':0, 'D':0.15, 'I':0.3},

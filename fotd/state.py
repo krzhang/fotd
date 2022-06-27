@@ -6,6 +6,7 @@ class State():
   def __init__(self, battle): # a battle is a controller
     self.battle = battle
     self.prev_state = None
+    self.phase = None
 
   def update(self, action):
     pass
@@ -66,6 +67,7 @@ class Pause(State):
     pg.event.clear()
     self.pauser = pauser
     self.pause_str = pause_str
+    self.phase = self.previous_state.phase
     
   def __str__(self):
     return "Paused"

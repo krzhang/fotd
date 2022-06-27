@@ -30,7 +30,10 @@ def disp_bar_day_tracker(max_pos, base, last_turn, cur):
                          ['#', '#', '.', " "],
                          [cur, last_turn-cur, base-last_turn, max_pos-base])
 
-class TextBox:
+class CursorBox:
+  """ 
+  a view element that has some idea of a "cursor" that moves with the elements as it is added
+  """
 
   def __init__(self, view, width, height, x, y, name, header=""):
     self.x = x
@@ -40,12 +43,49 @@ class TextBox:
     self.tx = 0 # this is where the "cursor" is
     self.ty = 0
     self.view = view
-    self.font_large = pygame.freetype.Font(None, 32)
-    self.font_mid = pygame.freetype.Font(None, 20)
-    self.font_small = pygame.freetype.Font(None, 12)
     self.surface = pygame.Surface((width, height))
     self.name = name
     self.header = header
+
+  def image_to_surface(self, filename, width=None, height=None):
+    surf = self.surface
+    surf_width, surf_height = surf.get_size()
+    if width is None:
+      width = self.width_single
+      height = self.height_single
+    image = pygame.transform.scale(pygame.image.load(filename), (width, height))
+    if self.tx + width > surf_width:
+      self.tx, self.ty = 0, self.ty + height
+    surf.blit(image, (self.tx, self.ty))
+    self.tx += width
+
+  def clear(self):
+    # these are the "cursors"
+    self.tx = 0
+    self.ty = 0
+    
+    
+class ImageBox(CursorBox):
+  """
+  (uniform images only) a grid container for uniform images of dimensions width_single*height_single
+  """
+  def __init__(self, view, width, height, width_single, height_single, x, y, name, header=""):
+    super().__init__(view, width, height, x, y, name, header=header)
+    self.width_single = width_single
+    self.height_single = height_single
+
+  def clear(self):
+    self.surface.fill(pg.SRCALPHA)
+    self.tx = 0
+    self.ty = 0
+    
+class TextBox(CursorBox):
+
+  def __init__(self, view, width, height, x, y, name, header=""):
+    super().__init__(view, width, height, x, y, name, header=header)
+    self.font_large = pygame.freetype.Font(None, 32)
+    self.font_mid = pygame.freetype.Font(None, 20)
+    self.font_small = pygame.freetype.Font(None, 12)
     
   def clear(self):
     # these are the "cursors"
@@ -55,13 +95,7 @@ class TextBox:
 
   def get_current_state(self):
     return self.view.battle.state_stack[-1]
-
-  def image_to_surface(self, filename, width, height):
-    surf = self.surface
-    image = pygame.transform.scale(pygame.image.load(filename), (width, height))
-    surf.blit(image, (self.tx, self.ty))
-    self.tx += width
-  
+    
   def text_to_surface(self, ytext_str, font=None):
     """ 
     Given a YText string and a pygame [surface], render the text to it (with colors).
@@ -221,7 +255,8 @@ class InfoBox(TextBox):
     # 'passive' means skills that are used and are not bulbed, meaning they *are* active
     active_skillist = [disp_text_activation(('*:' + s.short), success=None, upper=False)
                        for s in unit.skills_active()]
-    active_skillcards = [sc.str_seen_by_army(self.view.army) for sc in unit.army.tableau.bulbed_by(unit)]
+    active_skillcards = [sc.str_seen_by_army(self.view.army)
+                         for sc in unit.army.tableau.decks[unit]]
     if inactive_skillstr:
       sepstr = " | "
     else:

@@ -141,7 +141,7 @@ class Battle():
     scouted_cards = [None, None]
     for i in ids:
       drawn_cards[i] = self.armies[i].tableau.draw_cards(phase)
-      scouted_cards[i] = self.armies[i].tableau.scouted_by(self.armies[1-i])
+      scouted_cards[i] = self.armies[i].tableau.scouted_by(self.armies[1-i], phase)
     return (drawn_cards, scouted_cards)
   
   # def _get_formations(self):
@@ -264,6 +264,7 @@ class FormationTurn(state.State):
     self.army = battle.armies[armyid]
     self.armyid = armyid
     self.battle.armies[armyid].intelligence.await_formation(self.battle)
+    self.phase = "formation"
 
   def __str__(self):
     return "Waiting for formations from {}".format(self.armyid)
@@ -299,7 +300,8 @@ class OrderTurn(state.State):
     self.army = battle.armies[armyid]
     self.armyid = armyid
     self.battle.armies[armyid].intelligence.await_final(self.battle)
-
+    self.phase = "order"
+    
   def __str__(self):
     return "Waiting for orders from {}".format(self.armyid)
 

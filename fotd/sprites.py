@@ -136,10 +136,11 @@ class TableauCardSpr(pg.sprite.Sprite):
   skillcards sprites. These have colors since they correspond to phases
   """
 
-  def __init__(self, view, x, y, filename, tableaucard):
+  def __init__(self, view, imagebox, x, y, filename, tableaucard):
     
     pg.sprite.Sprite.__init__(self)
     self.view = view
+    self.imagebox = imagebox
     self.filename = filename
     self.image = pg.transform.scale(resources.get_image(filename), ((40, 40))) # copy
     self.image.set_colorkey(self.image.get_at((0, 0)))
@@ -165,4 +166,11 @@ class TableauCardSpr(pg.sprite.Sprite):
     self.infobox = False
 
   def update(self):
-    pass
+    visibility = self.tableaucard.visibility[self.view.army.armyid]
+    if not visibility:
+      pass
+      # self.rect.left, self.rect.top = 2000, 2000
+    else:
+      # make copy of self and put it on that surface. A bit janky
+      self.imagebox.image_to_surface(self.image, 40, 40)
+      

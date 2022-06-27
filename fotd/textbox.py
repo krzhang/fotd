@@ -47,13 +47,13 @@ class CursorBox:
     self.name = name
     self.header = header
 
-  def image_to_surface(self, filename, width=None, height=None):
+  def image_to_surface(self, image, width=None, height=None):
     surf = self.surface
     surf_width, surf_height = surf.get_size()
     if width is None:
       width = self.width_single
       height = self.height_single
-    image = pygame.transform.scale(pygame.image.load(filename), (width, height))
+    image = pygame.transform.scale(image, (width, height))
     if self.tx + width > surf_width:
       self.tx, self.ty = 0, self.ty + height
     surf.blit(image, (self.tx, self.ty))
@@ -64,6 +64,21 @@ class CursorBox:
     self.tx = 0
     self.ty = 0
     
+  def _render(self):
+    # the internal function
+    pass
+  
+  def render(self):
+    """ 
+    The outward facing function. Thin wrapper around the internal, plus a blit that
+    every TextBox would perform.
+    """
+    self._render()
+    self.view.screen.blit(self.surface, (self.x, self.y))
+
+  def update(self, actions):
+    pass
+
     
 class ImageBox(CursorBox):
   """
@@ -75,7 +90,7 @@ class ImageBox(CursorBox):
     self.height_single = height_single
 
   def clear(self):
-    self.surface.fill(pg.SRCALPHA)
+    self.surface.fill(pygame.SRCALPHA)
     self.tx = 0
     self.ty = 0
     
@@ -89,7 +104,7 @@ class TextBox(CursorBox):
     
   def clear(self):
     # these are the "cursors"
-    self.surface.fill(PColors.BLACK)
+    self.surface.fill((0, 0, 0))
     self.tx = 0
     self.ty = 0
 
@@ -134,20 +149,6 @@ class TextBox(CursorBox):
     self.ty += line_spacing
 
 
-  def _render(self):
-    # the internal function
-    pass
-  
-  def render(self):
-    """ 
-    The outward facing function. Thin wrapper around the internal, plus a blit that
-    every TextBox would perform.
-    """
-    self._render()
-    self.view.screen.blit(self.surface, (self.x, self.y))
-
-  def update(self, actions):
-    pass
     
 class BufferTextBox(TextBox):
   """ This is a slightly extended Textbox that allows an internal buffer which pauses
@@ -266,7 +267,7 @@ class InfoBox(TextBox):
     return charstr
 
   def _render_skill(self, skill):
-    self.image_to_surface(resources.skill_filename(skill), 40, 40)
+    self.image_to_surface(resources.get_image_skill(skill), 40, 40)
     self.text_to_surface("  $[7]${}$[8]$: ".format(skill.skill_str), font=self.font_large)
     activation = colorify(skill.activation)
     self.text_to_surface("({}) {}".format(activation, skill.desc))

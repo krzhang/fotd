@@ -40,6 +40,8 @@ def get_image(filename):
     IMAGE_CACHE[filename] = pygame.image.load(filename)
   return IMAGE_CACHE[filename]
 
+def get_image_skill(skill):
+  return get_image(skill_filename(skill))
 
 # def sprite_path(name: str):
 #   """

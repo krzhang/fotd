@@ -68,17 +68,17 @@ class TableauView(object):
     imageboxes = self.imageboxes[armyid]
     for unit_spr in self.view.army_groups[armyid]:
       u = unit_spr.unit
-      print(u)
       decks[u] = []
       x = unit_spr.rect.left
       if unit_spr.facing == "SOUTH":
-        y = unit_spr.rect.top - 350
+        y = unit_spr.rect.top - 210
       else:
         y = unit_spr.rect.bottom + 30
       imageboxes[u] = ImageBox(self.view, 82, 162, 40, 40, x, y, "imagebox[{}]".format(u.name))      
       for tc in tableau.decks[u]:
         sc = tc.skillcard
-        tcs = sprites.TableauCardSpr(self.view, 2000, 2000,
+        tcs = sprites.TableauCardSpr(self.view, imageboxes[u],
+                                     2000, 2000,
                                      resources.skillcard_filename(sc),
                                      tc)
         decks[u].append(tcs)
@@ -94,17 +94,16 @@ class TableauView(object):
       decks = self.decks[i]
       for unit_spr in self.view.army_groups[i]:
         u = unit_spr.unit
+        imagebox = self.imageboxes[i][u]
+        imagebox.clear()
         for tcs in decks[u]:
-          card_army = tcs.army
-          visibility = tcs.tableaucard.visibility[viewing_army.armyid]
-        if not visibility:
-          # tcs.rect.left, tcs.rect.top = 2000, 2000
-          pass
-        else:
-          imagebox = self.imageboxes[card_army.armyid][u]
-          imagebox.image_to_surface(tcs.filename, 40, 40)
-          
+          tcs.update()
 
+  def render(self):
+    for i in [0, 1]:
+      for unit_spr in self.view.army_groups[i]:
+        u = unit_spr.unit
+        self.imageboxes[i][u].render()
 
 class PGBattleView:
   """ a Pygame View + Controller for a battle object """
@@ -265,7 +264,8 @@ class PGBattleView:
         self.huddlebox.render()
       elif self.manueverbox.buf:
         self.manueverbox.render()
-
+      self.tableau_view.render()
+      
       pygame.display.flip()
 
   def run(self):

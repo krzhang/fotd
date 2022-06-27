@@ -51,7 +51,7 @@ class Pause(State):
     pg.event.clear()
     self.pauser = pauser
     self.pause_str = pause_str
-    self.phase = self.prev_state.phase
+    self.phase = self.battle.state_stack[-1].phase
     
   def __str__(self):
     return "Paused"

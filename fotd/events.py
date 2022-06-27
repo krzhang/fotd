@@ -85,7 +85,6 @@ class Event():
     if self.event_func:
       self.event_func(self.battle,
                       self.context,
-                      self.battle.view,
                       *args)
 
   def defer(self, queue_name, args=None):
@@ -148,7 +147,7 @@ def _compute_arrow_damage(csource, ctarget, multiplier=1):
 ################
 # after these, there should be a ctarget
 
-def order_received(battle, context, bv):
+def order_received(battle, context):
   """
   Handles statuses, etc. that affects receiving of an order.
   """
@@ -162,7 +161,7 @@ def order_received(battle, context, bv):
     return
   Event(battle, rps.order_to_event(given_order), context).activate()
 
-def attack_order(battle, context, bv):
+def attack_order(battle, context):
   """
   what we do in a *committed* attack order (we no longer consider statuses, etc;)
   """
@@ -179,13 +178,13 @@ def attack_order(battle, context, bv):
   newcontext = contexts.Context({"csource":cnewsource, "ctarget":cnewtarget})
   Event(battle, "march", newcontext).defer("Q_MANUEVER")
 
-def defense_order(battle, context, bv):
+def defense_order(battle, context):
   ctarget = context.ctarget
   ctarget.order = rps.FinalOrder('D')
   ctarget.targetting = ("defending", ctarget)
   Event(battle, "gain_status", context).activate("defended")
 
-def indirect_order(battle, context, bv):
+def indirect_order(battle, context):
   ctarget = context.ctarget
   ctarget.order = rps.FinalOrder('I')
   enemyunits = ctarget.army.other_army().present_units()
@@ -198,18 +197,18 @@ def indirect_order(battle, context, bv):
   newcontext = contexts.Context({"csource":cnewsource, "ctarget":cnewtarget})
   Event(battle, "indirect_raid", newcontext).defer("Q_MANUEVER")
 
-def panicked_order(battle, context, bv):
+def panicked_order(battle, context):
   #  could just call this order, though this way the narrator picks up this situation
-  defense_order(battle, context, bv)
+  defense_order(battle, context)
 
-def provoked_order(battle, context, bv):
-  attack_order(battle, context, bv)
+def provoked_order(battle, context):
+  attack_order(battle, context)
 
 ############################################
 # Meta events about the orders themeselves #
 ############################################
 
-def order_change(battle, context, bv):
+def order_change(battle, context):
   ctarget_army = context.ctarget_army
   morale_cost = context.morale_cost
   Event(battle, "change_morale", contexts.Context({"ctarget_army":ctarget_army, # losing army
@@ -222,7 +221,7 @@ def order_change(battle, context, bv):
                                                       "dmglog":""})).activate()
     
 
-def order_yomi_win(battle, context, bv, csource_army):
+def order_yomi_win(battle, context, csource_army):
   ctarget_army = csource_army.other_army()
   ycount = csource_army.get_yomi_count()
   # TODO currently not used for anything; eventually may be used for different yomi win handling
@@ -243,7 +242,7 @@ def order_yomi_win(battle, context, bv, csource_army):
 # The units move around, retarget, etc; no damage is actually done; all these things are put
 # on the main queue, Q_RESOLVE
 
-def march(battle, context, bv):
+def march(battle, context):
   csource = context.csource
   ctarget = context.ctarget
   if csource.attacked_by:
@@ -271,7 +270,7 @@ def march(battle, context, bv):
     # need logic for when 2 attackers rush into each other
     Event(battle, "physical_clash", context).defer("Q_RESOLVE")
 
-def indirect_raid(battle, context, bv):
+def indirect_raid(battle, context):
   csource = context.csource
   ctarget = context.ctarget
   if csource.attacked_by:
@@ -282,7 +281,7 @@ def indirect_raid(battle, context, bv):
   vulnerable = bool(ctarget.order == rps.FinalOrder('D'))
   Event(battle, "arrow_strike", context.copy({"vulnerable":vulnerable})).defer("Q_RESOLVE")
 
-def engage(battle, context, bv):
+def engage(battle, context):
   """
   What happens when they meet face to face, but before the attacks. All the resolved tactics
   fire off. Tactics only fire when
@@ -310,8 +309,9 @@ def engage(battle, context, bv):
 # Resolve Phase #
 #################
 
-def duel_accepted(battle, context, bv):
+def duel_accepted(battle, context):
   duelists = [context.csource, context.ctarget]
+  bv = battle.view
   ourduel = duel.Duel(context, bv, duelists)
   # the Duel also gets the renderer and thus 
   healths = ourduel.resolve()
@@ -340,7 +340,7 @@ def duel_accepted(battle, context, bv):
                                                         "dmgtype":"lost_duel",
                                                         "dmglog":""})).activate()
 
-def duel_challenged(battle, context, bv):
+def duel_challenged(battle, context):
   """
   source already committed, so target sees if he/she is interested
   """
@@ -352,7 +352,7 @@ def duel_challenged(battle, context, bv):
   else:
     Event(battle, "duel_rejected", context).activate()
       
-def arrow_strike(battle, context, bv):
+def arrow_strike(battle, context):
   csource = context.csource
   ctarget = context.ctarget
   multiplier = 1
@@ -371,7 +371,7 @@ def arrow_strike(battle, context, bv):
   elif ctarget.has_unit_status("counter_arrow"):
     Event(battle, 'counter_arrow', context).activate()
 
-def physical_clash(battle, context, bv):
+def physical_clash(battle, context):
   csource = context.csource
   ctarget = context.ctarget
   vulnerable = (csource.order == rps.FinalOrder('A')) and (ctarget.order == rps.FinalOrder('I'))
@@ -379,7 +379,7 @@ def physical_clash(battle, context, bv):
   if random.random() < 0.5:
     Event(battle, "physical_strike", context.clean_switch({'cause':'retaliation'})).activate()
 
-def physical_strike(battle, context, bv):
+def physical_strike(battle, context):
   """ strike is the singular act of hitting """
   csource = context.csource
   ctarget = context.ctarget
@@ -402,7 +402,7 @@ def physical_strike(battle, context, bv):
 #   EVENTS_RECEIVE[ev]["panic_blocked"] = True
 # No common rules here...
 
-def receive_damage(battle, context, bv):
+def receive_damage(battle, context):
   ctarget = context.ctarget
   damage = context.damage
   if damage >= ctarget.size:
@@ -411,7 +411,7 @@ def receive_damage(battle, context, bv):
   if ctarget.size <= 0:
     Event(battle, "unit_leave_battle", context).activate()
 
-def unit_leave_battle(battle, context, bv):
+def unit_leave_battle(battle, context):
   ctarget = context.ctarget
   army = ctarget.army
   if random.random() < 0.5:  # capture chance
@@ -434,7 +434,7 @@ def unit_leave_battle(battle, context, bv):
     Event(battle, "change_morale", contexts.Context({"ctarget_army":army.other_army(),
                                                      "morale_change":damage})).activate()
 
-def change_morale(battle, context, bv):
+def change_morale(battle, context):
   ctarget_army = context.ctarget_army
   if ctarget_army.morale <= 0:
     return
@@ -452,7 +452,7 @@ def change_morale(battle, context, bv):
 # targetted Events from Skills #
 ################################
 
-def _resolve_entanglement(battle, context, bv):
+def _resolve_entanglement(battle, context):
   """
   a bit harder since we dont know who the lurer actually is
 
@@ -461,6 +461,7 @@ def _resolve_entanglement(battle, context, bv):
     ctarget
     success_callback
   """
+  bv = battle.view
   csource = context.csource
   ctarget = context.ctarget
   base_entanglement_chance = 0.1
@@ -482,7 +483,7 @@ def _resolve_entanglement(battle, context, bv):
       lurer = random.choice(lure_candidates)
       successes = _roll_target_skill_tactic(battle,
                                             context.copy({"lurer":lurer,
-                                                          "ctarget":new_target}), bv,
+                                                          "ctarget":new_target}),
                                             "lure_tactic", 0.20)
       # TODO: add chain tactic for Pang Tong
       # either has 1 or 0 elements
@@ -492,7 +493,7 @@ def _resolve_entanglement(battle, context, bv):
         additional_activations.append(successes[0])
   return additional_activations
 
-def _roll_target_skill_tactic(battle, context, bv, roll_key, cchance):
+def _roll_target_skill_tactic(battle, context, roll_key, cchance):
   """
   We are about to roll something for success.
 
@@ -518,12 +519,12 @@ def _roll_target_skill_tactic(battle, context, bv, roll_key, cchance):
   if success:
     successful_targets.append(context.ctarget)
     if event_info(roll_key, "can_aoe"):
-      successful_targets += _resolve_entanglement(battle, context, bv)
+      successful_targets += _resolve_entanglement(battle, context)
   Event(battle, "roll_post_success", context).activate(roll_key, success)
   return successful_targets
 
-def resolve_targetting_event(battle, context, bv, roll_key, cchance, success_func):
-  successful_targets = _roll_target_skill_tactic(battle, context, bv, roll_key, cchance)
+def resolve_targetting_event(battle, context, roll_key, cchance, success_func):
+  successful_targets = _roll_target_skill_tactic(battle, context, roll_key, cchance)
   results = []
   for new_target in successful_targets:
     new_context = context.copy({"ctarget":new_target})
@@ -538,27 +539,27 @@ def resolve_targetting_event(battle, context, bv, roll_key, cchance, success_fun
 def _fire_arrow_success(battle, context): # eventually these should not be events...
   Event(battle, "gain_status", context).activate("burned")
 
-def fire_arrow(battle, context, bv):
+def fire_arrow(battle, context):
   if not battle.is_raining():
     chance = 0.5
   else:
     chance = -0.1
-  results = resolve_targetting_event(battle, context, bv, "fire_arrow", chance, _fire_arrow_success)
+  results = resolve_targetting_event(battle, context, "fire_arrow", chance, _fire_arrow_success)
 
 def _chu_ko_nu_success(battle, context): 
   Event(battle, 'arrow_strike', context).activate()
 
-def chu_ko_nu(battle, context, bv):
+def chu_ko_nu(battle, context):
   chance = 0.5
-  results = resolve_targetting_event(battle, context, bv, "chu_ko_nu", chance, _chu_ko_nu_success)
+  results = resolve_targetting_event(battle, context, "chu_ko_nu", chance, _chu_ko_nu_success)
 
 def _counter_arrow_success(battle, context): 
   Event(battle, "arrow_strike", context).activate()  # this is already switched
   
-def counter_arrow(battle, context, bv):
+def counter_arrow(battle, context):
   chance = 0.8
   newcontext = context.clean_switch() #  kill things like "vulnerable"
-  results = resolve_targetting_event(battle, newcontext, bv, "counter_arrow", chance, _counter_arrow_success)
+  results = resolve_targetting_event(battle, newcontext, "counter_arrow", chance, _counter_arrow_success)
 
 ##############
 # Skillcards #
@@ -567,26 +568,26 @@ def counter_arrow(battle, context, bv):
 def _fire_tactic_success(battle, context): # eventually these should not be events...
   Event(battle, "gain_status", context).activate("burned")
 
-def fire_tactic(battle, context, bv):
+def fire_tactic(battle, context):
   chance = 0.5
   context.tableaucard.make_visible_to_all()
-  results = resolve_targetting_event(battle, context, bv, "fire_tactic", chance, _fire_tactic_success)
+  results = resolve_targetting_event(battle, context, "fire_tactic", chance, _fire_tactic_success)
 
 def _jeer_tactic_success(battle, context):
   Event(battle, "gain_status", context).activate("provoked")
   
-def jeer_tactic(battle, context, bv):
+def jeer_tactic(battle, context):
   chance = 0.5
   context.tableaucard.make_visible_to_all()
-  results = resolve_targetting_event(battle, context, bv, "jeer_tactic", chance, _jeer_tactic_success)
+  results = resolve_targetting_event(battle, context, "jeer_tactic", chance, _jeer_tactic_success)
 
 def _panic_tactic_success(battle, context):
   Event(battle, "gain_status", context).activate("panicked")
 
-def panic_tactic(battle, context, bv):
+def panic_tactic(battle, context):
   chance = 0.5
   context.tableaucard.make_visible_to_all()
-  results = resolve_targetting_event(battle, context, bv, "panic_tactic", chance, _panic_tactic_success)
+  results = resolve_targetting_event(battle, context, "panic_tactic", chance, _panic_tactic_success)
 
 def _flood_tactic_success(battle, context):
   damdice = settings_battle.FLOOD_TACTIC_DAMDICE
@@ -594,16 +595,16 @@ def _flood_tactic_success(battle, context):
   Event(battle, "receive_damage", context.copy(
     {"damage":damage, "dmgtype":"flood", "dmglog":""})).activate()
 
-def flood_tactic(battle, context, bv):
+def flood_tactic(battle, context):
   chance = 0.5
   context.tableaucard.make_visible_to_all()
-  results = resolve_targetting_event(battle, context, bv, "flood_tactic", chance, _flood_tactic_success)
+  results = resolve_targetting_event(battle, context, "flood_tactic", chance, _flood_tactic_success)
 
 ##########
 # Status #
 ##########
 
-def gain_status(battle, context, bv, stat_str):
+def gain_status(battle, context, stat_str):
   """
   nothing should call add_unit_status except for this, so all the handlers are there.
   
@@ -614,7 +615,7 @@ def gain_status(battle, context, bv, stat_str):
   # narrator.narrate_status("on_receive", context.copy(
   #   {"stat_str":stat_str, "stat_viz":status.Status(stat_str).stat_viz()}))
 
-def remove_status_probabilistic(battle, context, bv):
+def remove_status_probabilistic(battle, context):
   """
   context:
     status
@@ -631,19 +632,19 @@ def remove_status_probabilistic(battle, context, bv):
   else:
     Event(battle, "retain_status", context).activate(stat_str)
 
-def burned_bot(battle, context, bv):
+def burned_bot(battle, context):
   ctarget = context.ctarget
   if battle.is_raining():
-    bv.yprint("thanks to the rain, %s put out the fire." % ctarget)
+    battle.view.yprint("thanks to the rain, %s put out the fire." % ctarget)
     ctarget.remove_unit_status("burned")
 
-def burned_eot(battle, context, bv):
+def burned_eot(battle, context):
   ctarget = context.ctarget
   if ctarget.has_unit_status("burned"): # could have dried up or something
     # damage before putting out
     if battle.is_hot():
       damdice = 10
-      bv.yprint("It's an extra {} day; fire is much more dangerous.".format(battle.weather))
+      battle.view.yprint("It's an extra {} day; fire is much more dangerous.".format(battle.weather))
     else:
       damdice = 5
     damage = random.choice(range(damdice))
@@ -658,9 +659,9 @@ def burned_eot(battle, context, bv):
 def _trymode_activation_success(battle, context):
   Event(battle, "gain_status", context).activate("trymode_activated")
 
-def trymode_status_bot(battle, context, bv):
+def trymode_status_bot(battle, context):
   ctarget = context.ctarget
   trymodeprob = (ctarget.size_base-ctarget.size)/ctarget.size_base
-  resolve_targetting_event(battle, context, bv, "trymode_status_bot", trymodeprob,
+  resolve_targetting_event(battle, context, "trymode_status_bot", trymodeprob,
                            _trymode_activation_success)
 

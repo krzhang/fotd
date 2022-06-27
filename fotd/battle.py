@@ -238,13 +238,6 @@ class Battle():
   def start_battle(self):
     print("Let's start the battle!")
     self._init_day()  
-  # def start_battle(self):
-  #   while(True):
-  #     game_ended = self.take_turn()
-  #     if game_ended:
-  #       state = self.end_state()
-  #       self.close()
-  #       return state  
 
 ###############
 # State Stuff #

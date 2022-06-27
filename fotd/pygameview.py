@@ -177,16 +177,7 @@ class PGBattleView:
     self.show_AI = show_AI
 
     self.actions = None 
-    
-    
-    
-  @property
-  def state_stack(self):
-    return self.battle.state_stack
-
-  def top_state(self):
-    return self.state_stack[-1]
-  
+      
   def _top_action_receiver(self):
     """
     This is used to decide which thing receives the actions. It's a bit hackish right now.
@@ -200,10 +191,7 @@ class PGBattleView:
       return self.huddlebox
     elif self.console.buf:
       return self.console
-    ts = self.top_state()
-    # if isinstance(ts, state.Pause):
-    #   return ts
-    return ts
+    return self.battle
 
   def pause(self, pauser=None, pause_str=None):
     pause = state.Pause(self.battle, pauser=pauser, pause_str=pause_str)
@@ -319,23 +307,23 @@ class PGBattleView:
                                                           bars[1],
                                                           ctarget.color_name()))
 
-  def input_battle_order(self, order_type, armyid):
-    """
-    Input a list of orders. The orders are objects (probably rps.Order()) with 
-    - colored_abbrev method for display
-    - str method for input
-    """
-    if order_type == 'FORMATION_ORDER':
-      order_list = [rps.FormationOrder(s) for s in rps.FORMATION_ORDER_LIST]
-    else:
-      assert order_type == 'FINAL_ORDER'
-      order_list = [rps.FinalOrder(s) for s in rps.FINAL_ORDER_LIST]
+  # def input_battle_order(self, order_type, armyid):
+  #   """
+  #   Input a list of orders. The orders are objects (probably rps.Order()) with 
+  #   - colored_abbrev method for display
+  #   - str method for input
+  #   """
+  #   if order_type == 'FORMATION_ORDER':
+  #     order_list = [rps.FormationOrder(s) for s in rps.FORMATION_ORDER_LIST]
+  #   else:
+  #     assert order_type == 'FINAL_ORDER'
+  #     order_list = [rps.FinalOrder(s) for s in rps.FINAL_ORDER_LIST]
 
-    pausestr_1 = PAUSE_STRS[order_type].format(**{"armyid":armyid})
-    render_list = [order.color_abbrev() for order in order_list]
-    pausestr_2 = " ({}):$[7]$".format("/".join(render_list))
-    return self._get_input(pausestr_1 + pausestr_2,
-                           [str(order).upper() for order in order_list])
+  #   pausestr_1 = PAUSE_STRS[order_type].format(**{"armyid":armyid})
+  #   render_list = [order.color_abbrev() for order in order_list]
+  #   pausestr_2 = " ({}):$[7]$".format("/".join(render_list))
+  #   return self._get_input(pausestr_1 + pausestr_2,
+  #                          [str(order).upper() for order in order_list])
 
   ############
   # Printing #
@@ -356,7 +344,8 @@ class PGBattleView:
       elif m == "huddle":
         self.huddlebox.buf.append(converted_text)
       elif m == 'order_phase':
-        self.manueverbox.buf.append(converted_text)
+        self.console.buf.append(converted_text)
+        # self.manueverbox.buf.append(converted_text)
       else:
         assert m == 'AI'
         if self.show_AI:

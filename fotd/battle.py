@@ -41,7 +41,9 @@ class Battle():
     self.automated = automated # happening with no player actor (so we can suppress input, etc.) 
     self.imaginary = False # happening as part of an AI's mind in simulation
     self.show_AI = show_AI
-
+    self.playing = False
+    self.result = None # eventually tuple of (player 1 win, player 2 win)
+    
   def __str__(self):
     my_str = ""
     if self.automated:
@@ -76,14 +78,7 @@ class Battle():
     bat.automated = True
     bat.imaginary = True
     return bat
-  
-  def end_state(self):
-    wins = [False, False]
-    for i in [0,1]:
-      if self.armies[i].is_present():
-        wins[i] = True
-    return tuple(wins)
-  
+    
   @property
   def formations(self):
     return (self.armies[0].formation, self.armies[1].formation)
@@ -106,35 +101,6 @@ class Battle():
   # Turn logic functions #
   ########################
 
-  def _init_day(self):
-    """
-    Cleans state, but also most importantly, makes it renderable.
-    """
-    # common knowledge: later take out
-    self.date += 1
-    self.weather = weather.random_weather()
-    self.yomi_winner_id = -1
-    self.yomis = None
-    # setup stuff
-    for i in [0, 1]:
-      self.armies[i].yomi_edge = None
-      # self.armies[i].bet_morale_change = 0
-      self.armies[i].formation = None
-      self.armies[i].order = None
-      self.armies[i].formation_bonus = 1.0
-      self.armies[i].commitment_bonus = False
-      # TODO: this is only helpful for view, so let view handle it
-      self.armies[i].last_turn_morale = self.armies[i].morale
-      self.armies[i].tableau.clear()
-      for u in self.armies[i].present_units():
-        u.attacked = []
-        u.attacked_by = []
-        u.targetting = None
-        # TODO: same here
-        u.last_turn_size = u.size
-    print("Day initialized")
-    self.start_formations()
-
   def _draw_and_scout(self, phase):
     ids = [0, 1]
     drawn_cards = [None, None]
@@ -143,7 +109,6 @@ class Battle():
       drawn_cards[i] = self.armies[i].tableau.draw_cards(phase)
       scouted_cards[i] = self.armies[i].tableau.scouted_by(self.armies[1-i], phase)
     return (drawn_cards, scouted_cards)
-  
   
   def _handle_yomi(self):
     for i in [0, 1]:
@@ -167,6 +132,11 @@ class Battle():
     Event(self, "order_yomi_completed", Context({})).activate(self.yomi_winner_id)
 
   def _run_status_handlers(self, func_key):
+    if func_key == "bot":
+      queue_name = "Q_PRELIM"
+    else:
+      assert func_key == "eot"
+      queue_name = "Q_CLEANUP"
     for i in [1, 0]:
       # originally these were in lists; the problem is you can change these lists, so make copies
       for unit in tuple(self.armies[i].units):
@@ -179,7 +149,7 @@ class Battle():
             event_name = func_list[0]
             additional_opt = {"stat_str":ss}
             additional_opt.update(func_list[1]) # additional arguments
-            Event(self, event_name, ctxt.copy(additional_opt)).activate()
+            Event(self, event_name, ctxt.copy(additional_opt)).defer(queue_name)
 
   def _send_orders_to_armies(self):
     orders = self.orders
@@ -195,59 +165,119 @@ class Battle():
     for o in tuple(orderlist):
       Event(self, o[1], o[2]).defer('Q_ORDER')
 
-  def _run_queue(self, queue_name):
-    while self.queues[queue_name]:
+  # def _run_queue(self, queue_name):
+  #   while self.queues[queue_name]:
+  #     event, args = self.queues[queue_name].pop()
+  #     event.activate(*args)
+
+  def pop_queue(self, queue_name):
+    if self.queues[queue_name]:
       event, args = self.queues[queue_name].pop()
       event.activate(*args)
-
-  def start_formations(self):
-    drawn_cards, scouted_cards = self._draw_and_scout("formations")
-    Event(self, "scout_completed", Context({})).activate(drawn_cards, scouted_cards)
-    FormationTurn(self, 0).enter_state()
-
-  def start_orders(self):
-    drawn_cards, scouted_cards = self._draw_and_scout("orders")
-    Event(self, "scout_completed", Context({})).activate(drawn_cards, scouted_cards)
-    OrderTurn(self, 0).enter_state()
-      
-  def resolve_orders(self):
-    """
-    The battle logic that happens after logic is selected.
-    Is public because AI also uses it to run mental simulations
-    """
-    Resolution(self).enter_state()
-    self._handle_yomi()
-    # preloading events
-    self._run_status_handlers("bot") # should be queue later
-    self._send_orders_to_armies()
-    self._run_queue('Q_ORDER')
-    for i in [0, 1]:
-      for u in self.armies[i].present_units():
-        assert u.targetting
-    self._run_queue('Q_MANUEVER')
-    self._run_queue('Q_RESOLVE')
-    self._run_status_handlers("eot") # should be queue later
-    game_end = False
-    for i in [0, 1]:
-      if not self.armies[i].is_present():
-        game_end = True
-    Event(self, "turn_end", {"game_end":game_end}).activate()
-    return game_end
-
+      return True
+    return False
   
   def start_battle(self):
     print("Let's start the battle!")
-    self._init_day()  
+    self.playing = True
+    InitDay(self).enter_state()
+
+  def end_battle(self):
+    self.playing = False
+    wins = [False, False]
+    for i in [0,1]:
+      if self.armies[i].is_present():
+        wins[i] = True
+    self.result = tuple(wins)
+    
+  def update(self, actions):
+    state = self.state_stack[-1]
+    state.update(actions)
 
 ###############
 # State Stuff #
 ###############
+
+  # def resolve_orders(self):
+  #   """
+  #   The battle logic that happens after logic is selected.
+  #   Is public because AI also uses it to run mental simulations
+  #   """
+  #   Resolution(self).enter_state()
+  #   self._handle_yomi()
+  #   # preloading events
+  #   self._run_status_handlers("bot") # should be queue later
+  #   self._send_orders_to_armies()
+  #   self._run_queue('Q_ORDER')
+  #   for i in [0, 1]:
+  #     for u in self.armies[i].present_units():
+  #       assert u.targetting
+  #   self._run_queue('Q_MANUEVER')
+  #   self._run_queue('Q_RESOLVE')
+  #   self._run_status_handlers("eot") # should be queue later
+  #   game_end = False
+  #   for i in [0, 1]:
+  #     if not self.armies[i].is_present():
+  #       game_end = True
+  #   Event(self, "turn_end", {"game_end":game_end}).activate()
+  #   return game_end
+
+  
+class InitDay(state.State):
+  """ Cleans the slate, checks for win conditions, etc. """
+  def __init__(self, battle):
+    super().__init__(battle)
+
+  def update(self, actions):
+    game_end = False
+    for i in [0, 1]:
+      if (not self.battle.armies[i].is_present()) or self.battle.imaginary:
+        # we exit for 2 reasons:
+        # 1. someone lost TODO: can activate this earlier
+        # 2. this is an imaginary battle and we have finished the turn
+        self.exit_state()
+        self.battle.end_battle()
+        return
+    Event(self.battle, "turn_end", {"game_end":game_end}).activate()
+
+    self.battle.date += 1
+    self.battle.weather = weather.random_weather()
+    self.battle.yomi_winner_id = -1
+    self.battle.yomis = None
+    # setup stuff
+    for i in [0, 1]:
+      army = self.battle.armies[i]
+      army.yomi_edge = None
+      # army.bet_morale_change = 0
+      army.formation = None
+      army.order = None
+      army.formation_bonus = 1.0
+      army.commitment_bonus = False
+      # TODO: this is only helpful for view, so let view handle it
+      army.last_turn_morale = army.morale
+      army.tableau.clear()
+      for u in army.present_units():
+        u.attacked = []
+        u.attacked_by = []
+        u.targetting = None
+        # TODO: same here
+        u.last_turn_size = u.size
+    print("Day initialized")
+    self.exit_state()
+    FormationTurn(self.battle, 0).enter_state() # this kicks off the state machine
+
+  def __str__(self):
+    return "Initializing day {}".format(self.battle.date)
 
 class FormationTurn(state.State):  
   def __init__(self, battle, armyid):
     super().__init__(battle)
     self.army = battle.armies[armyid]
     self.armyid = armyid
+
+    drawn_cards, scouted_cards = self.battle._draw_and_scout("formations")
+    Event(self.battle, "scout_completed", Context({})).activate(drawn_cards, scouted_cards)
+    
     self.battle.armies[armyid].intelligence.await_formation(self.battle)
     self.phase = "formation"
 
@@ -267,7 +297,7 @@ class FormationTurn(state.State):
         Event(self.battle, "formation_completed", Context({})).activate()
         print("Got formation " + str(self.army.formation) + " for " + str(self.armyid))
         
-        self.battle.start_orders()
+        OrderTurn(self.battle, 0).enter_state()
     else:
       if self.army.intelligence_type == 'PLAYER':
         if actions and any(actions.values()):
@@ -284,6 +314,10 @@ class OrderTurn(state.State):
     super().__init__(battle)
     self.army = battle.armies[armyid]
     self.armyid = armyid
+
+    drawn_cards, scouted_cards = self.battle._draw_and_scout("orders")
+    Event(self.battle, "scout_completed", Context({})).activate(drawn_cards, scouted_cards)
+    
     self.battle.armies[armyid].intelligence.await_final(self.battle)
     self.phase = "order"
     
@@ -301,7 +335,8 @@ class OrderTurn(state.State):
         self.exit_state()
         Event(self.battle, "order_completed", Context({})).activate()
         print("Got orders " + str(self.army.order) + " for " + str(self.armyid))
-        self.battle.resolve_orders()
+        
+        Resolution(self.battle).enter_state()
     else:
       if self.army.intelligence_type == 'PLAYER':
         if actions and any(actions.values()):
@@ -312,16 +347,40 @@ class OrderTurn(state.State):
         pass
         # if it's AI, its probably taking its turn right now; just let it wait.
 
+
 class Resolution(state.State):
+  """ abstract resolution class that resolves through queues. """
+
   def __init__(self, battle):
     super().__init__(battle)
+    self.phase = "resolution"
+    self.subphase_index = 0
+    # in settings_battle, we have different queues corresponding to different
+    # subphases. QUEUE_NAMES = ["Q_PRELIM", "Q_ORDER", "Q_MANUEVER", "Q_RESOLVE", "Q_CLEANUP"]
+    self.queue_names = settings_battle.QUEUE_NAMES.copy()
+    self.battle._handle_yomi()
+    self.battle._run_status_handlers("bot")
 
   def __str__(self):
-    return "Resolving Turn"
+    return "Resolution - subphase {}".format(self.subphase_index)
 
   def update(self, actions):
-    # gotta kill these updates if this is imaginary
-    if actions and any(actions.values()):
-      # update on any key
-      self.exit_state()
-      self.battle._init_day()
+    task_performed = self.battle.pop_queue(self.queue_names[0])
+    if task_performed:
+      return
+    else: # queue is idling
+      self.queue_names = self.queue_names[1:]
+      if not self.queue_names:
+        self.exit_state()
+        InitDay(self.battle).enter_state()
+        return
+      cur_queue = self.queue_names[0]
+      if cur_queue == "Q_PRELIM": # prelims 
+        self.battle._handle_yomi()
+        self.battle._run_status_handlers("bot")
+      elif cur_queue == "Q_ORDER": # orders
+        self.battle._send_orders_to_armies()
+      elif cur_queue == "Q_MANUEVER": # manuevers
+        pass
+      elif cur_queue == "Q_CLEANUP": # cleanup          
+        self.battle._run_status_handlers("eot")       

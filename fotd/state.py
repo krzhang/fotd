@@ -8,9 +8,6 @@ class State():
     self.prev_state = None
     self.phase = None
 
-  def update(self, action):
-    pass
-
   def render(self, surface):
     pass
 
@@ -18,14 +15,17 @@ class State():
     return ""
   
   def enter_state(self):
-    #print ("entered state " + str(self) + "({})".format(self.battle))
+    print ("entered state " + str(self) + "({})".format(self.battle))
     if len(self.battle.state_stack) > 1:
       self.prev_state = self.battle.state_stack[-1]
     self.battle.state_stack.append(self)
+    print ("  state stack: {}".format(self.battle.state_stack))
 
   def exit_state(self):
+    print ("  state stack: {}".format(self.battle.state_stack))
     self.battle.state_stack.pop()
-    #print ("exited state " + str(self) + "({})".format(self.battle))
+    print ("exited state " + str(self) + "({})".format(self.battle))
+    print ("  state stack: {}".format(self.battle.state_stack))
     
   def update(self, actions):
     pass
@@ -35,15 +35,6 @@ class GenesisState(State):
   def __str__(self):
     return "Genesis State"
   
-class EndState(State):
-  pass
-  
-class QuitState(State):
-
-  def update(self, actions):
-    pg.quit()
-    sys.exit()
-
 class Pause(State):
   def __init__(self, battle, pauser=None, pause_str=""):
     """ the [pauser] is the view (Console, main view, etc.) that generated the pause. """
@@ -58,6 +49,7 @@ class Pause(State):
 
   def update(self, actions):
     if actions and any(actions.values()):
+      print("unpaused")
       self.exit_state()
       if self.pauser:
         self.pauser.update(actions)

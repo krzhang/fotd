@@ -208,7 +208,8 @@ class MockBattleView(View):
     self.armyid = armyid
     self.show_AI = show_AI
     self.narrator = narration.BattleNarrator(self.battle, self)
-
+    self.playing = True
+    
   @property
   def army(self):
     return self.battle.armies[self.armyid]
@@ -263,6 +264,13 @@ class MockBattleView(View):
   def yprint(self, text, templates=None, debug=False, mode=("console",)):
     logging.info(text)
 
+  def update(self, actions):
+    self.battle.update(actions)
+    
+  def run(self):
+    while self.playing:
+      self.update({})
+    
 class TextBattleView(View):
   """ 
   Default ASCII-oriented View. 

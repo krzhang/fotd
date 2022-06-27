@@ -148,20 +148,24 @@ class BattleNarrator(Narrator):
 
   def narrate_scout_completed(self, context, drawn_cards, scouted_cards):
     myarmy = self.view.army
-    self.view.yprint("{} strategizing...".format(myarmy.color_name()), mode=["huddle"])
-    for tc in drawn_cards[myarmy.armyid]:
-      sc = tc.skillcard
-      unit = tc.unit
-      sc_str = sc.sc_str
-      order_str = str(sc.order)
+    myarmyid = myarmy.armyid
+    self.view.yprint("{} strategizing...".format(myarmy.color_name()), mode=["console"])
+    self.view.yprint("  brainstormed {} tactics".format(len(drawn_cards[myarmyid])), mode=["console"])
+    self.view.yprint("  scouted {}/{} enemy tactics".format(len(scouted_cards[1-myarmyid]), len(drawn_cards[1-myarmyid])), mode=["console"])
+    
+    # for tc in drawn_cards[myarmy.armyid]:
+    #   sc = tc.skillcard
+    #   unit = tc.unit
+    #   sc_str = sc.sc_str
+    #   order_str = str(sc.order)
     #   self.view.yprint("{} {}: '".format(sc.str_seen_by_army(myarmy),
     #                                      unit.color_name()) +
     #                    sc.on_bulb[order_str] + "'",
     #                    mode=["huddle"])
     # self.view.yprint("", mode=["huddle"])
     # self.view.yprint("{} scouting...".format(myarmy.color_name()), mode=["huddle"])
-    for tc in drawn_cards[1-myarmy.armyid]:
-      sc = tc.skillcard
+    # for tc in drawn_cards[1-myarmy.armyid]:
+    #   sc = tc.skillcard
       # if sc in scouted_cards[1-myarmy.armyid]:
       #   self.view.yprint("{} we find one of {}'s prepped tactics!".format(
       #     sc.str_seen_by_army(myarmy), sc.unit.color_name()), mode=['huddle'])

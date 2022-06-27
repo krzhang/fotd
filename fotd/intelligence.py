@@ -1,7 +1,7 @@
 import logging
 import random
 import state
-
+from battle import Resolution
 # logger = logging.getLogger("test")
 
 import numpy as np
@@ -35,12 +35,6 @@ class PlayerIntelligence(Intelligence):
 
     # same as above
     pass
-
-  # def get_order(self, battle, armyid, order_type):
-  #   if order_type == 'FORMATION':
-  #     return rps.FormationOrder(battle.battlescreen.input_battle_order(order_type, armyid))
-  #   else:
-  #     return rps.FinalOrder(battle.battlescreen.input_battle_order(order_type, armyid))
 
 class ArtificialIntelligence(Intelligence):
 
@@ -185,6 +179,17 @@ class ArtificialIntelligence(Intelligence):
 
 class NashIntelligence(ArtificialIntelligence):
 
+  def _evaluate_turn_end(self, tempbattle):
+    """ 
+    take a temporary (imaginary) battle where the orders are in, run it to the end,
+    and return the evluation
+    """
+    Resolution(tempbattle).enter_state()
+    tempbattle.playing = True
+    while tempbattle.playing:
+      tempbattle.update({})
+    return battle_edge_estimate(tempbattle, 0)
+  
   def get_formation_matrix(self, battle):
     # logger.debug("AI for formation matrix")
     matrix = np.array([[0,0,0], [0,0,0],[0,0,0]])
@@ -200,8 +205,10 @@ class NashIntelligence(ArtificialIntelligence):
           # simulate the rest of the turn; should get orders and then resolve them
           for k in [0, 1]:
             tempbattle.armies[k].order = tempbattle.armies[k].intelligence.get_final(tempbattle)
-          tempbattle.resolve_orders()
-          post_eval = battle_edge_estimate(tempbattle, 0)
+          # tempbattle.resolve_orders()
+          # so we no longer do this; what we need to do is to run the temp battle until it's over,
+          # and then look at the result.
+          post_eval = self._evaluate_turn_end(tempbattle)
           matrix[i][j] += post_eval - init_eval
         # logger.debug("  value: {}".format(matrix[i][j]))         
         # logger.debug("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]))
@@ -230,8 +237,7 @@ class NashIntelligence(ArtificialIntelligence):
           for k in [0,1]:
             tempbattle.armies[k].order = rps.FinalOrder(strat_strs[k])
           init_eval = battle_edge_estimate(tempbattle, 0)
-          tempbattle.resolve_orders()
-          post_eval = battle_edge_estimate(tempbattle, 0)
+          post_eval = self._evaluate_turn_end(tempbattle)
           matrix[i][j] += post_eval - init_eval
         # logger.debug("  value: {}".format(matrix[i][j]))         
         # logger.debug("{} vs {}: edge {}".format(strat0, strat1, matrix[i][j]))

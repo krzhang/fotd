@@ -13,6 +13,9 @@ class State():
 
   def __str__(self):
     return ""
+
+  def __repr__(self):
+    return str(self)
   
   def enter_state(self):
     print ("entered state " + str(self) + "({})".format(self.battle))

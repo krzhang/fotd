@@ -229,17 +229,6 @@ class InitDay(state.State):
     super().__init__(battle)
 
   def update(self, actions):
-    game_end = False
-    for i in [0, 1]:
-      if (not self.battle.armies[i].is_present()) or self.battle.imaginary:
-        # we exit for 2 reasons:
-        # 1. someone lost TODO: can activate this earlier
-        # 2. this is an imaginary battle and we have finished the turn
-        self.exit_state()
-        self.battle.end_battle()
-        return
-    Event(self.battle, "turn_end", {"game_end":game_end}).activate()
-
     self.battle.date += 1
     self.battle.weather = weather.random_weather()
     self.battle.yomi_winner_id = -1
@@ -371,6 +360,16 @@ class Resolution(state.State):
     else: # queue is idling
       self.queue_names = self.queue_names[1:]
       if not self.queue_names:
+        game_end = False
+        for i in [0, 1]:
+          if (not self.battle.armies[i].is_present()) or self.battle.imaginary:
+            # we exit for 2 reasons:
+            # 1. someone lost TODO: can activate this earlier
+            # 2. this is an imaginary battle and we have finished the turn
+            self.exit_state()
+            self.battle.end_battle()
+            return
+        Event(self.battle, "turn_end", {"game_end":game_end}).activate()
         self.exit_state()
         InitDay(self.battle).enter_state()
         return

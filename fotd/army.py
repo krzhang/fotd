@@ -84,11 +84,11 @@ class Unit(object):
     return [sc for sc in self.army.tableau.bulbed_by(self) if sc.visible_to(visible_to)]
 
   def color_name(self):
-    return "{}{}$[7]$".format(self.color, self.name)
+    return "{}{}$[8]$".format(self.color, self.name)
     # return "$[{}]${}$[7]$".format(self.color, self.name)
 
   def str_unit_size(unit):
-    csize = colors.color_size(unit.size, unit.size_base) + str(unit.size) + "$[7]$"
+    csize = colors.color_size(unit.size, unit.size_base) + str(unit.size) + "$[8]$"
     return "{}/{}".format(str(csize), str(unit.size_base))
   
   def str_targetting(self):
@@ -246,7 +246,7 @@ class Army(object):
       u.unhook()
     
   def color_name(self):
-    return "{}{}$[7]$".format(self.color, self.name)
+    return "{}{}$[8]$".format(self.color, self.name)
   
   def get_order(self):
     return self.order

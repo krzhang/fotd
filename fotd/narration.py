@@ -149,9 +149,9 @@ class BattleNarrator(Narrator):
   def narrate_scout_completed(self, context, drawn_cards, scouted_cards):
     myarmy = self.view.army
     myarmyid = myarmy.armyid
-    self.view.yprint("{} strategizing...".format(myarmy.color_name()), mode=["console"])
-    self.view.yprint("  brainstormed {} tactics".format(len(drawn_cards[myarmyid])), mode=["console"])
-    self.view.yprint("  scouted {}/{} enemy tactics".format(len(scouted_cards[1-myarmyid]), len(drawn_cards[1-myarmyid])), mode=["console"])
+    self.view.yprint("{} strategizing... brainstormed $[7]${}$[8]$ tactics and scouted $[7]${}/{}$[8]$ enemy tactics".format(
+      myarmy.color_name(), len(drawn_cards[myarmyid]),
+      len(scouted_cards[1-myarmyid]), len(drawn_cards[1-myarmyid])), mode=["console"])
     
     # for tc in drawn_cards[myarmy.armyid]:
     #   sc = tc.skillcard
@@ -380,11 +380,12 @@ class BattleNarrator(Narrator):
 
   def narrate_turn_end(self, context):
     game_end = context['game_end']
+    self.view.yprint("The day comes to a close.", templates=context)
     # if game_end:
     #   self.view.pause_and_display(pause_str="The battle ends...")
     # else:
     #   self.view.pause_and_display()
-    self.view.pause()
+    # self.view.pause()
     
 ENTRANCES = [
   "It's a good day for a battle.",

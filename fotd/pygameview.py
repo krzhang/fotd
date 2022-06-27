@@ -170,8 +170,6 @@ class PGBattleView:
                           self.statebox,
                           self.narrator]
 
-    self.view_stack = [self.console]
-    
     self.debug_mode = self.battle.debug_mode
     self.automated = automated
     self.show_AI = show_AI
@@ -189,13 +187,15 @@ class PGBattleView:
       return self.manueverbox
     elif self.huddlebox.buf:
       return self.huddlebox
-    elif self.console.buf:
+    elif self.console.paused:
+      # if it just has text it shouldn't interfere with the battle; but if it's paused, then
+      # it needs some attention
       return self.console
     return self.battle
 
-  def pause(self, pauser=None, pause_str=None):
-    pause = state.Pause(self.battle, pauser=pauser, pause_str=pause_str)
-    pause.enter_state()
+  # def pause(self, pauser=None, pause_str=None):
+  #   pause = state.Pause(self.battle, pauser=pauser, pause_str=pause_str)
+  #   pause.enter_state()
   
   @property
   def army(self):

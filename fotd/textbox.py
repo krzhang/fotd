@@ -90,10 +90,28 @@ class ImageBox(CursorBox):
     self.height_single = height_single
 
   def clear(self):
-    self.surface.fill(pygame.SRCALPHA)
+    trans_color = (255, 0, 255)
+    # pygame.draw.rect(self.surface, trans_color, (self.x, self.y, self.width, self.height), width=2)
+    self.surface.fill(trans_color)
+    self.surface.set_colorkey(trans_color)
+    # pygame.draw.rect(self.surface, PColors.RED, (self.x, self.y, self.width, self.height))
+    pygame.draw.rect(self.surface, PColors.GREY, (0, 0, self.width, self.height), width=2)
     self.tx = 0
     self.ty = 0
-    
+
+  def sprite_to_surface(self, sprite):
+    """ Like image_to_surface, but pulls a sprite into the right place """
+    surf = self.surface
+    surf_width, surf_height = surf.get_size()
+    width = self.width_single
+    height = self.height_single
+    if self.tx + width > surf_width:
+      self.tx, self.ty = 0, self.ty + height
+    # since we are placing, we need to account for the imageboxes' own offset
+    sprite.rect.left = self.tx + self.x
+    sprite.rect.top = self.ty + self.y
+    self.tx += width
+
 class TextBox(CursorBox):
 
   def __init__(self, view, width, height, x, y, name, header=""):
@@ -312,7 +330,7 @@ class InfoBox(TextBox):
     elif self.mouseover[0] == "SKILL":
       self._render_skill_verbose(self.mouseover[1])
     elif self.mouseover[0] == "SKILLCARD":
-      self._render_skill(self.mouseover[1])
+      self._render_skillcard(self.mouseover[1])
       
 class Huddle(BufferTextBox):
   """ 

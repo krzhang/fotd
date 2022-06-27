@@ -163,14 +163,17 @@ class TableauCardSpr(pg.sprite.Sprite):
     color_image.fill(background)
     self.image.blit(color_image, (0,0), special_flags=pg.BLEND_RGBA_MULT)
     view.all_sprites.add(self)
-    self.infobox = False
+    self.infobox = True
 
+  def mouseover_info(self):
+    return ("SKILLCARD", self.skillcard)
+    
   def update(self):
     visibility = self.tableaucard.visibility[self.view.army.armyid]
     if not visibility:
-      pass
-      # self.rect.left, self.rect.top = 2000, 2000
+      self.rect.left, self.rect.top = 2000, 2000
     else:
       # make copy of self and put it on that surface. A bit janky
-      self.imagebox.image_to_surface(self.image, 40, 40)
+      # self.imagebox.image_to_surface(self.image, 40, 40)
+      self.imagebox.sprite_to_surface(self)
       

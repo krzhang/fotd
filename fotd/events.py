@@ -292,7 +292,8 @@ def engage(battle, context, bv):
   csource = context.csource
   ctarget = context.ctarget
   army = csource.army
-  for sc in army.tableau.decks[csource]:
+  for tc in army.tableau.decks[csource]:
+    sc = tc.skillcard
     if sc.order == csource.order and battle.yomi_winner_id == army.armyid:
       # import pdb; pdb.set_trace()
       newcontext = context.copy({'skillcard':sc})

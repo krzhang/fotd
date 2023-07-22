@@ -1,6 +1,6 @@
 asciimatics==1.11.0
 colorama==0.4.1
-future==0.17.1
+future==0.18.3
 numpy
 pygame
 Pillow
